@@ -3,12 +3,12 @@ intimate
 romantic
 dreamy
 playful
-mysterious
+mysterious !day
 serene
 nostalgic
 elegant
-cozy
-melancholic
+cozy #indoor
+melancholic !summer
 energetic
 sensual
 cheerful

@@ -161,7 +161,10 @@
             <div class="row"><div><label for="v_device">장치</label>
               <select id="v_device"><option value="auto">자동</option><option value="cuda">GPU (cuda)</option><option value="cpu">CPU</option></select></div>
               <div><label for="v_dtype">정밀도</label>
-              <select id="v_dtype"><option>auto</option><option>bfloat16</option><option>float16</option><option>float32</option></select></div></div>
+              <select id="v_dtype"><option>auto</option><option>bfloat16</option><option>float16</option><option>float32</option></select></div>
+              <div><label for="v_quant">GPU 메모리</label>
+              <select id="v_quant"><option value="auto">자동 (여유 있으면 bf16, 아니면 FP8)</option><option value="fp8">FP8 (약 5GB, 조금 느림)</option><option value="none">bf16 (약 9GB, 빠름)</option></select></div></div>
+            <label class="check"><input type="checkbox" id="v_prefilter"> 사람·남자·커플 여부를 먼저 확인해 필요한 요소만 묻기 (빠름)</label>
             <div id="v_runtime" class="hint"></div>
           </div>
           <label for="v_model_id">기본 모델 (HF id 또는 폴더. 단일 파일일 때 설정을 가져올 원본 / 서버 백엔드면 서버의 모델명)</label>
@@ -370,6 +373,7 @@ async function vLoadConfig() {
   const c = d.config;
   $("v_backend").value = c.backend; $("v_model_path").value = c.model_path; $("v_model_id").value = c.model_id;
   $("v_api_base").value = c.api_base; $("v_device").value = c.device; $("v_dtype").value = c.dtype;
+  $("v_quant").value = c.quantization || "auto"; $("v_prefilter").checked = c.prefilter !== false;
   $("v_max_items").value = c.max_items_per_key; $("v_max_tokens").value = c.max_new_tokens;
   $("v_skip").value = c.skip_keys.join(", ");
   $("v_cfg_path").textContent = "설정 파일: " + d.config_path;
@@ -390,6 +394,7 @@ async function vSaveConfig() {
   const config = {
     backend: $("v_backend").value, model_path: $("v_model_path").value.trim(), model_id: $("v_model_id").value.trim(),
     api_base: $("v_api_base").value.trim(), device: $("v_device").value, dtype: $("v_dtype").value,
+    quantization: $("v_quant").value, prefilter: $("v_prefilter").checked,
     max_items_per_key: parseInt($("v_max_items").value, 10) || 3, max_new_tokens: parseInt($("v_max_tokens").value, 10) || 1024,
     skip_keys: $("v_skip").value,
   };

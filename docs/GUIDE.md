@@ -97,7 +97,7 @@ python -m promptmaker.server            # 또는 promptmaker-server
 | `seed` | 정수 / `None` | 같은 시드 + 같은 옵션 = 같은 결과 |
 | `translate` | bool | 영어가 아니면 번역 |
 | `use_related_words` | bool | 확률 기반 관련 단어 사용 |
-| `model_profile` | `flux` / `sdxl` / `wan_video` … | 결과에 모델 예시를 첨부 (추후 LLM 옵션용) |
+| `model_profile` | `krea2` / `qwen2.1` / `moss` / `minimax_h3` / `none` | 대상 모델 형식으로 출력. 비우면 이미지는 `krea2`, 영상은 `minimax_h3` (아래 "대상 모델" 참고) |
 
 ### 모드
 
@@ -356,7 +356,29 @@ class MyTranslator:
 pm = PromptMaker(translator=MyTranslator())
 ```
 
-## 7. 고정 입력 (시스템 프롬프트, 모델 예시) 과 추후 LLM 옵션
+## 7. 대상 모델 형식 (모델별 프롬프트 예시)
+
+생성된 프롬프트를 사용할 모델의 권장 형식으로 바꿔서 출력합니다. 라이브러리, 테스트 페이지("대상 모델"), ComfyUI 노드(`model_profile` 입력, `negative_prompt` 출력), 명령줄(`--model`) 모두 같습니다.
+
+| id | 모델 | 종류 | 형식 |
+|---|---|---|---|
+| `krea2` | Krea 2 | 이미지 (**기본**) | 자연스러운 문단 1~2개 |
+| `qwen2.1` | Qwen-Image 2.1 | 이미지 | 완전한 문장. 네거티브 칸이 없어 "No text, no watermark, no logos." 를 끝에 붙임 |
+| `moss` | MOSS-Image | 이미지 | 품질 → 인물 → 일반 태그 순서의 쉼표 나열 + 별도 네거티브 프롬프트 |
+| `minimax_h3` | MiniMax H3 (Hailuo 3) | 영상 (**기본**) | `integrated_multimodal_description:` / `overall_soundscape:` / `non_diegetic_music:` 세 부분 |
+
+- 비워 두면 이미지는 `krea2`, 영상은 `minimax_h3` 형식이 됩니다. `none` 이면 변환하지 않습니다.
+- 결과의 `prompt` 는 변환된 프롬프트, `base_prompt` 는 변환 전 문장, `negative_prompt` 는 네거티브 프롬프트(MOSS 등)입니다.
+- 형식은 `data/model_profiles/<id>.json` 에서 고칩니다. 주요 항목: `format`(prose / tags / h3), `default_for`(image / video), `max_chars`, `prefix`, `suffix`, `negative`, `inline_exclusions`, `tag_order`, `quality_tags`, `replace`, `music`, `sounds`.
+- 새 모델은 JSON 파일을 하나 추가하면 됩니다. 예시 프롬프트는 `data/model_examples/<id>.txt` 에 두면 결과의 `model_example` 로 함께 전달됩니다.
+
+```python
+r = pm.generate("해변 비키니 화보", model_profile="moss")
+print(r.prompt)           # masterpiece, best quality, ...
+print(r.negative_prompt)  # nsfw, worst quality, ...
+```
+
+## 7-0. 고정 입력 (시스템 프롬프트, 모델 예시) 과 추후 LLM 옵션
 
 - `data/system/system_prompt.txt`, `data/model_examples/*.txt` 는 결과의 `system_prompt`, `model_example` 로 함께 전달됩니다.
 - 현재 생성 과정은 LLM 을 쓰지 않습니다. 추후 최소한의 LLM 보정을 붙이려면:

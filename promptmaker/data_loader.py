@@ -269,3 +269,21 @@ def load_text_files(dirs: Iterable[str], subdir: str) -> Dict[str, str]:
                 with open(os.path.join(d, fname), encoding="utf-8") as f:
                     out[os.path.splitext(fname)[0]] = f.read().strip()
     return out
+
+
+def load_model_profiles(dirs: Iterable[str]):
+    """``model_profiles/<id>.json`` from every data dir (later dirs override)."""
+    from .model_profiles import ModelProfile
+
+    out = {}
+    for base in dirs:
+        d = os.path.join(base, "model_profiles")
+        if not os.path.isdir(d):
+            continue
+        for fname in sorted(os.listdir(d)):
+            if fname.endswith(".json"):
+                with open(os.path.join(d, fname), encoding="utf-8") as f:
+                    data = json.load(f)
+                pid = fname[:-5]
+                out[data.get("id", pid)] = ModelProfile.from_dict(pid, data)
+    return out

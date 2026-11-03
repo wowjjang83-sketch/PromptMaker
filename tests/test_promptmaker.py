@@ -56,8 +56,8 @@ class EngineTests(unittest.TestCase):
                                          random_elements=["*"], seed=seed, content_rating=rating)
                     self.assertNotIn("{", r.prompt, (tid, r.prompt))
                     self.assertNotIn("}", r.prompt, (tid, r.prompt))
-                    self.assertTrue(r.prompt[0].isupper())
-                    self.assertTrue(r.prompt.endswith("."))
+                    self.assertTrue(r.base_prompt[0].isupper())
+                    self.assertTrue(r.base_prompt.endswith("."))
                     self.assertGreaterEqual(int(r.picks["age"]), 20)
 
     def test_seed_is_reproducible(self):
@@ -287,3 +287,37 @@ class RequestPhraseTests(unittest.TestCase):
         self.assertFalse(looks_like_tag_list("with red, gold, and black accents"))
         self.assertFalse(is_usable_item("age", "19"))
         self.assertTrue(is_usable_item("age", "21"))
+
+
+class ModelProfileTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.pm = PromptMaker(translator=NoTranslator())
+
+    def test_defaults_are_krea2_and_minimax_h3(self):
+        img = self.pm.generate("portrait", prompt_type="image", seed=1)
+        vid = self.pm.generate("walking on the beach", prompt_type="video", seed=1)
+        self.assertEqual(img.model_profile, "krea2")
+        self.assertEqual(vid.model_profile, "minimax_h3")
+        self.assertTrue(vid.prompt.startswith("integrated_multimodal_description: "))
+        self.assertIn("\noverall_soundscape: ", vid.prompt)
+        self.assertIn("\nnon_diegetic_music: ", vid.prompt)
+        self.assertNotIn("cinematic", vid.prompt.lower())
+
+    def test_moss_tags_and_negative(self):
+        r = self.pm.generate("white miniskirt", model_profile="moss", seed=2)
+        self.assertTrue(r.prompt.startswith("masterpiece, best quality"))
+        self.assertNotIn("{", r.prompt)
+        self.assertIn("worst quality", r.negative_prompt)
+        self.assertIn("nsfw", r.negative_prompt)
+
+    def test_qwen_inline_exclusions_and_none(self):
+        r = self.pm.generate("portrait", model_profile="qwen2.1", seed=3)
+        self.assertTrue(r.prompt.endswith("No text, no watermark, no logos."))
+        r2 = self.pm.generate("portrait", model_profile="none", seed=3)
+        self.assertEqual(r2.prompt, r2.base_prompt)
+        self.assertEqual(r2.model_profile, "")
+
+    def test_old_profiles_removed(self):
+        for old in ("flux", "sdxl", "wan_video"):
+            self.assertNotIn(old, self.pm.info()["model_profiles"])

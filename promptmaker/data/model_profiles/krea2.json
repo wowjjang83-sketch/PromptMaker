@@ -1,0 +1,10 @@
+{
+  "label": "Krea 2",
+  "type": "image",
+  "default_for": "image",
+  "format": "prose",
+  "description": "자연스러운 문단형. 주제 → 외모/의상 → 구도 → 배경 → 조명/분위기 → 매체 순서. 키워드 나열 대신 1~2개 문단.",
+  "max_chars": 1500,
+  "drop_phrases": ["In this image, ", "This image shows "],
+  "notes": "출처: fal.ai Krea 2 prompting guide, Krea-2-Turbo 커뮤니티 시스템 프롬프트. 글자를 넣을 때는 큰따옴표."
+}

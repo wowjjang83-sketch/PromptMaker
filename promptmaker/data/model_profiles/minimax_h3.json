@@ -1,0 +1,11 @@
+{
+  "label": "MiniMax H3 (Hailuo 3)",
+  "type": "video",
+  "default_for": "video",
+  "format": "h3",
+  "description": "MiniMax H3 공식 형식: integrated_multimodal_description (화면·카메라·동작) / overall_soundscape (1~4문장) / non_diegetic_music (없으면 N/A).",
+  "max_chars": 7000,
+  "replace": {"cinematic": "film-like"},
+  "music": "N/A",
+  "notes": "출처: MiniMax H3 매뉴얼을 인용한 HeyMarmot, Pixo 가이드. 추상적인 말(cinematic, emotional)보다 구체적인 동작·카메라 묘사가 좋습니다. 카메라는 'The camera pushes in slowly' 처럼 씁니다. 네거티브 프롬프트 없음."
+}

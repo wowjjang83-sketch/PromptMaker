@@ -1,0 +1,9 @@
+{
+  "label": "Qwen-Image 2.1",
+  "type": "image",
+  "format": "prose",
+  "description": "완전한 문장으로 주제·목적을 먼저, 이어서 구도·디테일·소품·조명·스타일. 네거티브 칸이 없어 제외할 것은 문장 끝에 씁니다.",
+  "max_chars": 3000,
+  "inline_exclusions": "No text, no watermark, no logos",
+  "notes": "출처: Runware Qwen-Image-2.1-Pro prompting guide, ComfyUI 문서. 이미지 속 글자는 큰따옴표로 감싸고 위치를 적습니다. cfg 1 에서는 네거티브 프롬프트가 효과 없음."
+}

@@ -94,6 +94,9 @@
 
     <label for="template">템플릿</label>
     <select id="template"></select>
+    <label for="model_profile">대상 모델 (프롬프트 형식)</label>
+    <select id="model_profile"></select>
+    <p class="hint" id="model_hint"></p>
 
     <div class="row">
       <div><label for="content_rating">수위</label>
@@ -214,6 +217,27 @@ function fillTemplates() {
   if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
 }
 
+function fillModels() {
+  const type = $("prompt_type").value;
+  const sel = $("model_profile");
+  const prev = sel.value;
+  const list = (INFO.model_profile_info || []).filter(m => m.type === type || m.type === "any");
+  const def = list.find(m => m.default_for === type);
+  sel.innerHTML = `<option value="">기본 (${esc(def ? def.label : "없음")})</option>` +
+    list.map(m => `<option value="${esc(m.id)}">${esc(m.label)}</option>`).join("") +
+    '<option value="none">형식 변환 안 함</option>';
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  showModelHint();
+}
+
+function showModelHint() {
+  const type = $("prompt_type").value;
+  const list = INFO.model_profile_info || [];
+  const id = $("model_profile").value;
+  const m = id ? list.find(x => x.id === id) : list.find(x => x.default_for === type);
+  $("model_hint").textContent = m ? m.description : "";
+}
+
 function fillElements() {
   const rating = $("content_rating").value;
   const order = ["sfw","suggestive","explicit"];
@@ -242,7 +266,7 @@ function currentSelections() {
 async function loadInfo() {
   const res = await fetch("/api/info");
   INFO = await res.json();
-  fillTemplates(); fillElements();
+  fillTemplates(); fillModels(); fillElements();
 }
 
 async function generate() {
@@ -254,6 +278,7 @@ async function generate() {
     mode: $("mode").value,
     template: $("template").value,
     content_rating: $("content_rating").value,
+    model_profile: $("model_profile").value || null,
     count: parseInt($("count").value, 10) || 1,
     seed: isNaN(seed) || seed < 0 ? null : seed,
     translate: $("translate").checked,
@@ -266,9 +291,10 @@ async function generate() {
   if (!res.ok) { $("results").innerHTML = `<p class="error">${esc(data.error)}</p>`; return; }
   $("results").innerHTML = data.results.map((r, i) => `
     <div class="result">
-      <div class="meta"><span>#${i + 1} · ${esc(r.template_name)} · seed ${r.seed}</span>
+      <div class="meta"><span>#${i + 1} · ${esc(r.template_name)}${r.model_profile ? " · " + esc(r.model_profile) : ""} · seed ${r.seed}</span>
         <button class="secondary" data-copy="${i}" style="padding:4px 10px">복사</button></div>
-      <p>${esc(r.prompt)}</p>
+      <p style="white-space:pre-wrap">${esc(r.prompt)}</p>
+      ${r.negative_prompt ? `<p class="hint">네거티브: ${esc(r.negative_prompt)}</p>` : ""}
       ${r.warnings.map(w => `<div class="warn">⚠ ${esc(w)}</div>`).join("")}
       <details><summary class="hint">선택 과정 (장면 태그: ${esc((r.lexicon.scene_tags || []).join(", "))})</summary>
         <pre style="white-space:pre-wrap;font-size:12px">${esc((r.lexicon.trace || []).join("\n"))}</pre></details>
@@ -283,7 +309,8 @@ async function generate() {
   }, null, 2);
 }
 
-$("prompt_type").onchange = fillTemplates;
+$("prompt_type").onchange = () => { fillTemplates(); fillModels(); };
+$("model_profile").onchange = showModelHint;
 $("content_rating").onchange = fillElements;
 $("mode").onchange = () => $("mode_hint").textContent = MODE_HINT[$("mode").value];
 $("go").onclick = generate;

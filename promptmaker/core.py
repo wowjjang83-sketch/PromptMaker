@@ -15,9 +15,10 @@ from typing import Any, Dict, List, Optional, Protocol
 
 from . import grammar, safety
 from .data_loader import (PACKAGE_DATA_DIR, RATINGS, Element, Item, Template, load_elements,
-                          load_json, load_templates, load_text_files)
+                          load_json, load_model_profiles, load_templates, load_text_files)
 from .intent import Intent, extract
 from .lexicon import LexiconResult, analyze
+from .model_profiles import ModelProfile, format_prompt
 from .relations import PLACE_TAGS, Relations, SceneContext
 from .translator import DictionaryTranslator, GoogleTranslator, NoTranslator, Translator, is_english
 
@@ -45,7 +46,7 @@ class GenerateOptions:
     seed: Optional[int] = None
     translate: bool = True
     use_related_words: bool = True
-    model_profile: Optional[str] = None        # name of a file in data/model_examples
+    model_profile: Optional[str] = None        # target model: data/model_profiles/<id>.json (krea2, qwen2.1, moss, minimax_h3 ...)
     use_llm: bool = False                      # only used when an LLMRefiner is set
 
     @classmethod
@@ -73,6 +74,9 @@ class PromptResult:
     warnings: List[str] = field(default_factory=list)
     system_prompt: str = ""
     model_example: str = ""
+    model_profile: str = ""
+    negative_prompt: str = ""      # for models that take a separate negative prompt
+    base_prompt: str = ""          # the prompt before the target-model formatting
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -105,6 +109,7 @@ class PromptMaker:
         self.ko_en: Dict[str, str] = load_json(self.data_dirs, "lexicon/ko_en.json")
         self.system_prompts: Dict[str, str] = load_text_files(self.data_dirs, "system")
         self.model_examples: Dict[str, str] = load_text_files(self.data_dirs, "model_examples")
+        self.model_profiles: Dict[str, ModelProfile] = load_model_profiles(self.data_dirs)
         self.relations = Relations.load(load_json(self.data_dirs, "lexicon/relations.json"),
                                         load_json(self.data_dirs, "lexicon/tag_keywords.json"))
         self.relations.auto_tag(self.elements)
@@ -132,7 +137,8 @@ class PromptMaker:
                     "items": [{"text": i.text, "rating": i.rating} for i in e.items]}
                 for k, e in sorted(self.elements.items())
             },
-            "model_profiles": sorted(self.model_examples),
+            "model_profiles": sorted(set(self.model_examples) | set(self.model_profiles)),
+            "model_profile_info": [p.to_info() for p in sorted(self.model_profiles.values(), key=lambda p: p.id)],
         }
 
     # -------------------------------------------------------------- pipeline
@@ -189,6 +195,15 @@ class PromptMaker:
 
         system_prompt = self.system_prompts.get("system_prompt", "")
         profile = options.model_profile or ""
+        if not profile:  # default target model for the prompt type (krea2 / minimax_h3)
+            profile = next((p.id for p in self.model_profiles.values() if p.default_for == template.type), "")
+        if profile in ("none", "off"):
+            profile = ""
+        mprofile = self.model_profiles.get(profile) if profile else None
+        if profile and mprofile is None and profile not in self.model_examples:
+            warnings.append(f"모델 프로필 '{profile}' 을(를) 찾을 수 없어 기본 형식으로 출력합니다.")
+        if mprofile and mprofile.type not in ("any", template.type):
+            warnings.append(f"'{mprofile.label or mprofile.id}' 은(는) {mprofile.type} 모델인데 {template.type} 프롬프트에 적용했습니다.")
         model_example = self.model_examples.get(profile, "") if profile else ""
         if options.use_llm and self.llm is not None:
             try:
@@ -196,13 +211,19 @@ class PromptMaker:
             except Exception as exc:
                 warnings.append(f"LLM 보정 실패: {exc}")
 
+        base_prompt = prompt
+        formatted = format_prompt(prompt, filler.picks, filler.ctx.tags, mprofile,
+                                  options.content_rating, template.type)
+        prompt = formatted.prompt
+
         return PromptResult(
             prompt=prompt, prompt_type=template.type, template_id=template.id,
             template_name=template.name, seed=seed, original_input=user_input,
             english_input=english, translated=translated, picks=filler.picks,
             lexicon={**lex.to_dict(), "intent": intent.to_dict(), "trace": filler.ctx.trace,
                      "scene_tags": sorted(filler.ctx.tags)}, warnings=warnings, system_prompt=system_prompt,
-            model_example=model_example,
+            model_example=model_example, model_profile=profile if (mprofile or profile in self.model_examples) else "",
+            negative_prompt=formatted.negative, base_prompt=base_prompt,
         )
 
     def generate_batch(self, user_input: str = "", count: int = 4,

@@ -18,7 +18,7 @@ from .data_loader import (PACKAGE_DATA_DIR, RATINGS, Element, Item, Template, lo
                           load_json, load_templates, load_text_files)
 from .intent import Intent, extract
 from .lexicon import LexiconResult, analyze
-from .relations import Relations, SceneContext
+from .relations import PLACE_TAGS, Relations, SceneContext
 from .translator import DictionaryTranslator, GoogleTranslator, NoTranslator, Translator, is_english
 
 MODES = ("manual", "random", "random_by_type", "random_by_element")
@@ -267,6 +267,28 @@ class PromptMaker:
         return rng.choice(pool)
 
 
+STYLE_FIT = 6.0  # weight for photo/video styles that match the template's keywords
+GARMENT_MENTION_KEYS = ("attire_state", "pose", "action", "motion")
+# garment words an attire_state / pose line may mention -> words that must be in the outfit
+_GARMENT_WORDS = {
+    "blouse": ("blouse",), "shirt": ("shirt", "blouse"), "skirt": ("skirt",), "dress": ("dress", "gown"),
+    "jacket": ("jacket", "blazer", "coat"), "coat": ("coat", "trench"), "bikini": ("bikini",),
+    "swimsuit": ("swimsuit", "monokini", "one-piece"), "lacing": ("corset", "bodice", "lace-up"),
+    "corset": ("corset",), "stockings": ("stockings", "thigh-high"), "jeans": ("jeans",),
+    "sweater": ("sweater", "knit", "cardigan"), "hoodie": ("hoodie",), "robe": ("robe",),
+    "kimono": ("kimono", "yukata"), "hanbok": ("hanbok",), "bra": ("bra", "bralette", "bikini"),
+    "shorts": ("shorts",), "zipper": ("zip", "jacket", "hoodie", "dress"), "buttons": ("button", "shirt", "blouse", "cardigan"),
+}
+
+
+def _garments_fit(text: str, outfit: str) -> bool:
+    low = text.lower()
+    for word, needs in _GARMENT_WORDS.items():
+        if re.search(r"\b" + word + r"s?\b", low) and not any(n in outfit for n in needs):
+            return False
+    return True
+
+
 SCENE_TAGS = {"beach", "pool", "bedroom", "bathroom", "cafe", "bar", "street", "studio", "nature",
               "urban", "indoor", "outdoor"}
 PICK_ORDER = ["location", "time_weather", "photo_style", "video_style", "attire", "attire_state",
@@ -338,6 +360,14 @@ class _Filler:
         """Pick n items using base weight x request boost x scene-context relations."""
         boosts = self._boosts(key)
         scored = self.ctx.weigh(items, boosts)
+        if key in ("photo_style", "video_style"):  # styles that fit the chosen template
+            words = [k.lower() for k in self.t.raw.get("keywords", []) if len(k) > 3]
+            scored = [(it, w * (STYLE_FIT if any(re.search(r"\b" + re.escape(k), it.text, re.I) for k in words) else 1.0),
+                       why) for it, w, why in scored]
+        if key in GARMENT_MENTION_KEYS and "attire" in self.cache:
+            outfit = self.cache["attire"][0].lower()
+            scored = [(it, w if _garments_fit(it.text, outfit) else 0.0, why if _garments_fit(it.text, outfit)
+                       else "의상과 안 맞음") for it, w, why in scored]
         valid = [(it, w, why) for it, w, why in scored if w > 0]
         if not valid:
             # nothing satisfies the relation rules: fall back to plain weights, but say so
@@ -375,7 +405,8 @@ class _Filler:
     def _commit(self, key: str, items: List[Item]) -> List[str]:
         provider = key in self.maker.relations.providers
         for it in items:
-            self.ctx.add(it.tags, provider=provider)
+            # only the scene elements may set the place; flip-flops do not make a beach
+            self.ctx.add(it.tags if provider else it.tags - PLACE_TAGS, provider=provider)
         texts = [it.text for it in items]
         self.cache[key] = texts
         return texts
@@ -453,7 +484,7 @@ class _Filler:
                 barefoot = True
             elif shoe:
                 extras.append(shoe[0])
-        if "accessory" in self.maker.elements and self.rng.random() < 0.4:
+        if "accessory" in self.maker.elements and self.rng.random() < (0.15 if " under " in main else 0.4):
             acc = self.pick("accessory")
             if acc:
                 extras.append(acc[0])

@@ -174,6 +174,8 @@ giving {her} skin a warm, glowing tone ← 다른 슬롯 사용 가능
 
 **수정한 TXT 를 적용하려면:** 테스트 페이지의 "데이터 다시 읽기" 버튼(또는 `/api/reload`)을 누르면 됩니다. 서버 재시작은 필요 없습니다.
 서버 재시작은 파이썬 코드를 업데이트했을 때(`git pull` 후)만 필요합니다.
+포즈·동작 등에 완성 문장("Standing at the edge of a rooftop, she gazes at ...")을 넣으면 앞부분("standing at the edge of a rooftop")만 씁니다.
+그 안에 장소(rooftop, field, beach ...)가 있으면 그 장소일 때만 선택됩니다. 의상 상태에 옷 이름(blouse, skirt ...)이 있으면 그 옷을 입었을 때만 선택됩니다.
 불러올 때 자동으로 빠지는 줄: 미성년자 관련 단어, 20 미만 나이, 쉼표로 단어만 나열한 태그 줄(예: "Short, Firm, Square Face, Fair Skin, ...").
 
 ### 5-1-1. 의상 요소와 `{attire}` 자동 조합

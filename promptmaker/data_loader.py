@@ -166,6 +166,7 @@ def load_elements(dirs: Iterable[str]) -> Dict[str, Element]:
         seen = set()
         clean = []
         for item in el.items:
+            item.text = normalize_phrase(el.key, item.text)
             k = item.text.lower()
             if k in seen or not is_safe_item(item.text) or not is_usable_item(el.key, item.text):
                 continue
@@ -187,6 +188,26 @@ def looks_like_tag_list(text: str) -> bool:
     short = sum(1 for p in parts if len(p.split()) <= 3)
     titled = sum(1 for p in parts if p[:1].isupper())
     return short >= len(parts) * 0.75 and (titled >= len(parts) * 0.5 or len(parts) >= 6)
+
+
+PHRASE_KEYS = ("pose", "action", "motion", "interaction", "expression", "attire_state")
+
+
+def normalize_phrase(key: str, text: str) -> str:
+    """Turn a full sentence into the fragment a template expects.
+
+    "Standing at the edge of a rooftop, she gazes at the city below." ->
+    "standing at the edge of a rooftop"
+    """
+    if key not in PHRASE_KEYS:
+        return text
+    t = text.strip().rstrip(".!")
+    m = re.match(r"^([A-Za-z][\w'-]*ing\b[^,]*?),\s*(?:she|he|they|her|his|their)\b", t)
+    if m:
+        t = m.group(1)
+    if len(t) > 1 and t[0].isupper() and t[1].islower() and not t.startswith(("I ", "Japanese", "Korean")):
+        t = t[0].lower() + t[1:]
+    return t
 
 
 def is_usable_item(key: str, text: str) -> bool:

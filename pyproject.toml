@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "promptmaker"
-version = "0.2.0"
+version = "0.3.0"
 description = "LLM 없이 규칙/템플릿 기반으로 영문 자연어 이미지/영상 프롬프트를 생성하는 라이브러리"
 readme = "README.md"
 requires-python = ">=3.9"

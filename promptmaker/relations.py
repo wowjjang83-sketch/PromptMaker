@@ -19,6 +19,7 @@ from .data_loader import Element, Item
 
 # Elements whose items describe the scene itself: props they mention are *provided*.
 DEFAULT_PROVIDERS = ("location", "time_weather")
+MAX_BOOST = 20.0  # cap on the combined affinity multiplier
 # Elements never auto-tagged (their words say little about the scene).
 DEFAULT_SKIP = ("hair", "makeup", "skin", "beauty", "nationality", "age", "male_look",
                 "expression", "casting", "mood")
@@ -119,15 +120,18 @@ class Relations:
         missing = item.requires - context
         if missing and (scene_known or missing & self.enforced):
             return 0.0, f"필요(+{'/'.join(sorted(missing))}) 없음"
+        # soft rules: each of the item's own tags is scaled once, by the strongest boost
+        # and the strongest penalty found in the scene (no runaway compounding)
         mult, parts = 1.0, []
-        for c in context:
-            aff = self.affinity.get(c)
-            if not aff:
+        for t in sorted(item.tags):
+            ups = [(self.affinity[c][t], c) for c in context if t in self.affinity.get(c, {})]
+            if not ups:
                 continue
-            for t in tags:
-                if t in aff:
-                    mult *= aff[t]
-                    parts.append(f"{c}→{t}×{aff[t]:g}")
+            hi, lo = max(ups), min(ups)
+            for f, c in ([hi] if hi[0] > 1.0 else []) + ([lo] if lo[0] < 1.0 else []):
+                mult *= f
+                parts.append(f"{c}→{t}×{f:g}")
+        mult = min(mult, MAX_BOOST)
         return mult, ", ".join(parts)
 
 

@@ -332,7 +332,7 @@ class _Filler:
     def _weighted_pick(self, key: str, items: List[Item], n: int,
                        deterministic: bool = False) -> List[Item]:
         """Pick n items using base weight x request boost x scene-context relations."""
-        boosts = self.lex.boost_for(key)
+        boosts = self._boosts(key)
         scored = self.ctx.weigh(items, boosts)
         valid = [(it, w, why) for it, w, why in scored if w > 0]
         if not valid:
@@ -350,6 +350,23 @@ class _Filler:
             chosen.append(it)
             self.ctx.trace.append(f"{key}: {it.text}" + (f"  [{why}]" if why else ""))
         return chosen
+
+    def _boosts(self, key: str) -> Dict[str, float]:
+        """Request boosts, minus direct matches on words another element already used.
+
+        e.g. "on the beach" fixed the location; it must not also force the pose
+        "lying on a beach towel" just because that line contains "beach".
+        """
+        boosts = self.lex.boost_for(key)
+        if not boosts or key in self.intent.pools:
+            return boosts
+        hints = {h.lower() for h in self.lex.element_hints.get(key, [])}
+        fresh = [k for k in self.lex.keywords if k not in set(self.intent.consumed)]
+        out = {}
+        for text, b in boosts.items():
+            if text in hints or any(re.search(r"\b" + re.escape(k), text, re.I) for k in fresh):
+                out[text] = b
+        return out
 
     def _commit(self, key: str, items: List[Item]) -> List[str]:
         provider = key in self.maker.relations.providers
@@ -576,8 +593,11 @@ class _Filler:
                 out.append(k)
         return out
 
-    def _details_sentence(self) -> str:
-        """Sentence carrying the user's own request + probabilistic related words."""
+    def _details_sentence(self, used_text: str = "") -> str:
+        """Sentence carrying the user's own request + probabilistic related words.
+
+        Words already expressed elsewhere in the prompt (``used_text``) are not repeated.
+        """
         if not self.english:
             return ""
         adjs = self.lex.related.get("adjectives", [])
@@ -590,7 +610,8 @@ class _Filler:
         from .lexicon import GENERIC_WORDS
         consumed = set(self.intent.consumed) | set(self.related_keys())
         leftover = [k for k in self.lex.keywords
-                    if k not in consumed and k not in GENERIC_WORDS and k not in INTENT_NOISE]
+                    if k not in consumed and k not in GENERIC_WORDS and k not in INTENT_NOISE
+                    and not re.search(r"\b" + re.escape(k), used_text, re.I)]
         if leftover:
             parts.append(f"The scene also features {grammar.join_list(leftover)}")
         elif adjs or verbs or nouns:
@@ -683,5 +704,7 @@ class _Filler:
         uses_details = any("{user_details}" in (s.get("text", "") + " ".join(s.get("options", [])))
                            for s in self.t.sentences)
         if not uses_details and self.computed["user_details"]:
-            sentences.append(self._resolve(self.computed["user_details"]) or "")
+            details = self._details_sentence(" ".join(sentences))
+            if details:
+                sentences.append(self._resolve(details) or "")
         return grammar.tidy(" ".join(sentences))

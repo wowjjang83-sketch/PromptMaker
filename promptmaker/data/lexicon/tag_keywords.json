@@ -2,7 +2,7 @@
   "_comment": "자동 태깅 사전. tags: 문장에 단어가 있으면 그 태그를 붙임. props: 장소/시간 항목에서는 '제공', 포즈·동작 등에서는 '필요(+)'로 처리. 항목 줄 끝에 #태그 +태그 !태그 를 직접 써도 됩니다.",
   "provider_elements": ["location", "time_weather"],
   "garment_elements": ["outfit_type", "top", "bottom", "dress", "swimwear", "sleepwear", "lingerie", "outerwear", "traditional", "sportswear", "footwear", "legwear", "accessory"],
-  "enforced_props": ["hem", "sleeves", "collar", "strap"],
+  "enforced_props": ["hem", "sleeves", "collar", "strap", "dress", "top_bottom"],
   "skip_elements": ["hair", "makeup", "skin", "beauty", "nationality", "age", "male_look", "expression", "casting", "mood"],
   "tags": {
     "beach": ["beach", "seaside", "shore", "coastline", "white sand"],

@@ -1,0 +1,13 @@
+# 의상 상태 (sfw). 문장: "{She} {wears} {attire}, {attire_state}"
+neatly pressed and perfectly fitted
+slightly wrinkled from the day
+with the sleeves rolled up to the elbows
+with the collar casually open
+fluttering gently in the breeze
+with the hem lifting slightly in the wind
+damp from the rain
+loosely tucked in at the waist
+with a thin belt cinching the waist
+draped elegantly over {her} figure
+with one strap slipping off {her} shoulder
+softly clinging to {her} silhouette

@@ -1,0 +1,15 @@
+# 분위기 (형용사)
+intimate
+romantic
+dreamy
+playful
+mysterious
+serene
+nostalgic
+elegant
+cozy
+melancholic
+energetic
+sensual
+cheerful
+luxurious

@@ -1,0 +1,15 @@
+{
+  "id": "cinematic_scene",
+  "name": "시네마틱 장면",
+  "type": "image",
+  "description": "영화 스틸컷처럼 시간/날씨, 분위기, 색보정을 포함한 서사형 묘사",
+  "defaults": {"photo_style": "cinematic film still"},
+  "sentences": [
+    {"text": "A {photo_style} {time_weather}, showing {subject} {location}."},
+    {"text": "{She} {is} {pose}, {action}."},
+    {"text": "{She} {wears} {attire}, {attire_state}, and {has} {hair}."},
+    {"text": "{She} {is} {interaction}, the moment feeling {mood}.", "when": "male > 0"},
+    {"text": "{lighting} fills the frame, {lighting_effect}."},
+    {"text": "{camera}, {color_grade}, shallow depth of field, film grain.", "probability": 0.8}
+  ]
+}

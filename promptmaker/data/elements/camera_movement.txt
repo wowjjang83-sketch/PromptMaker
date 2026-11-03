@@ -1,0 +1,13 @@
+# [영상] 카메라 움직임 (문장: "The camera {camera_movement}")
+slowly dollies in toward {her} face
+orbits smoothly around {her_obj}
+tracks alongside {her_obj} as {she} walk{s}
+pulls back to reveal the whole scene
+tilts up from {her} feet to {her} face
+pans gently from left to right
+pushes in with a subtle handheld sway
+stays static on a tripod
+cranes down from above
+follows {her_obj} from behind in a steady glide
+zooms in slowly with a cinematic feel
+racks focus from the foreground to {her} eyes

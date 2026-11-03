@@ -1,0 +1,16 @@
+{
+  "id": "fashion_editorial",
+  "name": "패션 화보",
+  "type": "image",
+  "description": "잡지 화보 느낌. 의상과 메이크업, 카메라/색감을 강조합니다.",
+  "casting_filter": {"male_max": 0},
+  "defaults": {"photo_style": "high-fashion editorial photograph"},
+  "sentences": [
+    {"options": ["A {photo_style} featuring {subject}.", "{subject} {is} the focus of a {photo_style}."]},
+    {"text": "Styled in {attire}, {attire_state}, {she} {is} {pose}."},
+    {"text": "{Her} look is completed with {hair} and {makeup}, accentuating {her} {skin} skin."},
+    {"text": "{She} {looks} toward the lens with {expression}."},
+    {"text": "Set {location}, the shot is lit by {lighting}, {lighting_effect}."},
+    {"text": "{camera}, {color_grade}, {mood} mood."}
+  ]
+}

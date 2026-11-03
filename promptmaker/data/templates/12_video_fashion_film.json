@@ -1,0 +1,15 @@
+{
+  "id": "video_fashion_film",
+  "name": "[영상] 패션 필름",
+  "type": "video",
+  "description": "의상과 움직임을 강조하는 짧은 패션 필름",
+  "casting_filter": {"male_max": 0},
+  "defaults": {"video_style": "fashion film clip"},
+  "sentences": [
+    {"text": "A {video_style} featuring {subject}."},
+    {"text": "Dressed in {attire}, {she} {is} {motion} {pacing}."},
+    {"text": "{Her} {hair} and {makeup} catch the light as the camera {camera_movement}."},
+    {"text": "Set {location}, {ambient_motion}."},
+    {"text": "{lighting}, {lighting_effect}, {color_grade}, {mood} atmosphere."}
+  ]
+}

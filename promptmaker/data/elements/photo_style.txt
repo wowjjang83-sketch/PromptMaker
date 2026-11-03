@@ -1,0 +1,40 @@
+# 사진/영상 스타일 (문장: "A {photo_style} of ...")
+# 형식: 한 줄에 하나, "가중치::텍스트" 로 가중치 지정 가능
+3::photorealistic portrait photograph
+3::high-resolution DSLR photograph
+2::cinematic film still
+2::candid street photograph
+2::high-fashion editorial photograph
+2::glossy magazine cover photograph
+analog 35mm film photograph
+Kodak Portra 400 film photograph
+Fujifilm Superia film snapshot
+medium format Hasselblad portrait
+soft-focus dreamy portrait
+moody fine-art photograph
+black-and-white documentary photograph
+vintage 1990s flash photograph
+Polaroid instant photograph
+smartphone selfie-style photograph
+behind-the-scenes photo shoot image
+studio beauty headshot
+lifestyle Instagram photograph
+golden-hour outdoor portrait
+low-key chiaroscuro portrait
+high-key bright studio photograph
+neon-noir cinematic photograph
+hyper-detailed 8K photograph
+lookbook catalog photograph
+boudoir-style portrait photograph
+travel photography shot
+wedding-style romantic photograph
+paparazzi telephoto snapshot
+K-drama style cinematic still
+retro 1980s glamour photograph
+artistic double-exposure photograph
+wide-angle environmental portrait
+shallow depth-of-field bokeh portrait
+cyberpunk-inspired photograph
+ethereal pastel-toned photograph
+gritty grainy film photograph
+luxury brand campaign photograph

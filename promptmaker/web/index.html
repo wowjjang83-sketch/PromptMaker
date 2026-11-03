@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PromptMaker 테스트</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1d2330; --muted:#6b7280; --line:#e3e6eb; --accent:#3b5bdb; --warn:#b45309; --err:#c92a2a; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14171c; --card:#1d2128; --text:#e6e8ec; --muted:#9aa3b2; --line:#2e333c; --accent:#748ffc; --warn:#f59f00; --err:#ff6b6b; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:20px 16px 8px; max-width:1200px; margin:0 auto; }
+  header h1 { margin:0; font-size:22px; }
+  header p { margin:4px 0 0; color:var(--muted); font-size:14px; }
+  main { max-width:1200px; margin:0 auto; padding:12px 16px 40px; display:grid; grid-template-columns:380px 1fr; gap:16px; }
+  @media (max-width:900px) { main { grid-template-columns:1fr; } }
+  section { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  h2 { font-size:15px; margin:0 0 12px; }
+  label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px; }
+  select, input[type=text], input[type=number], textarea { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--text); font:inherit; font-size:14px; }
+  textarea { resize:vertical; }
+  .row { display:flex; gap:8px; } .row > * { flex:1; }
+  .check { display:flex; align-items:center; gap:6px; font-size:13px; margin-top:10px; color:var(--text); }
+  button { padding:10px 14px; border:0; border-radius:6px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; font-size:14px; }
+  button.secondary { background:transparent; color:var(--accent); border:1px solid var(--accent); }
+  .actions { display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  details { margin-top:12px; border-top:1px solid var(--line); padding-top:8px; }
+  summary { cursor:pointer; font-size:14px; font-weight:600; }
+  .el-grid { display:grid; grid-template-columns:1fr; gap:2px; max-height:420px; overflow:auto; padding-right:4px; }
+  .el-row { display:grid; grid-template-columns:110px 1fr 52px; gap:6px; align-items:center; font-size:12px; }
+  .el-row select { padding:4px 6px; font-size:12px; }
+  .el-row .rnd { font-size:11px; color:var(--muted); display:flex; gap:3px; align-items:center; }
+  .result { border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; }
+  .result .meta { font-size:12px; color:var(--muted); margin-bottom:6px; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .result p { margin:0; line-height:1.6; font-size:14px; white-space:pre-wrap; }
+  .warn { color:var(--warn); font-size:12px; margin-top:6px; }
+  .error { color:var(--err); font-size:14px; }
+  pre { font-size:11px; overflow:auto; background:var(--bg); padding:8px; border-radius:6px; max-height:260px; }
+  .hint { font-size:12px; color:var(--muted); margin-top:4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>PromptMaker 테스트 페이지</h1>
+  <p>LLM 없이 템플릿과 요소 목록으로 영문 자연어 프롬프트를 생성합니다. 모든 인물은 20세 이상 성인으로 생성됩니다.</p>
+</header>
+<main>
+  <section>
+    <h2>옵션</h2>
+    <label for="user_input">사용자 요청 (한글/영문)</label>
+    <textarea id="user_input" rows="3" placeholder="예: 비 오는 날 카페 창가에 앉아 있는 여자"></textarea>
+
+    <div class="row">
+      <div><label for="prompt_type">프롬프트 종류</label>
+        <select id="prompt_type"><option value="image">이미지 생성용</option><option value="video">영상 생성용</option></select></div>
+      <div><label for="mode">모드</label>
+        <select id="mode">
+          <option value="random_by_type">타입별 랜덤</option>
+          <option value="random">전체 랜덤</option>
+          <option value="random_by_element">요소별 랜덤</option>
+          <option value="manual">직접 선택</option>
+        </select></div>
+    </div>
+    <p class="hint" id="mode_hint"></p>
+
+    <label for="template">템플릿</label>
+    <select id="template"></select>
+
+    <div class="row">
+      <div><label for="content_rating">수위</label>
+        <select id="content_rating"><option value="sfw">일반 (sfw)</option><option value="suggestive">약간 선정적 (suggestive)</option><option value="explicit">성인 (explicit, 사용자 데이터)</option></select></div>
+      <div><label for="count">생성 개수</label><input id="count" type="number" min="1" max="20" value="3"></div>
+      <div><label for="seed">시드 (-1=랜덤)</label><input id="seed" type="number" value="-1"></div>
+    </div>
+
+    <label class="check"><input type="checkbox" id="translate" checked> 영어가 아니면 구글 번역 사용</label>
+    <label class="check"><input type="checkbox" id="use_related_words" checked> 확률 기반 관련 단어 사용</label>
+
+    <details>
+      <summary>요소 선택 / 요소별 랜덤</summary>
+      <p class="hint">값을 고르면 고정됩니다. "랜덤" 체크는 요소별 랜덤 모드에서만 사용됩니다.</p>
+      <div class="el-grid" id="elements"></div>
+    </details>
+
+    <div class="actions">
+      <button id="go">프롬프트 생성</button>
+      <button class="secondary" id="reset">요소 초기화</button>
+      <button class="secondary" id="reload">데이터 다시 읽기</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>결과</h2>
+    <div id="results"><p class="hint">옵션을 고르고 "프롬프트 생성"을 누르세요.</p></div>
+    <details><summary>상세 정보 (번역, 키워드, 관련 단어, 선택된 요소)</summary><pre id="debug">-</pre></details>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let INFO = null;
+const MODE_HINT = {
+  random_by_type: "선택한 종류(이미지/영상) 안에서 템플릿과 모든 요소를 무작위로 고릅니다.",
+  random: "종류와 템플릿, 모든 요소를 무작위로 고릅니다.",
+  random_by_element: "선택한 템플릿을 쓰고, '랜덤'에 체크한 요소만 무작위로 고릅니다. 나머지는 기본값입니다.",
+  manual: "선택한 템플릿과 직접 고른 요소만 사용합니다. 고르지 않은 요소는 기본값입니다.",
+};
+
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function fillTemplates() {
+  const type = $("prompt_type").value;
+  const sel = $("template");
+  const prev = sel.value;
+  sel.innerHTML = '<option value="random">(랜덤)</option>' + INFO.templates
+    .filter(t => t.type === type)
+    .map(t => `<option value="${esc(t.id)}" title="${esc(t.description)}">${esc(t.name)} (${esc(t.id)})</option>`).join("");
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+
+function fillElements() {
+  const rating = $("content_rating").value;
+  const order = ["sfw","suggestive","explicit"];
+  const box = $("elements");
+  const saved = currentSelections();
+  box.innerHTML = Object.entries(INFO.elements).map(([key, el]) => {
+    const items = el.items.filter(i => order.indexOf(i.rating) <= order.indexOf(rating));
+    const opts = items.map(i => `<option value="${esc(i.text)}">${esc(i.text)}</option>`).join("");
+    return `<div class="el-row"><span title="${esc(el.description || "")}">${esc(key)}</span>
+      <select data-key="${esc(key)}"><option value="">(기본/랜덤)</option>${opts}</select>
+      <span class="rnd"><input type="checkbox" data-rnd="${esc(key)}">랜덤</span></div>`;
+  }).join("");
+  for (const [k, v] of Object.entries(saved.selections)) {
+    const s = box.querySelector(`select[data-key="${CSS.escape(k)}"]`); if (s) s.value = v;
+  }
+  saved.random.forEach(k => { const c = box.querySelector(`input[data-rnd="${CSS.escape(k)}"]`); if (c) c.checked = true; });
+}
+
+function currentSelections() {
+  const selections = {}, random = [];
+  document.querySelectorAll("#elements select[data-key]").forEach(s => { if (s.value) selections[s.dataset.key] = s.value; });
+  document.querySelectorAll("#elements input[data-rnd]").forEach(c => { if (c.checked) random.push(c.dataset.rnd); });
+  return { selections, random };
+}
+
+async function loadInfo() {
+  const res = await fetch("/api/info");
+  INFO = await res.json();
+  fillTemplates(); fillElements();
+}
+
+async function generate() {
+  const { selections, random } = currentSelections();
+  const seed = parseInt($("seed").value, 10);
+  const body = {
+    user_input: $("user_input").value,
+    prompt_type: $("prompt_type").value,
+    mode: $("mode").value,
+    template: $("template").value,
+    content_rating: $("content_rating").value,
+    count: parseInt($("count").value, 10) || 1,
+    seed: isNaN(seed) || seed < 0 ? null : seed,
+    translate: $("translate").checked,
+    use_related_words: $("use_related_words").checked,
+    selections, random_elements: random,
+  };
+  $("results").innerHTML = '<p class="hint">생성 중…</p>';
+  const res = await fetch("/api/generate", { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body) });
+  const data = await res.json();
+  if (!res.ok) { $("results").innerHTML = `<p class="error">${esc(data.error)}</p>`; return; }
+  $("results").innerHTML = data.results.map((r, i) => `
+    <div class="result">
+      <div class="meta"><span>#${i + 1} · ${esc(r.template_name)} · seed ${r.seed}</span>
+        <button class="secondary" data-copy="${i}" style="padding:4px 10px">복사</button></div>
+      <p>${esc(r.prompt)}</p>
+      ${r.warnings.map(w => `<div class="warn">⚠ ${esc(w)}</div>`).join("")}
+    </div>`).join("");
+  document.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => {
+    navigator.clipboard.writeText(data.results[+b.dataset.copy].prompt); b.textContent = "복사됨";
+  });
+  const r0 = data.results[0];
+  $("debug").textContent = JSON.stringify({
+    원문: r0.original_input, 영문: r0.english_input, 번역됨: r0.translated,
+    키워드분석: r0.lexicon, 선택된요소: r0.picks,
+  }, null, 2);
+}
+
+$("prompt_type").onchange = fillTemplates;
+$("content_rating").onchange = fillElements;
+$("mode").onchange = () => $("mode_hint").textContent = MODE_HINT[$("mode").value];
+$("go").onclick = generate;
+$("reset").onclick = () => { document.querySelectorAll("#elements select").forEach(s => s.value = ""); document.querySelectorAll("#elements input").forEach(c => c.checked = false); };
+$("reload").onclick = async () => { await fetch("/api/reload"); await loadInfo(); };
+$("mode_hint").textContent = MODE_HINT[$("mode").value];
+loadInfo().catch(() => { $("results").innerHTML = '<p class="error">서버에 연결할 수 없습니다. <code>python -m promptmaker.server</code> 로 실행한 뒤 http://127.0.0.1:8765 에서 열어 주세요.</p>'; });
+</script>
+</body>
+</html>

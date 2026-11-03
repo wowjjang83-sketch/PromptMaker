@@ -9,6 +9,7 @@
 analog 35mm film photograph
 Kodak Portra 400 film photograph
 Fujifilm Superia film snapshot
+bright summer gravure photograph
 medium format Hasselblad portrait
 soft-focus dreamy portrait
 moody fine-art photograph
@@ -38,3 +39,6 @@ cyberpunk-inspired photograph
 ethereal pastel-toned photograph
 gritty grainy film photograph
 luxury brand campaign photograph
+Japanese gravure magazine photograph
+gravure photo shoot image
+swimsuit pictorial photograph

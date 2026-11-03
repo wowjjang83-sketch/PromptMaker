@@ -12,7 +12,7 @@
     "adjectives": [["cozy", 0.8], ["warm", 0.6], ["relaxed", 0.5]],
     "verbs": [["steam curling from a latte", 0.6]],
     "nouns": [["wooden tables", 0.5], ["soft jazz ambiance", 0.3]],
-    "elements": {"location": ["in a cozy coffee shop with wooden interiors"], "action": ["sipping a cup of coffee"], "ambient_motion": ["while steam rises from a cup beside {her_obj}"], "lighting": ["warm tungsten lamp light"]}
+    "elements": {"location": ["in a cozy cafe with wooden interiors"], "action": ["sipping a cup of coffee"], "ambient_motion": ["while steam rises from a cup beside {her_obj}"], "lighting": ["warm tungsten lamp light"]}
   },
   "beach": {
     "aliases": ["sea", "ocean", "shore", "seaside", "summer"],
@@ -155,10 +155,11 @@
     "elements": {"casting": ["a woman and a man"]}
   },
   "studio": {
-    "aliases": ["photoshoot", "model", "editorial", "magazine"],
+    "aliases": ["photoshoot"],
     "adjectives": [["polished", 0.7], ["clean", 0.6]],
     "verbs": [],
-    "nouns": [["a seamless backdrop", 0.5]],
+    "nouns": [],
     "elements": {"location": ["in a minimalist white photo studio"], "photo_style": ["high-fashion editorial photograph", "glossy magazine cover photograph"], "lighting": ["bright high-key studio lighting"]}
-  }
+  },
+  "gravure": {"aliases": ["pictorial", "idol"], "adjectives": [["playful", 0.7], ["sun-kissed", 0.6], ["glossy", 0.6], ["youthful-looking", 0.3]], "verbs": [["posing playfully for the camera", 0.6]], "nouns": [], "elements": {"photo_style": ["Japanese gravure magazine photograph", "gravure photo shoot image"], "attire": ["a sleek one-piece swimsuit", "a stylish bikini with a sheer sarong", "a white oversized button-up shirt"], "expression": ["a bright, cheerful grin", "a playful wink", "a shy, bashful expression"]}}
 }

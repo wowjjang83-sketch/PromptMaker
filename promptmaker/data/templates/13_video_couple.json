@@ -2,6 +2,7 @@
   "id": "video_couple",
   "name": "[영상] 커플 장면",
   "type": "video",
+  "keywords": ["couple", "romance", "boyfriend", "lovers", "date"],
   "description": "남녀 커플의 상호작용을 담은 영상 (남성 1명 이상 필수)",
   "casting_filter": {
     "male_min": 1,

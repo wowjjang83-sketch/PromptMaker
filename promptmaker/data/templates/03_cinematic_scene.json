@@ -2,6 +2,7 @@
   "id": "cinematic_scene",
   "name": "시네마틱 장면",
   "type": "image",
+  "keywords": ["cinematic", "movie", "film", "still", "scene", "drama"],
   "description": "영화 스틸컷처럼 시간/날씨, 분위기, 색보정을 포함한 서사형 묘사",
   "defaults": {"photo_style": "cinematic film still"},
   "sentences": [

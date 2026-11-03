@@ -2,6 +2,7 @@
   "id": "fashion_editorial",
   "name": "패션 화보",
   "type": "image",
+  "keywords": ["editorial", "magazine", "gravure", "pictorial", "fashion", "model", "photoshoot", "lookbook", "cover"],
   "description": "잡지 화보 느낌. 의상과 메이크업, 카메라/색감을 강조합니다.",
   "casting_filter": {"male_max": 0},
   "defaults": {"photo_style": "high-fashion editorial photograph"},

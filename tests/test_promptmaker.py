@@ -124,6 +124,49 @@ class EngineTests(unittest.TestCase):
             self.assertIn("moon", r.prompt)
 
 
+class IntentTests(unittest.TestCase):
+    """The request must drive the result; random only fills unspecified slots."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.pm = PromptMaker(translator=NoTranslator())
+
+    def test_request_locks_elements(self):
+        text = "A gravure photo taken by a 20-year-old Japanese model on the beach"
+        for seed in range(25):
+            for mode in ("random", "random_by_type"):
+                r = self.pm.generate(text, seed=seed, mode=mode)
+                self.assertEqual(r.prompt_type, "image")
+                self.assertEqual(r.picks["age"], "20")
+                self.assertEqual(r.picks["nationality"], "Japanese")
+                self.assertEqual(r.picks["casting"], "one woman")
+                self.assertIn("beach", r.picks.get("location", "beach"))
+                self.assertIn("20-year-old Japanese model", r.prompt)
+
+    def test_casting_from_request(self):
+        for seed in range(10):
+            r = self.pm.generate("two Korean women in a cafe", seed=seed)
+            self.assertEqual(r.picks["casting"], "two women")
+            self.assertIn("cafe", r.picks["location"])
+            r = self.pm.generate("a couple at night", seed=seed)
+            self.assertEqual(r.picks["casting"], "a woman and a man")
+
+    def test_korean_age_and_video_type(self):
+        pm = PromptMaker(translator=DictionaryTranslator(self.pm.ko_en))
+        r = pm.generate("25살 한국 여자 영상", seed=1, mode="random")
+        self.assertEqual(r.picks["age"], "25")
+        self.assertEqual(r.prompt_type, "video")
+
+    def test_user_selection_beats_request(self):
+        r = self.pm.generate("a Japanese woman", seed=1, selections={"nationality": "Thai"})
+        self.assertEqual(r.picks["nationality"], "Thai")
+
+    def test_request_text_not_dumped(self):
+        r = self.pm.generate("A gravure photo taken by a 20-year-old Japanese model on the beach", seed=3)
+        self.assertNotIn("The scene captures", r.prompt)
+        self.assertNotIn("year-old and", r.prompt)
+
+
 class TranslatorTests(unittest.TestCase):
     def test_is_english(self):
         self.assertTrue(is_english("a woman in a cafe"))

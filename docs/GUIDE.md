@@ -59,6 +59,8 @@ python -m promptmaker "카페" --json      # 상세 결과
 
 ### 2-3. HTML 테스트 페이지
 
+**Windows: `run_server.bat` 을 더블클릭**하면 서버가 켜지고 브라우저가 자동으로 열립니다. 포트를 바꾸려면 `run_server.bat 8800`. 저장소 폴더에 `user_data/` 가 있으면 자동으로 사용합니다.
+
 ```bash
 python -m promptmaker.server            # 또는 promptmaker-server
 ```
@@ -106,7 +108,24 @@ python -m promptmaker.server            # 또는 promptmaker-server
 | `random_by_element` | 요소별 랜덤 | 지정한 템플릿 사용, `random_elements` 의 요소만 랜덤, 나머지는 기본값 |
 | `manual` | 직접 선택 | 지정한 템플릿 + `selections` 값, 나머지는 기본값 (항상 같은 결과) |
 
-**기본값 우선순위:** `selections` > 템플릿 `defaults` > 요소 파일의 `default` > 목록의 첫 번째 항목
+**기본값 우선순위:** `selections` > 사용자 요청에서 뽑은 값 > 템플릿 `defaults` > 요소 파일의 `default` > 목록의 첫 번째 항목
+
+### 사용자 요청이 결과를 결정합니다 (요청 우선 규칙)
+
+요청 문장에서 다음을 먼저 뽑아 **고정**하고, 랜덤은 요청에 없는 부분만 채웁니다.
+
+| 요청에서 찾는 것 | 예 | 결과 |
+|---|---|---|
+| 나이 | `20살`, `25-year-old`, `20대 후반`, `in her late twenties` | `age` 고정 (20 미만은 20) |
+| 국적 | `일본`, `Japanese`, `Japan` | `nationality` 고정 |
+| 인물 수/성별 | `여자`, `모델`(1명, 남성 없음), `two women`, `커플`, `남자친구` | `casting` 고정, 맞는 템플릿만 선택 |
+| 호칭 | `model`, `idol`, `actress` | 주어가 "woman" 대신 "model" 등으로 |
+| 종류 | `사진/화보/photo` → 이미지, `영상/video` → 영상 | 전체 랜덤 모드에서 종류 제한 |
+| 장소, 시간/날씨, 스타일, 의상, 포즈/동작 등 | `해변`, `비 오는 날`, `그라비아`, `한복`, `walking` | 그 단어가 들어간 항목 중에서만 선택 |
+| 템플릿 | 템플릿 JSON 의 `"keywords"` 와 겹치는 단어 (`화보/editorial/gravure` → 패션 화보) | 점수가 높은 템플릿 우선 |
+
+요청 문장을 그대로 끝에 붙이지 않고, 요소로 쓰이지 않은 단어만 "The scene also features ..." 로 덧붙입니다.
+템플릿 JSON 에 `"keywords": ["editorial", "gravure", ...]` 를 추가하면 템플릿 선택에 반영됩니다.
 
 ## 5. 데이터 파일 편집 (템플릿 / 요소)
 

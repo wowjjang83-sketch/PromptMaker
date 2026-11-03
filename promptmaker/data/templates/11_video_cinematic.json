@@ -2,6 +2,7 @@
   "id": "video_cinematic",
   "name": "[영상] 시네마틱 클립",
   "type": "video",
+  "keywords": ["cinematic", "video", "clip", "movie"],
   "description": "카메라 무빙 + 인물 동작 + 환경 움직임 순서로 묘사하는 영상용 템플릿",
   "sentences": [
     {"text": "A {video_style} of {subject} {location} {time_weather}."},

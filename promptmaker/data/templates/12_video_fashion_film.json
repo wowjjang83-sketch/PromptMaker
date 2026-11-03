@@ -2,6 +2,7 @@
   "id": "video_fashion_film",
   "name": "[영상] 패션 필름",
   "type": "video",
+  "keywords": ["fashion", "model", "runway", "editorial", "gravure", "video"],
   "description": "의상과 움직임을 강조하는 짧은 패션 필름",
   "casting_filter": {"male_max": 0},
   "defaults": {"video_style": "fashion film clip"},

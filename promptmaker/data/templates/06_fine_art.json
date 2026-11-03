@@ -2,6 +2,7 @@
   "id": "fine_art",
   "name": "파인아트 포트레이트",
   "type": "image",
+  "keywords": ["art", "artistic", "fine", "moody", "painting"],
   "description": "조명과 피부 표현, 색감 중심의 예술 사진",
   "casting_filter": {"male_max": 0},
   "defaults": {"photo_style": "moody fine-art photograph"},

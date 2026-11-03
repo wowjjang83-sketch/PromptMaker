@@ -2,6 +2,7 @@
   "id": "beauty_closeup",
   "name": "뷰티 클로즈업",
   "type": "image",
+  "keywords": ["beauty", "closeup", "close", "face", "makeup", "skin", "headshot"],
   "description": "얼굴/피부/메이크업 위주의 클로즈업",
   "casting_filter": {"female_max": 1, "male_max": 0},
   "defaults": {"photo_style": "studio beauty headshot", "camera": "close-up framing"},

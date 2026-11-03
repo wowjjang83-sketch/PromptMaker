@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional, Protocol
 from . import grammar, safety
 from .data_loader import (PACKAGE_DATA_DIR, RATINGS, Element, Item, Template, load_elements,
                           load_json, load_templates, load_text_files)
+from .intent import Intent, extract
 from .lexicon import LexiconResult, analyze
 from .translator import DictionaryTranslator, GoogleTranslator, NoTranslator, Translator, is_english
 
@@ -171,12 +172,15 @@ class PromptMaker:
         lex = analyze(english, self.elements, self.related_db if options.use_related_words else {},
                       rng) if english else LexiconResult()
 
+        # 4-1) hard constraints from the request (age, nationality, people, location ...)
+        intent = extract(user_input, english, self.elements) if english or user_input else Intent()
+
         # 5) template choice
-        template = self._choose_template(options, rng, lex)
+        template = self._choose_template(options, rng, lex, intent)
 
         # 6) fill template
         literal = translated is False or getattr(self.translator, "last_backend", "") != "fallback"
-        filler = _Filler(self, template, options, rng, lex, english, warnings, literal)
+        filler = _Filler(self, template, options, rng, lex, english, warnings, literal, intent)
         prompt = filler.render()
 
         system_prompt = self.system_prompts.get("system_prompt", "")
@@ -192,7 +196,7 @@ class PromptMaker:
             prompt=prompt, prompt_type=template.type, template_id=template.id,
             template_name=template.name, seed=seed, original_input=user_input,
             english_input=english, translated=translated, picks=filler.picks,
-            lexicon=lex.to_dict(), warnings=warnings, system_prompt=system_prompt,
+            lexicon={**lex.to_dict(), "intent": intent.to_dict()}, warnings=warnings, system_prompt=system_prompt,
             model_example=model_example,
         )
 
@@ -204,25 +208,60 @@ class PromptMaker:
         return [self.generate(user_input, options, seed=base + i) for i in range(count)]
 
     # -------------------------------------------------------------- helpers
+    def _casting_items(self, rating: str) -> List[Item]:
+        el = self.elements.get("casting")
+        return list(el.items_for(rating)) if el else []
+
+    @staticmethod
+    def _casting_allowed(t: Template, item: Item) -> bool:
+        f = t.casting_filter
+        fe, ma = int(item.meta.get("female", 1)), int(item.meta.get("male", 0))
+        return (f.get("female_min", 0) <= fe <= f.get("female_max", 99)
+                and f.get("male_min", 0) <= ma <= f.get("male_max", 99))
+
     def _choose_template(self, options: GenerateOptions, rng: random.Random,
-                         lex: LexiconResult) -> Template:
+                         lex: LexiconResult, intent: Optional[Intent] = None) -> Template:
+        intent = intent or Intent()
         limit = RATINGS.index(options.content_rating)
+        tid = options.template
+        if options.mode in ("manual", "random_by_element") and tid and tid != "random":
+            if tid not in self.templates:
+                raise ValueError(f"템플릿 '{tid}' 을(를) 찾을 수 없습니다.")
+            return self.templates[tid]
         if options.mode == "random":
-            pool = list(self.templates.values())
+            ptype = intent.prompt_type
+            pool = self.list_templates(ptype) if ptype else list(self.templates.values())
         else:
             pool = self.list_templates(options.prompt_type)
         pool = [t for t in pool if RATINGS.index(t.rating if t.rating in RATINGS else "sfw") <= limit]
         if not pool:
             raise ValueError("선택 가능한 템플릿이 없습니다. prompt_type / content_rating 을 확인하세요.")
-        tid = options.template
-        if options.mode in ("manual", "random_by_element"):
-            if tid and tid != "random":
-                if tid not in self.templates:
-                    raise ValueError(f"템플릿 '{tid}' 을(를) 찾을 수 없습니다.")
-                return self.templates[tid]
-            if not tid and options.mode == "manual":
-                return pool[0]
+        # keep only templates that can show the people the request asked for
+        if intent.female is not None or intent.male is not None:
+            wanted = [i for i in self._casting_items(options.content_rating)
+                      if intent.casting_ok(int(i.meta.get("female", 1)), int(i.meta.get("male", 0)))]
+            fit = [t for t in pool if any(self._casting_allowed(t, i) for i in wanted)]
+            pool = fit or pool
+        if options.mode == "manual" and not tid:
+            return pool[0]
+        # prefer templates whose keywords / elements match the request
+        kws = set(intent.template_keywords)
+
+        def score(t: Template) -> int:
+            tk = {k.lower() for k in t.raw.get("keywords", [])}
+            keys = set(t.element_keys())
+            return 3 * len(kws & tk) + len([k for k in intent.pools if k in keys])
+
+        best = max(score(t) for t in pool)
+        if best > 0:
+            pool = [t for t in pool if score(t) >= max(1, best - 1)]
         return rng.choice(pool)
+
+
+INTENT_NOISE = {"taken", "shot", "wearing", "year", "old", "years", "year-old", "years-old",
+                "model", "models", "idol", "idols", "actress", "solo", "alone", "twenties",
+                "thirties", "early", "late", "mid", "gravure", "pictorial",
+                "photoshoot", "editorial", "magazine", "japanese", "korean", "chinese"}
 
 
 class _Filler:
@@ -230,8 +269,11 @@ class _Filler:
 
     def __init__(self, maker: PromptMaker, template: Template, options: GenerateOptions,
                  rng: random.Random, lex: LexiconResult, english: str, warnings: List[str],
-                 literal_input: bool = True):
+                 literal_input: bool = True, intent: Optional[Intent] = None):
         self.literal_input = literal_input
+        self.intent = intent or Intent()
+        # request locks < explicit user selections
+        self.selections = {**self.intent.locks, **options.selections}
         self.maker = maker
         self.t = template
         self.o = options
@@ -269,11 +311,25 @@ class _Filler:
         return items[0].text if items else None
 
     def pick(self, key: str, n: int = 1) -> List[str]:
-        if key in self.o.selections:
-            value = str(self.o.selections[key])
+        if key in self.selections:
+            value = str(self.selections[key])
             values = [v.strip() for v in value.split("|") if v.strip()] if "|" in value else [value]
             return values[:max(n, 1)] if n > 1 else [values[0]]
         items = self._candidates(key)
+        pool_texts = self.intent.pools.get(key)
+        if pool_texts:  # the request mentioned this element: choose only among matches
+            allowed = {t.lower() for t in pool_texts}
+            restricted = [i for i in items if i.text.lower() in allowed]
+            if restricted:
+                items = restricted
+                boosts = self.lex.boost_for(key)
+                pool = list(items)
+                chosen = []
+                for _ in range(min(n, len(pool))):
+                    weights = [i.weight * boosts.get(i.text.lower(), 1.0) for i in pool]
+                    idx = self.rng.choices(range(len(pool)), weights=weights, k=1)[0]
+                    chosen.append(pool.pop(idx).text)
+                return chosen
         if not items:
             return []
         if not self._is_random(key):
@@ -300,6 +356,15 @@ class _Filler:
             if ma < f.get("male_min", 0) or ma > f.get("male_max", 99):
                 continue
             items.append(i)
+        wanted = [i for i in items if self.intent.casting_ok(int(i.meta.get("female", 1)),
+                                                             int(i.meta.get("male", 0)))]
+        if wanted:
+            items = wanted
+            if "casting" not in self.o.selections and len(wanted) == 1:
+                chosen_fixed = wanted[0]
+                self.picks["casting"] = chosen_fixed.text
+                return {"female": int(chosen_fixed.meta.get("female", 1)),
+                        "male": int(chosen_fixed.meta.get("male", 0)), "text": chosen_fixed.text}
         chosen: Optional[Item] = None
         sel = self.o.selections.get("casting")
         if sel:
@@ -339,11 +404,15 @@ class _Filler:
         nationality = self._one("nationality")
         male_look = self._one("male_look") if ma else ""
 
+        noun_s, noun_p = self.intent.female_noun or ("woman", "women")
+        if noun_s != "woman" and noun_s in beauty.lower():  # avoid "model-like ... model"
+            beauty = "stunning"
+            self.picks["beauty"] = beauty
         female_core = " ".join(x for x in [beauty, f"{age}-year-old", nationality] if x)
         if fe == 1:
-            female_subject = grammar.with_article(f"{female_core} woman")
+            female_subject = grammar.with_article(f"{female_core} {noun_s}")
         elif fe > 1:
-            female_subject = f"{grammar.number_word(fe)} {female_core} women"
+            female_subject = f"{grammar.number_word(fe)} {female_core} {noun_p}"
         else:
             female_subject = ""
         if ma == 1:
@@ -381,6 +450,14 @@ class _Filler:
         }
         return c
 
+    def related_keys(self) -> List[str]:
+        out = []
+        db = self.maker.related_db
+        for k in self.lex.keywords:
+            if k in db or any(k in v.get("aliases", []) for v in db.values()):
+                out.append(k)
+        return out
+
     def _details_sentence(self) -> str:
         """Sentence carrying the user's own request + probabilistic related words."""
         if not self.english:
@@ -392,21 +469,31 @@ class _Filler:
         text = re.sub(r"^(please\s+)?(make|create|generate|draw)\s+(me\s+)?(an?\s+)?"
                       r"(image|picture|photo|video|prompt)\s+(of\s+)?", "", text, flags=re.I)
         parts: List[str] = []
-        if self.literal_input and text:
-            if len(text.split()) <= 3 and not re.match(r"(?i)^(an?|the)\s", text):
-                parts.append(f"The theme is {text}")
-            else:
-                parts.append(f"The scene captures {text}")
-        else:
-            from .lexicon import GENERIC_WORDS
-            kws = [k for k in self.lex.keywords if k not in GENERIC_WORDS]
-            if kws:
-                parts.append(f"The scene emphasizes {grammar.join_list(kws)}")
+        from .lexicon import GENERIC_WORDS
+        consumed = set(self.intent.consumed) | set(self.related_keys())
+        leftover = [k for k in self.lex.keywords
+                    if k not in consumed and k not in GENERIC_WORDS and k not in INTENT_NOISE]
+        if leftover:
+            parts.append(f"The scene also features {grammar.join_list(leftover)}")
+        elif adjs or verbs or nouns:
+            parts.append("The overall mood is")
         if adjs:
-            parts.append(f"with {grammar.with_article(grammar.join_list(adjs))} atmosphere")
+            if parts and parts[-1] == "The overall mood is":
+                parts[-1] = f"The overall mood is {grammar.join_list(adjs)}"
+            else:
+                parts.append(f"with {grammar.with_article(grammar.join_list(adjs))} atmosphere")
+        elif parts and parts[-1] == "The overall mood is":
+            parts[-1] = "The scene includes"
         extras = verbs[:2] + [f"{n} in view" for n in nouns[:1]]
+        if parts and parts[-1] == "The scene includes":
+            if not extras:
+                parts.pop()
+            else:
+                parts[-1] = f"The scene includes {grammar.join_list(extras)}"
+                extras = []
         if extras:
-            parts.append(grammar.join_list(extras))
+            prefix = "with " if parts and parts[-1].startswith("The overall mood is") else ""
+            parts.append(prefix + grammar.join_list(extras))
         if not parts:
             return ""
         return ", ".join(parts) + "."

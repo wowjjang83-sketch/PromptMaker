@@ -1,5 +1,5 @@
 # 장소 (전치사구, 문장: "The scene takes place {location}")
-in a cozy coffee shop with wooden interiors
+in a cozy cafe with wooden interiors
 on a sunny tropical beach
 in a neon-lit Seoul alley at night
 on a rooftop overlooking the city skyline
@@ -31,3 +31,15 @@ in a convenience store glowing under fluorescent lights
 in a backstage dressing room with vanity lights
 in a bamboo forest
 in a desert at golden hour
+in a royal Korean palace courtyard
+on a charming Paris street lined with cafés
+in a bustling New York street
+on a rainy London street
+in a quiet Kyoto temple garden
+on a Jeju Island coastline with black volcanic rocks
+on a Busan beach at dusk
+on a Bali villa terrace surrounded by palm trees
+in a Bangkok night market full of lanterns
+on a Hawaiian beach with crashing waves
+in a hotel infinity pool overlooking the ocean
+on a white sand beach with turquoise water

@@ -50,8 +50,9 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(vision.parse_response(text), {"hair": ["long red hair"], "mood": ["calm"]})
 
     def test_parse_drops_placeholders(self):
-        text = '{"hair": ["Not visible"], "attire": "N/A", "pose": ["no person visible"], "mood": ["not visible", "calm"]}'
-        self.assertEqual(vision.parse_response(text), {"mood": ["calm"]})
+        text = ('{"hair": ["Not visible"], "attire": "N/A", "pose": ["no person visible"], "mood": ["not visible", "calm"], '
+                '"motion": ["no motion detected"], "makeup": ["natural no-makeup makeup"]}')
+        self.assertEqual(vision.parse_response(text), {"mood": ["calm"], "makeup": ["natural no-makeup makeup"]})
 
     def test_parse_without_json(self):
         with self.assertRaises(ValueError):

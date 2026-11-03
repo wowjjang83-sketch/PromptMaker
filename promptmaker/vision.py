@@ -298,8 +298,9 @@ def build_prompt(data_dirs: List[str], cfg: VisionConfig) -> Tuple[str, List[str
 # ------------------------------------------------------------------ parsing
 _FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.DOTALL)
 # Placeholder answers small models give instead of leaving a key out.
-_EMPTY_RE = re.compile(r"^(?:none|n/?a|null|unknown|nothing|not (?:visible|applicable|present|shown|clear|available)"
-                       r"|no (?:person|people|one|man|woman|human)s?(?: visible| present)?)$", re.IGNORECASE)
+_EMPTY_RE = re.compile(r"^(?:none|n/?a|null|unknown|nothing|no (?:person|people|one|man|woman|human)s?"
+                       r"|(?:no|not)\b.*\b(?:visible|applicable|present|shown|clear|available|detected|seen|identifiable))$",
+                       re.IGNORECASE)
 
 
 def parse_response(text: str) -> Dict[str, List[str]]:

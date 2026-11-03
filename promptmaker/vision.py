@@ -210,7 +210,12 @@ class TransformersBackend:
             base = cfg.model_id
             config = AutoConfig.from_pretrained(base)
             load_dtype = torch.bfloat16 if dtype == "auto" else dtype
-            self.model = AutoModelForImageTextToText.from_config(config, dtype=load_dtype)
+            try:  # skip random init (minutes on CPU); every weight comes from the file
+                from transformers.initialization import no_init_weights
+            except ImportError:
+                from contextlib import nullcontext as no_init_weights
+            with no_init_weights():
+                self.model = AutoModelForImageTextToText.from_config(config, dtype=load_dtype)
             missing, unexpected = self.model.load_state_dict(load_single_file(cfg.model_ref, load_dtype), strict=False)
             missing = [k for k in missing if k != "lm_head.weight"]  # tied to embed_tokens
             if missing or unexpected:

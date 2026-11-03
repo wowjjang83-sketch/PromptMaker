@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -33,6 +34,10 @@ class Item:
     weight: float = 1.0
     rating: str = "sfw"
     meta: Dict[str, Any] = field(default_factory=dict)
+    tags: set = field(default_factory=set)       # "#tag": added to the scene context
+    requires: set = field(default_factory=set)   # "+tag": needs one of these in the context
+    excludes: set = field(default_factory=set)   # "!tag": not allowed with these
+    explicit_tags: bool = False                  # True when the user wrote tags by hand
 
 
 @dataclass
@@ -84,7 +89,25 @@ def _parse_txt_line(line: str) -> Optional[Item]:
             line = tail.strip()
         except ValueError:
             pass
-    return Item(text=line, weight=weight)
+    item = Item(text=line, weight=weight)
+    _parse_tag_tokens(item)
+    return item
+
+
+_TAG_TOKEN = re.compile(r"\s([#+!])([a-z][a-z0-9_]*)(?=\s|$)")
+
+
+def _parse_tag_tokens(item: Item) -> None:
+    """Split trailing ``#tag +tag !tag`` tokens off the item text."""
+    text = " " + item.text
+    found = False
+    for sign, tag in _TAG_TOKEN.findall(text):
+        found = True
+        {"#": item.tags, "+": item.requires, "!": item.excludes}[sign].add(tag)
+    if found:
+        item.text = _TAG_TOKEN.sub(" ", text).strip()
+        item.text = re.sub(r"\s{2,}", " ", item.text)
+        item.explicit_tags = True
 
 
 def _split_name(filename: str):
@@ -130,7 +153,14 @@ def load_elements(dirs: Iterable[str]) -> Dict[str, Element]:
                         text = raw.pop("text")
                         weight = float(raw.pop("weight", 1.0))
                         r = raw.pop("rating", rating)
-                        el.items.append(Item(text=text, weight=weight, rating=r, meta=raw))
+                        tags = set(raw.pop("tags", []))
+                        req = set(raw.pop("requires", []))
+                        exc = set(raw.pop("excludes", []))
+                        it = Item(text=text, weight=weight, rating=r, meta=raw,
+                                  tags=tags, requires=req, excludes=exc,
+                                  explicit_tags=bool(tags or req or exc))
+                        _parse_tag_tokens(it)
+                        el.items.append(it)
     # Drop duplicates and anything that refers to minors.
     for el in elements.values():
         seen = set()

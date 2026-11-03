@@ -29,7 +29,7 @@ opts = GenerateOptions(
     mode="random_by_element",            # 아래 '모드' 참고
     template="video_cinematic",
     selections={"nationality": "Korean", "location": "on a sunny tropical beach"},
-    random_elements=["attire", "lighting", "camera_movement"],
+    random_elements=["attire", "lighting", "camera_movement"],  # attire = 의상 요소 전체
     content_rating="sfw",                # sfw | suggestive | explicit
     seed=1234,                           # 같은 시드 = 같은 결과
 )
@@ -156,7 +156,8 @@ giving {her} skin a warm, glowing tone ← 다른 슬롯 사용 가능
 | `photo_style`, `video_style` | 명사구 (관사 없이) | `A {photo_style} of ...` |
 | `nationality`, `beauty`, `male_look`, `mood` | 형용사 | 주어 구문에 자동 결합 |
 | `age` | 숫자 (20 이상) | `20-year-old` 로 자동 변환 |
-| `hair`, `makeup`, `attire`, `expression`, `lighting` | 명사구 | `{She} {has} {hair}` |
+| `hair`, `makeup`, `expression`, `lighting` | 명사구 | `{She} {has} {hair}` |
+| `top`, `bottom`, `dress`, `swimwear`, `sleepwear`, `outerwear`, `footwear`, `accessory` 등 의상 | 명사구 (관사 포함) | `{attire}` 슬롯이 자동 조합 |
 | `skin` | 형용사구 | `... and {skin} skin` |
 | `pose`, `action`, `motion`, `interaction` | 현재분사구 (-ing) | `{She} {is} {pose}` |
 | `location`, `time_weather` | 전치사구 (in/on/at ...) | `The scene takes place {location}` |
@@ -164,6 +165,58 @@ giving {her} skin a warm, glowing tone ← 다른 슬롯 사용 가능
 | `ambient_motion` | `while ...` 절 | `..., {ambient_motion}` |
 
 항목 안에서 she/her 대신 `{she}` `{her}` `{her_obj}` 를 쓰면 인물이 여러 명일 때 they/their/them 으로 자동 변환됩니다.
+
+### 5-1-1. 의상 요소와 `{attire}` 자동 조합
+
+예전의 `attire.txt` 한 파일은 아래처럼 나뉘었습니다. 템플릿의 `{attire}` 슬롯은 이제 이 요소들을 **문법에 맞게 조합**합니다.
+
+| 단계 | 사용 요소 | 예 |
+|---|---|---|
+| 1. 의상 구성 고르기 | `outfit_type` (top_bottom, dress, swimwear, sleepwear, traditional, sportswear, lingerie) | `swimwear` |
+| 2. 본 의상 | top_bottom 이면 `top` + `bottom`, 그 외에는 같은 이름의 요소 | `a white string bikini` |
+| 3. 겉옷 (선택) | `outerwear` — 추울 때(winter/rain/snow) 60%, 평소 15%, 여름·수영복·잠옷에는 없음 | `... under a long camel wool coat` |
+| 4. 신발·액세서리 (선택) | `footwear` 약 50%, `accessory` 약 40% | `... with strappy sandals and a sun hat` |
+
+- 요청에 "비키니"처럼 특정 의상이 나오면 그 구성이 고정됩니다.
+- `selections` 에 `attire` 를 직접 넣으면 조합 대신 그 문장을 그대로 씁니다.
+- 요소별 랜덤 모드에서 `attire` 를 랜덤으로 지정하면 모든 의상 요소가 랜덤이 됩니다.
+
+### 5-1-2. 관계 규칙: 어울리는 항목끼리만 나오게 하기 (태그)
+
+요소는 **장면 순서**대로 선택됩니다: 장소 → 시간/날씨 → 사진 스타일 → 의상 → 의상 상태 → 포즈 → 동작 → 표정 → 조명 → 카메라 → 분위기.
+선택된 항목의 태그가 "장면 정보"에 쌓이고, 다음 요소는 그 장면에 맞는지 검사를 받습니다.
+
+TXT 항목 줄 끝에 태그를 직접 붙일 수 있습니다 (붙인 태그는 문장에 나오지 않습니다).
+
+```text
+lying on a beach towel #summer +beach !night
+```
+
+| 표기 | 뜻 |
+|---|---|
+| `#태그` | 이 항목이 장면에 이 태그를 **추가** |
+| `+태그` | 장면에 이 태그가 **있어야** 선택 가능 (여러 개면 모두 필요) |
+| `!태그` | 장면에 이 태그가 있으면 **선택 불가** |
+
+태그를 안 붙여도 **자동 태깅**이 됩니다 (`lexicon/tag_keywords.json`).
+
+- `tags`: 문장에 단어가 있으면 태그를 붙입니다. 예: "bikini" → `swim`, `summer`.
+- `props` (소품): 장소/시간과 의상 요소에서는 "제공", 포즈·동작 등에서는 "필요"로 처리됩니다.
+  예: 포즈 "sitting on the edge of the bed" 는 `bed` 가 필요 → 장소가 해변이면 선택되지 않습니다.
+- `enforced_props` (hem, sleeves, collar, strap): 장면을 몰라도 항상 검사합니다. 예: "with the sleeves rolled up" 은 소매 있는 옷일 때만.
+- 소품 검사(`+`)는 장소가 정해졌을 때(요청에 장소가 있거나 장소가 선택된 뒤)만 적용됩니다.
+
+확률은 `lexicon/relations.json` 으로 정합니다.
+
+- `implies`: 태그가 다른 태그를 포함. 예: `beach` → outdoor, summer, sand, water, sea.
+- `conflicts`: 함께 나올 수 없는 짝 → 확률 0. 예: `["beach", "bed"]`, `["swim", "winter"]`, `["day", "night"]`.
+- `affinity`: 장면 태그가 있을 때 항목 태그의 가중치 배수. 예: `"beach": {"swim": 8, "formal": 0.2}` → 해변에서는 수영복이 8배, 정장은 0.2배.
+- 최종 확률 = 항목 가중치 × (장면 태그별 affinity 의 곱) × 요청 단어 가산점. 규칙을 만족하는 항목이 하나도 없으면 규칙 없이 고르고 경고를 남깁니다.
+
+**점검 명령**: 줄을 추가한 뒤 `python -m promptmaker --check` 를 실행하면 규칙에 없는 태그나, 어떤 장소/의상도 제공하지 않아 선택될 수 없는 `+태그` 를 알려 줍니다.
+
+**선택 이유 보기**: 결과의 `lexicon.trace` 에 요소별 선택 항목과 적용된 배수가 나옵니다 (HTML 페이지의 "선택 과정" 칸에도 표시). 예:
+`swimwear: a white string bikini  [beach→swim×8, gravure→swim×5]`
 
 ### 5-2. 요소 파일 (JSON)
 

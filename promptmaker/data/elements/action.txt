@@ -21,3 +21,7 @@ eating a strawberry
 glancing sideways with a playful smirk
 closing {her} eyes and enjoying the moment
 holding a glass of red wine
+# 해변·물가 동작
+brushing {her} wet hair back +water
+splashing water playfully
+shading {her} eyes from the sun +outdoor !night

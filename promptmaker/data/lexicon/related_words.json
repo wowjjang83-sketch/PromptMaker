@@ -19,7 +19,7 @@
     "adjectives": [["sun-drenched", 0.8], ["breezy", 0.6], ["carefree", 0.5], ["tropical", 0.5]],
     "verbs": [["waves washing over the sand", 0.6], ["sea breeze tousling {her} hair", 0.5]],
     "nouns": [["turquoise water", 0.6], ["palm trees", 0.4]],
-    "elements": {"location": ["on a sunny tropical beach"], "attire": ["a sleek one-piece swimsuit", "a stylish bikini with a sheer sarong", "a flowing floral sundress"], "lighting": ["soft golden-hour sunlight", "bright midday sun with crisp shadows"], "ambient_motion": ["while waves roll gently onto the shore"]}
+    "elements": {"location": ["on a sunny tropical beach"], "outfit_type": ["swimwear"], "swimwear": ["a white string bikini", "a sleek black one-piece swimsuit"], "dress": ["a flowing floral sundress"], "lighting": ["soft golden-hour sunlight", "bright midday sun with crisp shadows"], "ambient_motion": ["while waves roll gently onto the shore"]}
   },
   "night": {
     "aliases": ["midnight", "evening", "nighttime"],
@@ -40,28 +40,28 @@
     "adjectives": [["serene", 0.6], ["crisp", 0.6], ["cozy", 0.5]],
     "verbs": [["snowflakes settling on {her} hair", 0.6], ["breath visible in the cold air", 0.4]],
     "nouns": [["frosted windows", 0.4]],
-    "elements": {"time_weather": ["on a snowy winter day"], "location": ["in a snowy mountain cabin"], "attire": ["a wool coat and scarf", "a cozy oversized knit sweater"], "ambient_motion": ["while snowflakes fall softly around {her_obj}"]}
+    "elements": {"time_weather": ["on a snowy winter day"], "location": ["in a snowy mountain cabin"], "outerwear": ["a long camel wool coat"], "top": ["a cozy oversized knit sweater"], "ambient_motion": ["while snowflakes fall softly around {her_obj}"]}
   },
   "bedroom": {
     "aliases": ["bed", "morning", "sheets"],
     "adjectives": [["intimate", 0.7], ["lazy", 0.5], ["soft", 0.6]],
     "verbs": [["morning light spilling across the sheets", 0.6]],
     "nouns": [["rumpled white linen", 0.5]],
-    "elements": {"location": ["in a sunlit bedroom with white linen sheets"], "pose": ["perched on the edge of a bed", "lying on {her} side propped up on one elbow"], "attire": ["a satin pajama set", "a white oversized button-up shirt"], "action": ["stretching after waking up"]}
+    "elements": {"location": ["in a sunlit bedroom with white linen sheets"], "pose": ["perched on the edge of a bed", "lying on {her} side propped up on one elbow"], "outfit_type": ["sleepwear"], "sleepwear": ["a satin pajama set", "an oversized sleep shirt"], "action": ["stretching after waking up"]}
   },
   "office": {
     "aliases": ["work", "business", "secretary", "ceo"],
     "adjectives": [["professional", 0.7], ["sleek", 0.5], ["confident", 0.6]],
     "verbs": [["papers scattered across the desk", 0.4]],
     "nouns": [["a glass-walled office", 0.5]],
-    "elements": {"attire": ["a crisp office blouse and pencil skirt", "a fitted black turtleneck and high-waisted trousers"], "location": ["in a modern apartment with floor-to-ceiling windows"]}
+    "elements": {"top": ["a crisp office blouse"], "bottom": ["a pencil skirt"], "location": ["in a modern apartment with floor-to-ceiling windows"]}
   },
   "hanbok": {
     "aliases": ["traditional", "palace", "joseon"],
     "adjectives": [["graceful", 0.8], ["timeless", 0.6], ["elegant", 0.6]],
     "verbs": [["silk ribbons fluttering in the breeze", 0.5]],
     "nouns": [["wooden lattice doors", 0.5]],
-    "elements": {"attire": ["a traditional Korean hanbok"], "location": ["in a traditional Korean hanok courtyard"], "nationality": ["Korean"]}
+    "elements": {"outfit_type": ["traditional"], "traditional": ["a traditional Korean hanbok"], "location": ["in a traditional Korean hanok courtyard"], "nationality": ["Korean"]}
   },
   "cherry": {
     "aliases": ["blossom", "sakura", "spring"],
@@ -96,7 +96,7 @@
     "adjectives": [["luxurious", 0.6], ["sun-soaked", 0.7], ["relaxed", 0.5]],
     "verbs": [["water droplets glistening on {her} skin", 0.7]],
     "nouns": [["crystal-clear water", 0.5]],
-    "elements": {"location": ["by an infinity pool at a resort"], "attire": ["a sleek one-piece swimsuit", "a stylish bikini with a sheer sarong"], "skin": ["glistening, slightly sweaty"]}
+    "elements": {"location": ["by an infinity pool at a resort"], "outfit_type": ["swimwear"], "swimwear": ["a sleek black one-piece swimsuit", "a bikini with a sheer sarong tied at the hip"], "skin": ["glistening, slightly sweaty"]}
   },
   "forest": {
     "aliases": ["woods", "nature", "garden", "flower", "flowers"],
@@ -161,5 +161,5 @@
     "nouns": [],
     "elements": {"location": ["in a minimalist white photo studio"], "photo_style": ["high-fashion editorial photograph", "glossy magazine cover photograph"], "lighting": ["bright high-key studio lighting"]}
   },
-  "gravure": {"aliases": ["pictorial", "idol"], "adjectives": [["playful", 0.7], ["sun-kissed", 0.6], ["glossy", 0.6], ["youthful-looking", 0.3]], "verbs": [["posing playfully for the camera", 0.6]], "nouns": [], "elements": {"photo_style": ["Japanese gravure magazine photograph", "gravure photo shoot image"], "attire": ["a sleek one-piece swimsuit", "a stylish bikini with a sheer sarong", "a white oversized button-up shirt"], "expression": ["a bright, cheerful grin", "a playful wink", "a shy, bashful expression"]}}
+  "gravure": {"aliases": ["pictorial", "idol"], "adjectives": [["playful", 0.7], ["sun-kissed", 0.6], ["glossy", 0.6], ["youthful-looking", 0.3]], "verbs": [["posing playfully for the camera", 0.6]], "nouns": [], "elements": {"photo_style": ["Japanese gravure magazine photograph", "gravure photo shoot image"], "outfit_type": ["swimwear"], "swimwear": ["a white string bikini", "a sleek black one-piece swimsuit"], "expression": ["a bright, cheerful grin", "a playful wink", "a shy, bashful expression"]}}
 }

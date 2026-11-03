@@ -60,6 +60,8 @@
     "outdoor": ["breeze", "wind", "windswept", "waves roll"],
     "rooftop": ["rooftop", "tightrope", "skyscraper", "cityscape", "city below"],
     "piano": ["piano"],
+    "gallery": ["museum", "gallery", "statue"],
+    "wet": ["wet", "damp", "dripping", "soaked"],
     "fireplace": ["fireplace"],
     "trees": ["through leaves", "falling leaves", "autumn leaves", "fallen leaves", "trees", "foliage", "forest", "park", "garden", "cherry blossom", "bamboo", "maple"],
     "cushion": ["cushion", "chaise"],

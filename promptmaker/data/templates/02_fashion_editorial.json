@@ -10,7 +10,7 @@
     {"options": ["A {photo_style} featuring {subject}.", "{subject} {is} the focus of a {photo_style}."]},
     {"text": "Styled in {attire}, {attire_state}, {she} {is} {pose}."},
     {"text": "{Her} look is completed with {hair} and {makeup}, accentuating {her} {skin} skin."},
-    {"text": "{She} {looks} toward the lens with {expression}."},
+    {"text": "{She} {looks} toward the camera with {expression}."},
     {"text": "Set {location}, the shot is lit by {lighting}, {lighting_effect}."},
     {"text": "{camera}, {color_grade}, {mood} mood."}
   ]

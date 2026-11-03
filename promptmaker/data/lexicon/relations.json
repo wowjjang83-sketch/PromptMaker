@@ -3,6 +3,9 @@
   "implies": {
     "beach": ["outdoor", "summer", "sand", "water", "sea"],
     "pool": ["water", "summer"],
+    "water": ["wet"],
+    "rain": ["wet"],
+    "bathroom": ["wet"],
     "bedroom": ["indoor", "bed", "window", "floor", "wall", "cushion", "sofa"],
     "bathroom": ["indoor", "mirror", "wall", "floor"],
     "cafe": ["indoor", "table", "chair", "window", "wall"],

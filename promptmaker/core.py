@@ -277,7 +277,8 @@ _GARMENT_WORDS = {
     "corset": ("corset",), "stockings": ("stockings", "thigh-high"), "jeans": ("jeans",),
     "sweater": ("sweater", "knit", "cardigan"), "hoodie": ("hoodie",), "robe": ("robe",),
     "kimono": ("kimono", "yukata"), "hanbok": ("hanbok",), "bra": ("bra", "bralette", "bikini"),
-    "shorts": ("shorts",), "zipper": ("zip", "jacket", "hoodie", "dress"), "buttons": ("button", "shirt", "blouse", "cardigan"),
+    "shorts": ("shorts",), "tied at the neck": ("halter",), "halter": ("halter",),
+    "one strap": ("strap", "cami", "slip", "bikini", "tank", "sundress", "bra"), "zipper": ("zip", "jacket", "hoodie", "dress"), "buttons": ("button", "shirt", "blouse", "cardigan"),
 }
 
 

@@ -49,6 +49,10 @@ class ParseTests(unittest.TestCase):
         text = 'Here:\n```json\n{"hair": ["long red hair", "long red hair"], "mood": "calm", "x": [], "pose": [1, "none"],}\n```'
         self.assertEqual(vision.parse_response(text), {"hair": ["long red hair"], "mood": ["calm"]})
 
+    def test_parse_drops_placeholders(self):
+        text = '{"hair": ["Not visible"], "attire": "N/A", "pose": ["no person visible"], "mood": ["not visible", "calm"]}'
+        self.assertEqual(vision.parse_response(text), {"mood": ["calm"]})
+
     def test_parse_without_json(self):
         with self.assertRaises(ValueError):
             vision.parse_response("no json here")
@@ -65,14 +69,14 @@ class AppendTests(VisionTestCase):
         before = self.read("hair.txt")
         rep = vision.append_items(self.data, {
             "hair": ["Long straight black hair", "silver hair in a braided crown", "silver hair in a braided crown"],
-            "attire": ["a schoolgirl uniform", "a mustard corduroy jumpsuit"],
+            "location": ["in a schoolgirl dormitory", "inside a mustard-yellow vintage diner"],
             "no_such_key": ["x"],
         })
         self.assertEqual(rep["added"], {"hair": ["silver hair in a braided crown"],
-                                        "attire": ["a mustard corduroy jumpsuit"]})
+                                        "location": ["inside a mustard-yellow vintage diner"]})
         reasons = {k: [r["reason"] for r in v] for k, v in rep["skipped"].items()}
         self.assertEqual(reasons["hair"], ["duplicate", "duplicate"])
-        self.assertEqual(reasons["attire"], ["unsafe"])
+        self.assertEqual(reasons["location"], ["unsafe"])
         self.assertEqual(reasons["no_such_key"], ["unknown_key"])
         after = self.read("hair.txt")
         self.assertTrue(after.startswith(before))  # only appended

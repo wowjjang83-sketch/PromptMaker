@@ -285,7 +285,7 @@ def build_prompt(data_dirs: List[str], cfg: VisionConfig) -> Tuple[str, List[str
         if not path:  # json-only elements (e.g. casting) are not written to
             continue
         sfw = [i.text for i in el.items if i.rating == "sfw"][:3]
-        title = _file_title(path) or el.description or key
+        title = (_file_title(path) or el.description or key).rstrip(". ")
         examples = "; ".join(f'"{t}"' for t in sfw)
         lines.append(f"- {key}: {title}. e.g. {examples}")
         keys.append(key)
@@ -297,6 +297,9 @@ def build_prompt(data_dirs: List[str], cfg: VisionConfig) -> Tuple[str, List[str
 
 # ------------------------------------------------------------------ parsing
 _FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.DOTALL)
+# Placeholder answers small models give instead of leaving a key out.
+_EMPTY_RE = re.compile(r"^(?:none|n/?a|null|unknown|nothing|not (?:visible|applicable|present|shown|clear|available)"
+                       r"|no (?:person|people|one|man|woman|human)s?(?: visible| present)?)$", re.IGNORECASE)
 
 
 def parse_response(text: str) -> Dict[str, List[str]]:
@@ -319,7 +322,7 @@ def parse_response(text: str) -> Dict[str, List[str]]:
             if not isinstance(v, str):
                 continue
             v = " ".join(v.replace("\n", " ").split()).strip(" .,;")
-            if v and v.lower() not in ("none", "n/a", "unknown") and v not in clean:
+            if v and not _EMPTY_RE.match(v) and v not in clean:
                 clean.append(v)
         if clean:
             out[str(key).strip()] = clean

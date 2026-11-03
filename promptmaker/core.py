@@ -229,15 +229,13 @@ class PromptMaker:
         intent = intent or Intent()
         limit = RATINGS.index(options.content_rating)
         tid = options.template
-        if options.mode in ("manual", "random_by_element") and tid and tid != "random":
+        if tid and tid != "random":  # a template the user picked is used in every mode
             if tid not in self.templates:
                 raise ValueError(f"템플릿 '{tid}' 을(를) 찾을 수 없습니다.")
             return self.templates[tid]
-        if options.mode == "random":
-            ptype = intent.prompt_type
-            pool = self.list_templates(ptype) if ptype else list(self.templates.values())
-        else:
-            pool = self.list_templates(options.prompt_type)
+        # type: what the request says ("영상", "video" ...) wins, otherwise the selected type
+        ptype = intent.prompt_type if options.mode == "random" and intent.prompt_type else options.prompt_type
+        pool = self.list_templates(ptype)
         pool = [t for t in pool if RATINGS.index(t.rating if t.rating in RATINGS else "sfw") <= limit]
         if not pool:
             raise ValueError("선택 가능한 템플릿이 없습니다. prompt_type / content_rating 을 확인하세요.")
@@ -255,8 +253,14 @@ class PromptMaker:
         def score(t: Template) -> int:
             tk = {k.lower() for k in t.raw.get("keywords", [])}
             keys = set(t.element_keys())
-            return 3 * len(kws & tk) + len([k for k in intent.pools if k in keys])
+            if "attire" in keys:  # {attire} is composed from the garment elements
+                keys |= set(self.relations.garments)
+            wanted = set(intent.pools) | (set(intent.locks) - {"age", "nationality"})
+            return 3 * len(kws & tk) + 2 * len(wanted & keys)
 
+        # a requested garment must be visible: keep templates that have an {attire} slot
+        if (set(intent.pools) | set(intent.locks)) & set(self.relations.garments):
+            pool = [t for t in pool if "attire" in t.element_keys()] or pool
         best = max(score(t) for t in pool)
         if best > 0:
             pool = [t for t in pool if score(t) >= max(1, best - 1)]

@@ -196,8 +196,8 @@
 const $ = (id) => document.getElementById(id);
 let INFO = null;
 const MODE_HINT = {
-  random_by_type: "선택한 종류(이미지/영상) 안에서 템플릿과 모든 요소를 무작위로 고릅니다.",
-  random: "종류와 템플릿, 모든 요소를 무작위로 고릅니다.",
+  random_by_type: "선택한 종류(이미지/영상) 안에서 템플릿과 모든 요소를 무작위로 고릅니다. 템플릿을 고르면 그 템플릿을 씁니다.",
+  random: "모든 요소를 무작위로 고릅니다. 요청에 '영상'처럼 종류가 적혀 있으면 그 종류를, 아니면 선택한 종류를 씁니다. 템플릿을 고르면 그 템플릿을 씁니다.",
   random_by_element: "선택한 템플릿을 쓰고, '랜덤'에 체크한 요소만 무작위로 고릅니다. 나머지는 기본값입니다.",
   manual: "선택한 템플릿과 직접 고른 요소만 사용합니다. 고르지 않은 요소는 기본값입니다.",
 };
@@ -294,7 +294,7 @@ loadInfo().catch(() => { $("results").innerHTML = '<p class="error">서버에 �
 
 // ---------------------------------------------------------------- 이미지 분석
 let V_IMAGE = null;
-const V_STATUS = { new: "새 항목", duplicate: "중복", unsafe: "제외", unknown_key: "없는 키" };
+const V_STATUS = { new: "새 항목", duplicate: "중복", unsafe: "제외", not_a_phrase: "문장 아님(태그 나열·20세 미만)", unknown_key: "없는 키" };
 const postJSON = (url, body) => fetch(url, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body) });
 
 function vShowBackend() {

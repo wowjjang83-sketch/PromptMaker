@@ -36,6 +36,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .data_loader import PACKAGE_DATA_DIR, RATINGS, load_elements
+from .data_loader import is_usable_item
 from .safety import is_safe_item
 
 DEFAULT_MODEL_ID = "Qwen/Qwen3-VL-4B-Instruct"
@@ -670,6 +671,8 @@ def classify(data_dirs: List[str], found: Dict[str, List[str]], allowed_keys: Li
                 status = "unknown_key"
             elif not is_safe_item(v):
                 status = "unsafe"
+            elif not is_usable_item(key, v):
+                status = "not_a_phrase"
             elif normalize(v) in seen:
                 status = "duplicate"
             else:
@@ -715,6 +718,8 @@ def append_items(data_dir: str, items: Dict[str, List[str]], rating: str = "sfw"
                     continue
                 if not is_safe_item(v):
                     reason = "unsafe"
+                elif not is_usable_item(key, v):
+                    reason = "not_a_phrase"
                 elif normalize(v) in seen:
                     reason = "duplicate"
                 if reason:

@@ -22,7 +22,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional
 
-from .safety import is_safe_item
+from .safety import MIN_AGE, is_safe_item
 
 RATINGS = ["sfw", "suggestive", "explicit"]
 PACKAGE_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
@@ -161,18 +161,43 @@ def load_elements(dirs: Iterable[str]) -> Dict[str, Element]:
                                   explicit_tags=bool(tags or req or exc))
                         _parse_tag_tokens(it)
                         el.items.append(it)
-    # Drop duplicates and anything that refers to minors.
+    # Drop duplicates, anything that refers to minors, ages under 20 and tag dumps.
     for el in elements.values():
         seen = set()
         clean = []
         for item in el.items:
             k = item.text.lower()
-            if k in seen or not is_safe_item(item.text):
+            if k in seen or not is_safe_item(item.text) or not is_usable_item(el.key, item.text):
                 continue
             seen.add(k)
             clean.append(item)
         el.items = clean
     return elements
+
+
+def looks_like_tag_list(text: str) -> bool:
+    """True for comma-separated keyword dumps ("Short, Firm, Square Face, Fair Skin, ...").
+
+    Such lines are tags, not sentence fragments, and would break the grammar of a
+    template sentence. Normal items have at most a couple of commas inside a phrase.
+    """
+    parts = [p.strip() for p in text.split(",") if p.strip()]
+    if len(parts) < 4 or any(p.lower().startswith(("and ", "or ")) for p in parts):
+        return False  # a normal English list ("red, gold, and black")
+    short = sum(1 for p in parts if len(p.split()) <= 3)
+    titled = sum(1 for p in parts if p[:1].isupper())
+    return short >= len(parts) * 0.75 and (titled >= len(parts) * 0.5 or len(parts) >= 6)
+
+
+def is_usable_item(key: str, text: str) -> bool:
+    """Element-level sanity checks used when loading (and when appending new lines)."""
+    if looks_like_tag_list(text):
+        return False
+    if key == "age":
+        m = re.match(r"\s*(\d+)", text)
+        if m and int(m.group(1)) < MIN_AGE:
+            return False
+    return True
 
 
 def load_templates(dirs: Iterable[str]) -> Dict[str, Template]:

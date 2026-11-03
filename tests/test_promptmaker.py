@@ -256,3 +256,34 @@ class CoherenceTests(unittest.TestCase):
     def test_trace_is_reported(self):
         r = self.pm.generate("gravure photoshoot on the beach", GenerateOptions(mode="random", seed=3))
         self.assertTrue(any(line.startswith("location:") for line in r.lexicon.get("trace", [])))
+
+
+class RequestPhraseTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.pm = PromptMaker(translator=NoTranslator())
+
+    def test_selected_template_and_type_kept_in_full_random(self):
+        for seed in range(20):
+            r = self.pm.generate("fair skin, white miniskirt", mode="random", prompt_type="image",
+                                 template="fashion_editorial", seed=seed)
+            self.assertEqual(r.template_id, "fashion_editorial")
+        for seed in range(20):
+            r = self.pm.generate("fair skin", mode="random", prompt_type="image", seed=seed)
+            self.assertEqual(r.prompt_type, "image")
+
+    def test_colour_garment_and_skin_tone_are_used(self):
+        for seed in range(30):
+            r = self.pm.generate("bright skin, white miniskirt", mode="random", seed=seed)
+            p = r.prompt.lower()
+            self.assertIn("white mini skirt", p)
+            self.assertIn("fair", r.picks.get("skin", "") + p)
+            self.assertNotIn("also features", p)
+            self.assertNotIn(" women", p)
+
+    def test_tag_dumps_and_minor_ages_are_not_loaded(self):
+        from promptmaker.data_loader import is_usable_item, looks_like_tag_list
+        self.assertTrue(looks_like_tag_list("Seductress, Short, Firm, Square Face, Fair Skin, Light Brown Hair"))
+        self.assertFalse(looks_like_tag_list("with red, gold, and black accents"))
+        self.assertFalse(is_usable_item("age", "19"))
+        self.assertTrue(is_usable_item("age", "21"))

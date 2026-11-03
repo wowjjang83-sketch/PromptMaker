@@ -61,6 +61,19 @@
   .v-steps { display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; font-size:11px; }
   .v-steps span { padding:2px 8px; border-radius:10px; border:1px solid var(--line); color:var(--muted); }
   .v-steps span.on { border-color:var(--accent); color:var(--accent); } .v-steps span.fin { color:#2b8a3e; border-color:#2b8a3e; }
+  .v-qhead { display:flex; justify-content:space-between; font-size:13px; margin-top:14px; }
+  .v-qhead span { color:var(--muted); font-size:12px; }
+  .v-queue { margin-top:6px; max-height:320px; overflow:auto; display:grid; gap:4px; }
+  .v-q { display:grid; grid-template-columns:44px 1fr auto; gap:8px; align-items:center; padding:4px; border:1px solid var(--line); border-radius:6px; cursor:pointer; font-size:12px; }
+  .v-q.sel { border-color:var(--accent); background:var(--bg); }
+  .v-q img { width:44px; height:44px; object-fit:cover; border-radius:4px; background:var(--bg); }
+  .v-q .nm { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .v-q .mini { height:4px; background:var(--bg); border-radius:2px; margin-top:4px; overflow:hidden; }
+  .v-q .mini div { height:100%; background:var(--accent); }
+  .v-q .x { border:0; background:transparent; color:var(--muted); cursor:pointer; padding:2px 6px; font-size:14px; }
+  .st-done { color:#2b8a3e; } .st-error { color:var(--err); } .st-running { color:var(--accent); } .st-cancelled, .st-pending { color:var(--muted); }
+  .v-sel { font-size:14px; font-weight:600; margin-bottom:6px; }
+  #v_fp_box { margin-top:12px; }
   .v-key { margin-top:10px; font-size:13px; font-weight:600; }
   .v-item { display:grid; grid-template-columns:22px 1fr 64px; gap:6px; align-items:center; margin-top:4px; }
   .v-item input[type=text] { padding:4px 8px; font-size:13px; }
@@ -165,13 +178,23 @@
           <p class="hint" id="v_cfg_path"></p>
         </details>
 
-        <label>이미지</label>
-        <div class="drop" id="v_drop">클릭하거나 이미지를 끌어다 놓으세요 (Ctrl+V 붙여넣기 가능)<img id="v_preview" hidden alt=""></div>
-        <input type="file" id="v_file" accept="image/*" hidden>
         <label for="v_rating">추가할 파일 수위</label>
         <select id="v_rating"><option value="sfw">일반 (&lt;요소&gt;.txt)</option><option value="suggestive">suggestive (&lt;요소&gt;.suggestive.txt)</option><option value="explicit">explicit (&lt;요소&gt;.explicit.txt)</option></select>
-        <div class="actions"><button id="v_analyze">이미지 분석</button></div>
-        <p class="hint">처음 실행할 때는 모델을 불러오느라 시간이 걸립니다.</p>
+        <label class="check"><input type="checkbox" id="v_full_prompt"> 풀 프롬프트도 생성 (이미지를 묘사하는 영문 프롬프트 한 문단)</label>
+        <label class="check"><input type="checkbox" id="v_auto_save_fp"> 풀 프롬프트 자동 저장</label>
+        <label class="check"><input type="checkbox" id="v_auto_apply"> 새 요소 항목을 검토 없이 바로 txt 에 추가</label>
+        <p class="hint" id="v_fp_path"></p>
+
+        <label>이미지 (여러 장 가능)</label>
+        <div class="drop" id="v_drop">클릭하거나 이미지를 여러 장 끌어다 놓으면 대기열에 들어가 차례로 분석합니다 (Ctrl+V 붙여넣기 가능)</div>
+        <input type="file" id="v_file" accept="image/*" multiple hidden>
+        <div class="v-qhead"><b>대기열</b><span id="v_qsum">비어 있음</span></div>
+        <div class="v-queue" id="v_queue"></div>
+        <div class="actions">
+          <button class="secondary" id="v_qstop" style="padding:4px 10px">대기열 중지</button>
+          <button class="secondary" id="v_qclear" style="padding:4px 10px">끝난 항목 지우기</button>
+        </div>
+        <p class="hint">처음 분석할 때는 모델을 불러오느라 시간이 걸립니다. 분석 중에도 이미지를 더 넣을 수 있습니다.</p>
       </div>
       <div>
         <div class="v-progress" id="v_progress" hidden>
@@ -185,11 +208,21 @@
             <span>속도 <b id="v_rate">-</b></span>
           </div>
           <div class="v-steps" id="v_steps"></div>
-          <div class="actions"><button class="secondary" id="v_cancel" style="padding:4px 10px">분석 취소</button></div>
+          <div class="hint" id="v_qline"></div>
         </div>
-        <div id="v_result"><p class="hint">이미지를 고르고 "이미지 분석"을 누르세요. 새 항목만 기본 선택되며, 문구를 고친 뒤 추가할 수 있습니다.</p></div>
+        <div class="v-sel" id="v_sel"></div>
+        <div id="v_result"><p class="hint">이미지를 넣으면 차례로 분석합니다. 대기열에서 이미지를 누르면 그 결과를 봅니다. 새 항목만 기본 선택되며, 문구를 고친 뒤 추가할 수 있습니다.</p></div>
         <div class="actions" id="v_apply_bar" hidden><button id="v_apply">선택 항목 txt 에 추가</button></div>
         <div id="v_report"></div>
+        <div id="v_fp_box" hidden>
+          <div class="v-key">풀 프롬프트</div>
+          <textarea id="v_fp" rows="5"></textarea>
+          <div class="actions">
+            <button class="secondary" id="v_fp_save" style="padding:4px 10px">풀 프롬프트 저장</button>
+            <button class="secondary" id="v_fp_copy" style="padding:4px 10px">복사</button>
+          </div>
+          <div id="v_fp_report"></div>
+        </div>
         <details><summary>모델 원본 응답</summary><pre id="v_raw">-</pre></details>
       </div>
     </div>
@@ -339,6 +372,8 @@ async function vLoadConfig() {
   $("v_max_items").value = c.max_items_per_key; $("v_max_tokens").value = c.max_new_tokens;
   $("v_skip").value = c.skip_keys.join(", ");
   $("v_cfg_path").textContent = "설정 파일: " + d.config_path;
+  $("v_full_prompt").checked = !!c.full_prompt; $("v_auto_save_fp").disabled = !c.full_prompt;
+  $("v_fp_path").textContent = "풀 프롬프트 저장 파일: " + d.full_prompt_path;
   const rt = d.runtime || {};
   $("v_runtime").innerHTML = !rt.torch
     ? `<span class="bad">이 서버 파이썬(${esc(rt.python)})에 torch 가 없습니다.</span>`
@@ -381,13 +416,6 @@ async function vBrowse(path) {
   box.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => { $("v_model_path").value = el.dataset.pick; box.hidden = true; $("v_model_path").onchange(); });
 }
 
-function vSetImage(file) {
-  if (!file || !file.type.startsWith("image/")) return;
-  const reader = new FileReader();
-  reader.onload = () => { V_IMAGE = reader.result; $("v_preview").src = V_IMAGE; $("v_preview").hidden = false; };
-  reader.readAsDataURL(file);
-}
-
 function vRender(data) {
   const keys = Object.keys(data.elements);
   if (!keys.length) { $("v_result").innerHTML = '<p class="hint">인식된 요소가 없습니다. 모델 원본 응답을 확인하세요.</p>'; $("v_apply_bar").hidden = true; return; }
@@ -421,38 +449,123 @@ function vShowProgress(p, status, startedAt) {
     `<span class="${status === "done" || i < idx ? "fin" : i === idx ? "on" : ""}">${label}</span>`).join("");
 }
 
-async function vAnalyze() {
-  if (!V_IMAGE) { $("v_result").innerHTML = '<p class="error">이미지를 먼저 선택하세요.</p>'; return; }
-  if ($("v_settings").open && !(await vSaveConfig())) return;
-  $("v_result").innerHTML = ""; $("v_report").innerHTML = ""; $("v_apply_bar").hidden = true;
-  $("v_analyze").disabled = true; $("v_cancel").disabled = false; $("v_cancel").parentElement.hidden = false;
-  const startedAt = Date.now();
-  try {
-    const res = await postJSON("/api/vision/jobs", { image: V_IMAGE });
-    let job = await res.json();
-    if (!res.ok) { $("v_result").innerHTML = `<p class="error">${esc(job.error)}</p>`; return; }
-    V_JOB = job.id;
-    while (job.status === "queued" || job.status === "running") {
-      vShowProgress(job.progress, job.status, startedAt);
-      await new Promise(r => setTimeout(r, 700));
-      const r = await fetch("/api/vision/jobs/" + V_JOB);
-      job = await r.json();
-      if (!r.ok) throw new Error(job.error);
-    }
-    vShowProgress(job.status === "done" ? job.result.stats : job.progress, job.status, startedAt);
-    if (job.status === "done") { $("v_raw").textContent = job.result.raw; vRender(job.result); }
-    else if (job.status === "cancelled") { $("v_stage").textContent = "취소됨"; $("v_result").innerHTML = '<p class="hint">분석을 취소했습니다.</p>'; }
-    else { $("v_stage").textContent = "오류"; $("v_result").innerHTML = `<p class="error">${esc(job.error)}</p>`; }
-  } catch (e) {
-    $("v_result").innerHTML = `<p class="error">${esc(e)}</p>`;
-  } finally { $("v_analyze").disabled = false; $("v_cancel").parentElement.hidden = true; V_JOB = null; }
+// ---- 대기열: 여러 이미지를 넣으면 서버가 차례로 분석하고, 페이지는 상태를 주기적으로 읽어 옵니다.
+const V_THUMBS = {};        // 대기열 id -> 미리보기 data URL
+const V_RESULTS = {};       // 대기열 id -> 분석 결과 (한 번만 받아 옴)
+let V_SEL = null, V_PINNED = false, V_POLL = null;
+const V_QSTATUS = { pending: "대기", running: "분석 중", done: "완료", error: "오류", cancelled: "취소됨" };
+
+function readAsDataURL(file) {
+  return new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = fail; r.readAsDataURL(file); });
 }
 
-$("v_cancel").onclick = async () => {
-  if (!V_JOB) return;
-  $("v_cancel").disabled = true; $("v_stage").textContent = "취소하는 중…";
-  await postJSON(`/api/vision/jobs/${V_JOB}/cancel`, {});
-};
+function queueOptions() {
+  return { auto_apply: $("v_auto_apply").checked, rating: $("v_rating").value, auto_save_full_prompt: $("v_auto_save_fp").checked };
+}
+
+async function vAddFiles(files) {
+  files = [...files].filter(f => f.type.startsWith("image/"));
+  if (!files.length) return;
+  if ($("v_settings").open && !(await vSaveConfig())) return;
+  const images = await Promise.all(files.map(async f => ({ name: f.name || "붙여넣은 이미지", image: await readAsDataURL(f) })));
+  const res = await postJSON("/api/vision/queue", { images, ...queueOptions() });
+  const d = await res.json();
+  if (!res.ok) { $("v_result").innerHTML = `<p class="error">${esc(d.error)}</p>`; return; }
+  d.items.slice(-images.length).forEach((it, i) => V_THUMBS[it.id] = images[i].image);
+  vRenderQueue(d);
+  vStartPolling();
+}
+
+function vRenderQueue(d) {
+  const s = d.summary, c = s.counts || {};
+  $("v_qsum").textContent = s.total ? `${s.total}장 · 완료 ${c.done || 0} · 대기 ${c.pending || 0}` + (c.error ? ` · 오류 ${c.error}` : "") + ` · 전체 ${s.percent}%` : "비어 있음";
+  $("v_queue").innerHTML = d.items.map(it => {
+    const pct = it.status === "done" ? 100 : (it.progress && it.progress.percent) || 0;
+    return `<div class="v-q ${it.id === V_SEL ? "sel" : ""}" data-qid="${esc(it.id)}">
+      <img src="${V_THUMBS[it.id] || ""}" alt="">
+      <div><div class="nm">${esc(it.name)}</div><div class="st-${it.status}">${V_QSTATUS[it.status] || it.status}${it.status === "running" ? " " + pct.toFixed(0) + "%" : ""}${it.error ? " · " + esc(it.error) : ""}</div>
+        <div class="mini"><div style="width:${pct}%"></div></div></div>
+      ${it.status === "running" ? "" : `<button class="x" data-qdel="${esc(it.id)}" title="대기열에서 빼기">✕</button>`}</div>`;
+  }).join("");
+  $("v_queue").querySelectorAll("[data-qid]").forEach(el => el.onclick = e => {
+    if (e.target.dataset.qdel) return;
+    V_SEL = el.dataset.qid; V_PINNED = true; vRenderQueue(d); vShowItem(d.items.find(i => i.id === V_SEL));
+  });
+  $("v_queue").querySelectorAll("[data-qdel]").forEach(b => b.onclick = async () => {
+    const r = await postJSON(`/api/vision/queue/${b.dataset.qdel}/remove`, {});
+    if (r.ok) { if (V_SEL === b.dataset.qdel) V_SEL = null; vRenderQueue(await r.json()); }
+  });
+  // 진행 표시: 분석 중인 항목
+  const running = d.items.find(i => i.status === "running");
+  if (running && running.progress) {
+    vShowProgress(running.progress, "running", Date.now());
+    const idx = d.items.indexOf(running) + 1;
+    $("v_qline").textContent = `대기열 ${idx}/${s.total} · ${running.name} · 전체 ${s.percent}%`;
+  } else if (s.total && !s.running) {
+    $("v_qline").textContent = `대기열 끝 · 전체 ${s.total}장`;
+  }
+  if (!V_PINNED) {  // 사용자가 고르지 않았으면 분석 중이거나 마지막으로 끝난 항목을 보여 줌
+    const last = running || [...d.items].reverse().find(i => i.status === "done");
+    if (last && last.id !== V_SEL) { V_SEL = last.id; vShowItem(last); }
+    else if (last && last.status === "done" && !V_RESULTS[last.id]) vShowItem(last);
+  }
+}
+
+async function vShowItem(it) {
+  if (!it) return;
+  $("v_sel").textContent = it.name;
+  $("v_report").innerHTML = ""; $("v_fp_report").innerHTML = "";
+  if (it.status === "pending" || it.status === "running") {
+    $("v_result").innerHTML = `<p class="hint">${it.status === "pending" ? "분석 대기 중입니다." : "분석 중입니다…"}</p>`;
+    $("v_apply_bar").hidden = true; $("v_fp_box").hidden = true; return;
+  }
+  if (it.status !== "done") {
+    $("v_result").innerHTML = `<p class="${it.status === "error" ? "error" : "hint"}">${esc(it.error || V_QSTATUS[it.status])}</p>`;
+    $("v_apply_bar").hidden = true; $("v_fp_box").hidden = true; return;
+  }
+  if (!V_RESULTS[it.id]) {
+    const r = await fetch("/api/vision/queue/" + it.id);
+    if (!r.ok) return;
+    V_RESULTS[it.id] = await r.json();
+  }
+  if (V_SEL !== it.id) return;
+  const full = V_RESULTS[it.id], res = full.result;
+  $("v_raw").textContent = res.raw;
+  vShowProgress(res.stats, "done", Date.now());
+  vRender(res);
+  if (full.report) {  // 자동 추가된 경우
+    vShowApplyReport(full.report);
+    document.querySelectorAll("#v_result input[data-vkey]").forEach(c => { c.checked = false; c.disabled = true; });
+    $("v_apply_bar").hidden = true;
+  }
+  $("v_fp_box").hidden = !res.full_prompt;
+  $("v_fp").value = res.full_prompt || "";
+  if (full.full_prompt_report) vShowFpReport(full.full_prompt_report);
+}
+
+function vStartPolling() {
+  if (V_POLL) return;
+  V_POLL = setInterval(async () => {
+    const r = await fetch("/api/vision/queue");
+    if (!r.ok) return;
+    const d = await r.json();
+    vRenderQueue(d);
+    if (!d.summary.running && !(d.summary.counts.pending)) { clearInterval(V_POLL); V_POLL = null; await loadInfo(); }
+  }, 700);
+}
+
+function vShowFpReport(d) {
+  $("v_fp_report").innerHTML = d.saved_count
+    ? `<p class="ok">저장했습니다: ${esc(d.path)}</p>`
+    : `<p class="warn">저장하지 않음: ${d.skipped.map(s => s.reason === "duplicate" ? "이미 있는 프롬프트" : "사용할 수 없는 표현").join(", ")}</p>`;
+}
+
+function vShowApplyReport(d) {
+  const skipped = Object.entries(d.skipped).flatMap(([k, rows]) => rows.map(r => `${k}: ${r.text} (${V_STATUS[r.reason] || r.reason})`));
+  $("v_report").innerHTML = `<p class="ok">${d.added_count}개 항목을 추가했습니다.</p>` +
+    Object.entries(d.added).map(([k, v]) => `<div class="hint">${esc(k)} ← ${v.map(esc).join(" / ")}</div>`).join("") +
+    (skipped.length ? `<div class="warn">건너뜀: ${skipped.map(esc).join(" / ")}</div>` : "");
+}
 
 async function vApply() {
   const items = {};
@@ -461,10 +574,8 @@ async function vApply() {
   const res = await postJSON("/api/vision/apply", { items, rating: $("v_rating").value });
   const d = await res.json();
   if (!res.ok) { $("v_report").innerHTML = `<p class="error">${esc(d.error)}</p>`; return; }
-  const skipped = Object.entries(d.skipped).flatMap(([k, rows]) => rows.map(r => `${k}: ${r.text} (${V_STATUS[r.reason] || r.reason})`));
-  $("v_report").innerHTML = `<p class="ok">${d.added_count}개 항목을 추가했습니다.</p>` +
-    Object.entries(d.added).map(([k, v]) => `<div class="hint">${esc(k)} ← ${v.map(esc).join(" / ")}</div>`).join("") +
-    (skipped.length ? `<div class="warn">건너뜀: ${skipped.map(esc).join(" / ")}</div>` : "");
+  vShowApplyReport(d);
+  if (V_RESULTS[V_SEL]) V_RESULTS[V_SEL].report = d;
   checked.forEach(c => { c.checked = false; c.disabled = true; c.nextElementSibling.disabled = true; c.parentElement.querySelector(".badge").textContent = "처리됨"; });
   $("v_apply_bar").hidden = true;
   if (d.added_count) await loadInfo();
@@ -474,15 +585,39 @@ $("v_backend").onchange = vShowBackend;
 $("v_browse_btn").onclick = () => vBrowse($("v_model_path").value.trim());
 $("v_model_path").onchange = async () => { const r = await fetch("/api/vision/check?path=" + encodeURIComponent($("v_model_path").value.trim())); vShowCheck(await r.json()); };
 $("v_save").onclick = vSaveConfig;
-$("v_analyze").onclick = vAnalyze;
 $("v_apply").onclick = vApply;
 $("v_drop").onclick = () => $("v_file").click();
-$("v_file").onchange = e => vSetImage(e.target.files[0]);
+$("v_file").onchange = e => { vAddFiles(e.target.files); e.target.value = ""; };
 $("v_drop").ondragover = e => { e.preventDefault(); $("v_drop").classList.add("over"); };
 $("v_drop").ondragleave = () => $("v_drop").classList.remove("over");
-$("v_drop").ondrop = e => { e.preventDefault(); $("v_drop").classList.remove("over"); vSetImage(e.dataTransfer.files[0]); };
-document.addEventListener("paste", e => { const f = [...(e.clipboardData?.files || [])].find(f => f.type.startsWith("image/")); if (f) vSetImage(f); });
-vLoadConfig().catch(() => {});
+$("v_drop").ondrop = e => { e.preventDefault(); $("v_drop").classList.remove("over"); vAddFiles(e.dataTransfer.files); };
+document.addEventListener("paste", e => { const fs = [...(e.clipboardData?.files || [])]; if (fs.length) vAddFiles(fs); });
+$("v_qstop").onclick = async () => { const r = await postJSON("/api/vision/queue/stop", {}); vRenderQueue(await r.json()); };
+$("v_qclear").onclick = async () => { const r = await postJSON("/api/vision/queue/clear", {}); vRenderQueue(await r.json()); };
+// 옵션은 바로 서버 대기열에 반영 (분석 중인 대기열의 다음 이미지부터 적용)
+["v_auto_apply", "v_auto_save_fp", "v_rating"].forEach(id => $(id).addEventListener("change", () => postJSON("/api/vision/queue", { ...queueOptions(), images: [] }).catch(() => {})));
+$("v_full_prompt").onchange = async () => {
+  await postJSON("/api/vision/config", { config: { full_prompt: $("v_full_prompt").checked } });
+  if (!$("v_full_prompt").checked) $("v_auto_save_fp").checked = false;
+  $("v_auto_save_fp").disabled = !$("v_full_prompt").checked;
+};
+$("v_fp_save").onclick = async () => {
+  const r = await postJSON("/api/vision/full_prompts", { prompts: [$("v_fp").value] });
+  const d = await r.json();
+  if (!r.ok) { $("v_fp_report").innerHTML = `<p class="error">${esc(d.error)}</p>`; return; }
+  vShowFpReport(d);
+};
+$("v_fp_copy").onclick = () => { navigator.clipboard.writeText($("v_fp").value); $("v_fp_copy").textContent = "복사됨"; setTimeout(() => $("v_fp_copy").textContent = "복사", 1200); };
+vLoadConfig().then(async () => {
+  // 페이지를 다시 열어도 서버에 남아 있는 대기열을 보여 줌
+  const r = await fetch("/api/vision/queue");
+  if (!r.ok) return;
+  const d = await r.json();
+  $("v_auto_apply").checked = d.options.auto_apply; $("v_rating").value = d.options.rating;
+  $("v_auto_save_fp").checked = d.options.auto_save_full_prompt && $("v_full_prompt").checked;
+  vRenderQueue(d);
+  if (d.summary.running) vStartPolling();
+}).catch(() => {});
 </script>
 </body>
 </html>

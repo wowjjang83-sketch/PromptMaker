@@ -97,44 +97,52 @@ class PromptMakerReload:
         return (f"templates={len(_MAKER.templates)}, elements={len(_MAKER.elements)}",)
 
 
-class _ComfyProgress:
-    """Progress bar on the node + console line + ComfyUI's cancel button, for vision.ImageAnalyzer."""
+def _comfy_interrupted() -> bool:
+    try:
+        import comfy.model_management as mm
 
-    def __init__(self, batch: int):
-        self.batch, self.index = batch, 0
+        return mm.processing_interrupted()
+    except ImportError:  # outside ComfyUI
+        return False
+
+
+class _ComfyProgress:
+    """Progress bar on the node + console line + ComfyUI's cancel button, for vision.AnalysisQueue."""
+
+    def __init__(self, queue):
+        self.queue = queue
         self._stage, self._printed = "", 0.0
         try:
             from comfy.utils import ProgressBar
 
-            self.bar = ProgressBar(100 * batch)
+            self.bar = ProgressBar(100 * len(queue.items))
         except ImportError:  # outside ComfyUI
             self.bar = None
 
-    def __call__(self, p) -> None:
+    def __call__(self, item, p) -> None:
         import time
 
+        if _comfy_interrupted():
+            self.queue.stop()
+        total = len(self.queue.items)
+        index = self.queue.items.index(item)
         if self.bar is not None:
-            self.bar.update_absolute(int(100 * self.index + p.percent), 100 * self.batch)
+            self.bar.update_absolute(int(100 * index + p.percent), 100 * total)
         now = time.monotonic()
         if p.stage != self._stage or now - self._printed >= 2:  # console: stage changes + every 2 s
-            print(f"[PromptMaker 이미지 분석 {self.index + 1}/{self.batch}] {p}", flush=True)
+            print(f"[PromptMaker 이미지 분석 {index + 1}/{total} {item.name}] {p}", flush=True)
             self._stage, self._printed = p.stage, now
-
-    def is_set(self) -> bool:  # used as the "cancel" flag
-        try:
-            import comfy.model_management as mm
-
-            return mm.processing_interrupted()
-        except ImportError:
-            return False
 
 
 class PromptMakerImageAnalyze:
-    """이미지 -> 비전 모델(기본 Qwen3-VL-4B) -> 요소별 문구 -> 중복 확인 후 요소 txt 에 추가."""
+    """이미지(배치 또는 폴더) -> 비전 모델(기본 Qwen3-VL-4B) -> 요소별 문구 -> 중복 확인 후 요소 txt 에 추가.
+
+    여러 장은 대기열로 차례로 분석하며, 풀 프롬프트(이미지를 묘사하는 영문 프롬프트)도 만들고 저장할 수 있습니다.
+    """
 
     CATEGORY = "PromptMaker"
-    RETURN_TYPES = ("STRING", "STRING", "INT")
-    RETURN_NAMES = ("report", "elements_json", "added_count")
+    RETURN_TYPES = ("STRING", "STRING", "INT", "STRING")
+    RETURN_NAMES = ("report", "elements_json", "added_count", "full_prompt")
     FUNCTION = "analyze"
     OUTPUT_NODE = True
 
@@ -145,7 +153,6 @@ class PromptMakerImageAnalyze:
         cfg = vision.load_config()
         return {
             "required": {
-                "image": ("IMAGE",),
                 "write_to_txt": ("BOOLEAN", {"default": True}),
                 "content_rating": (RATINGS,),
                 "backend": (list(vision.BACKENDS), {"default": cfg.backend}),
@@ -154,14 +161,20 @@ class PromptMakerImageAnalyze:
                 "model_id": ("STRING", {"default": cfg.model_id}),
             },
             "optional": {
+                "image": ("IMAGE", {"tooltip": "여러 장(배치)이면 차례로 분석합니다"}),
+                "image_folder": ("STRING", {"default": "", "tooltip": "폴더의 이미지를 모두 대기열에 넣어 차례로 분석 (image 와 함께 쓰면 둘 다)"}),
+                "full_prompt": ("BOOLEAN", {"default": cfg.full_prompt, "tooltip": "이미지마다 풀 프롬프트도 생성"}),
+                "save_full_prompt": ("BOOLEAN", {"default": False, "tooltip": "풀 프롬프트를 파일에 저장 (중복 제외)"}),
+                "full_prompt_file": ("STRING", {"default": cfg.full_prompt_file, "tooltip": "비우면 output/full_prompts.txt"}),
                 "api_base": ("STRING", {"default": cfg.api_base}),
                 "max_items_per_key": ("INT", {"default": cfg.max_items_per_key, "min": 1, "max": 10}),
                 "save_as_default": ("BOOLEAN", {"default": False}),
             },
         }
 
-    def analyze(self, image, write_to_txt, content_rating, backend, model_path, model_id,
-                api_base="", max_items_per_key=3, save_as_default=False):
+    def analyze(self, write_to_txt, content_rating, backend, model_path, model_id, image=None, image_folder="",
+                full_prompt=False, save_full_prompt=False, full_prompt_file="", api_base="",
+                max_items_per_key=3, save_as_default=False):
         import numpy as np
         from PIL import Image
 
@@ -171,34 +184,50 @@ class PromptMakerImageAnalyze:
         cfg.backend, cfg.model_path, cfg.model_id = backend, model_path.strip(), model_id.strip() or cfg.model_id
         cfg.api_base = api_base.strip() or cfg.api_base
         cfg.max_items_per_key = int(max_items_per_key)
+        cfg.full_prompt = bool(full_prompt or save_full_prompt)
+        cfg.full_prompt_file = full_prompt_file.strip()
         if save_as_default:
             vision.save_config(cfg)
-        analyzer = vision.ImageAnalyzer(_MAKER, cfg)
-        lines, merged, added = [], {}, 0
-        batch = image.shape[0]
-        reporter = _ComfyProgress(batch)
-        for i in range(batch):  # ComfyUI IMAGE: [B, H, W, C] float 0..1
-            arr = (image[i].cpu().numpy() * 255).clip(0, 255).astype(np.uint8)
-            reporter.index = i
-            try:
-                result = analyzer.analyze(Image.fromarray(arr), progress=reporter, cancel=reporter)
-            except vision.AnalysisCancelled:
-                import comfy.model_management as mm
+        queue = vision.AnalysisQueue(vision.ImageAnalyzer(_MAKER, cfg), auto_apply=write_to_txt,
+                                     rating=content_rating, auto_save_full_prompt=save_full_prompt)
+        if image is not None:
+            for i in range(image.shape[0]):  # ComfyUI IMAGE: [B, H, W, C] float 0..1
+                arr = (image[i].cpu().numpy() * 255).clip(0, 255).astype(np.uint8)
+                queue.add(Image.fromarray(arr), f"image {i + 1}")
+        if image_folder.strip():
+            if not os.path.isdir(image_folder.strip()):
+                raise ValueError(f"image_folder 를 찾을 수 없습니다: {image_folder}")
+            queue.add_folder(image_folder.strip())
+        if not queue.items:
+            raise ValueError("image 입력이나 image_folder 중 하나는 있어야 합니다.")
+        queue.run(progress=_ComfyProgress(queue))
+        if _comfy_interrupted():
+            import comfy.model_management as mm
 
-                mm.throw_exception_if_processing_interrupted()  # ComfyUI's own "interrupted" handling
-                raise
-            s = result["stats"]
-            lines.append(f"== 이미지 {i + 1}/{batch}: 입력 {s['input_tokens']} 토큰, 출력 {s['output_tokens']} 토큰, "
+            mm.throw_exception_if_processing_interrupted()  # ComfyUI's own "interrupted" handling
+
+        lines, merged, added, prompts = [], {}, 0, []
+        total = len(queue.items)
+        for n, item in enumerate(queue.items, 1):
+            if item.status != "done":
+                lines.append(f"== {n}/{total} {item.name}: {item.status} {item.error}")
+                continue
+            result, s = item.result, item.result["stats"]
+            lines.append(f"== {n}/{total} {item.name}: 입력 {s['input_tokens']} 토큰, 출력 {s['output_tokens']} 토큰, "
                          f"{s['tokens_per_sec']:.1f} tok/s, {vision._fmt_time(s['elapsed'])} 소요")
             for key, rows in result["elements"].items():
                 merged.setdefault(key, []).extend(rows)
                 lines += [f"[{r['status']}] {key}: {r['text']}" for r in rows]
-            if write_to_txt and result["new"]:
-                rep = analyzer.apply(result["new"], content_rating)
-                added += rep["added_count"]
-                lines += [f"+ {k}: {t}" for k, v in rep["added"].items() for t in v]
+            if item.report:
+                added += item.report["added_count"]
+                lines += [f"+ {k}: {t}" for k, v in item.report["added"].items() for t in v]
+            if result.get("full_prompt"):
+                prompts.append(result["full_prompt"])
+                lines.append(f"풀 프롬프트: {result['full_prompt']}")
+            if item.full_prompt_report and item.full_prompt_report["saved_count"]:
+                lines.append(f"-> 풀 프롬프트 저장: {item.full_prompt_report['path']}")
         lines.append(f"추가된 항목: {added}개" if write_to_txt else "미리보기 모드 (txt 에 추가하지 않음)")
-        return ("\n".join(lines), json.dumps(merged, ensure_ascii=False, indent=2), added)
+        return ("\n".join(lines), json.dumps(merged, ensure_ascii=False, indent=2), added, "\n\n".join(prompts))
 
 
 NODE_CLASS_MAPPINGS = {

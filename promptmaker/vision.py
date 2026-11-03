@@ -47,6 +47,13 @@ PROMPT_PATH = os.path.join(PACKAGE_DATA_DIR, "vision", "analyze_prompt.txt")
 # Elements that should not be guessed from a picture.
 DEFAULT_SKIP_KEYS = ["casting", "age", "outfit_type", "nationality", "camera_movement", "pacing"]
 APPEND_HEADER = "# 이미지 분석 자동 추가 ({date})"
+FULL_PROMPT_KEY = "full_prompt"
+DEFAULT_FULL_PROMPT_FILE = os.path.join(REPO_ROOT, "output", "full_prompts.txt")
+FULL_PROMPT_RULE = (
+    f'- Also add the key "{FULL_PROMPT_KEY}": ONE English paragraph (3 to 6 sentences) that could be used as a '
+    "text-to-image prompt to recreate this image: subject, appearance, attire, pose, setting, lighting, camera "
+    "and mood, in natural language. Describe every person as an adult. Do not use placeholders in it."
+)
 
 
 @dataclass
@@ -62,6 +69,8 @@ class VisionConfig:
     max_items_per_key: int = 3
     max_image_side: int = 1024
     skip_keys: List[str] = field(default_factory=lambda: list(DEFAULT_SKIP_KEYS))
+    full_prompt: bool = False              # also ask for one full English image prompt per image
+    full_prompt_file: str = ""             # where saved full prompts go; empty -> output/full_prompts.txt
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "VisionConfig":
@@ -79,6 +88,10 @@ class VisionConfig:
     @property
     def model_ref(self) -> str:
         return self.model_path.strip() or self.model_id
+
+    @property
+    def full_prompt_path(self) -> str:
+        return self.full_prompt_file.strip() or DEFAULT_FULL_PROMPT_FILE
 
 
 def load_config(path: Optional[str] = None) -> VisionConfig:
@@ -596,6 +609,11 @@ def build_prompt(data_dirs: List[str], cfg: VisionConfig) -> Tuple[str, List[str
     with open(PROMPT_PATH, encoding="utf-8") as f:
         template = f.read()
     prompt = template.replace("{elements}", "\n".join(lines)).replace("{max_items}", str(cfg.max_items_per_key))
+    extra = FULL_PROMPT_RULE if cfg.full_prompt else ""
+    if "{extra_rules}" in prompt:
+        prompt = prompt.replace("{extra_rules}", extra)
+    elif extra:
+        prompt += "\n" + extra + "\n"
     return prompt, keys
 
 
@@ -607,8 +625,8 @@ _EMPTY_RE = re.compile(r"^(?:none|n/?a|null|unknown|nothing|no (?:person|people|
                        re.IGNORECASE)
 
 
-def parse_response(text: str) -> Dict[str, List[str]]:
-    """Pull the JSON object out of a model reply and normalise it to lists of strings."""
+def extract_json(text: str) -> Dict[str, Any]:
+    """The JSON object inside a model reply (code fences and trailing commas tolerated)."""
     m = _FENCE_RE.search(text)
     body = m.group(1) if m else text
     start, end = body.find("{"), body.rfind("}")
@@ -616,11 +634,28 @@ def parse_response(text: str) -> Dict[str, List[str]]:
         raise ValueError("모델 응답에서 JSON 을 찾지 못했습니다.")
     raw = body[start:end + 1]
     try:
-        data = json.loads(raw)
+        return json.loads(raw)
     except json.JSONDecodeError:
-        data = json.loads(re.sub(r",\s*([}\]])", r"\1", raw))  # trailing commas
+        return json.loads(re.sub(r",\s*([}\]])", r"\1", raw))
+
+
+def split_full_prompt(data: Dict[str, Any]) -> Tuple[Dict[str, Any], str]:
+    """Separate the optional full prompt from the element lists."""
+    data = dict(data)
+    value = data.pop(FULL_PROMPT_KEY, "")
+    if isinstance(value, list):
+        value = " ".join(v for v in value if isinstance(v, str))
+    text = " ".join(str(value or "").split())
+    return data, "" if _EMPTY_RE.match(text) else text
+
+
+def parse_response(text: Any) -> Dict[str, List[str]]:
+    """Pull the JSON object out of a model reply (or take a parsed dict) and normalise it to lists of strings."""
+    data = text if isinstance(text, dict) else extract_json(text)
     out: Dict[str, List[str]] = {}
     for key, value in data.items():
+        if key == FULL_PROMPT_KEY:
+            continue
         values = value if isinstance(value, list) else [value]
         clean = []
         for v in values:
@@ -785,14 +820,16 @@ class ImageAnalyzer:
                 rep.update("load_model", "모델 불러오는 중 (처음 한 번만)", 0.0)
             backend = get_backend(self.config, rep)
         rep.update("prepare", f"요소 {len(keys)}개로 지시문 구성 완료", 1.0)
-        # First-run estimate: roughly a short phrase for half of the keys.
-        expected = min(int(self.config.max_new_tokens), 20 + 12 * len(keys))
+        # First-run estimate: roughly a short phrase for half of the keys (+ the paragraph).
+        expected = min(int(self.config.max_new_tokens),
+                       20 + 12 * len(keys) + (160 if self.config.full_prompt else 0))
         if _accepts(backend.chat, "progress"):
             raw = backend.chat(img, prompt, progress=rep, expected_tokens=expected)
         else:
             raw = backend.chat(img, prompt)
         rep.update("parse", "응답 해석 및 중복 확인 중", 0.0)
-        found = parse_response(raw)
+        data, full_prompt = split_full_prompt(extract_json(raw))
+        found = parse_response(data)
         limit = max(1, int(self.config.max_items_per_key))
         found = {k: v[:limit] for k, v in found.items() if k not in self.config.skip_keys}
         rows = classify(self.data_dirs, found, keys)
@@ -802,7 +839,8 @@ class ImageAnalyzer:
         rep.update("done", f"완료: 새 항목 {n_new}개", 1.0, eta=0.0, **{k: v for k, v in usage.items()
                                                                        if k in ("input_tokens", "output_tokens")})
         stats = rep.state.to_dict()
-        return {"elements": rows, "new": {k: v for k, v in new.items() if v}, "raw": raw, "stats": stats}
+        return {"elements": rows, "new": {k: v for k, v in new.items() if v}, "raw": raw, "stats": stats,
+                "full_prompt": full_prompt if self.config.full_prompt else ""}
 
     def apply(self, items: Dict[str, List[str]], rating: str = "sfw") -> Dict[str, Any]:
         report = append_items(self.write_dir, items, rating=rating, search_dirs=self.data_dirs)
@@ -810,17 +848,196 @@ class ImageAnalyzer:
             self.maker.reload()
         return report
 
+    def save_full_prompts(self, prompts: List[str], path: Optional[str] = None) -> Dict[str, Any]:
+        """Append full prompts to ``path`` (default: the config's ``full_prompt_path``)."""
+        return save_full_prompts(prompts, path or self.config.full_prompt_path)
+
     def analyze_and_apply(self, image: Any, rating: str = "sfw",
-                          progress: Optional[Callable[[Progress], None]] = None, cancel=None) -> Dict[str, Any]:
+                          progress: Optional[Callable[[Progress], None]] = None, cancel=None,
+                          save_full_prompt: bool = False) -> Dict[str, Any]:
         result = self.analyze(image, progress, cancel)
         result["report"] = self.apply(result["new"], rating)
+        if save_full_prompt and result["full_prompt"]:
+            result["full_prompt_report"] = self.save_full_prompts([result["full_prompt"]])
         return result
+
+
+def save_full_prompts(prompts: List[str], path: str = DEFAULT_FULL_PROMPT_FILE) -> Dict[str, Any]:
+    """Append one prompt per line to a text file, skipping duplicates and unsafe text.
+
+    The file uses the element file conventions (``#`` comments, one item per line), so it
+    can be read back with any text tool or used as a wildcard list.
+    """
+    saved, skipped = [], []
+    with _write_lock:
+        content = ""
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8", newline="") as f:
+                content = f.read()
+        seen = {normalize(line) for line in content.splitlines() if line.strip() and not line.startswith("#")}
+        for p in prompts:
+            p = " ".join(str(p).split())
+            if not p:
+                continue
+            if not is_safe_item(p):
+                skipped.append({"text": p, "reason": "unsafe"})
+            elif normalize(p) in seen:
+                skipped.append({"text": p, "reason": "duplicate"})
+            else:
+                seen.add(normalize(p))
+                saved.append(p)
+        if saved:
+            os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+            eol = "\r\n" if "\r\n" in content else "\n"
+            chunk = "" if content.endswith("\n") or not content else eol
+            if not content:
+                chunk += "# 이미지 분석 풀 프롬프트 (한 줄에 하나)" + eol
+            chunk += eol.join(saved) + eol
+            with open(path, "a", encoding="utf-8", newline="") as f:
+                f.write(chunk)
+    return {"path": path, "saved": saved, "skipped": skipped, "saved_count": len(saved)}
+
+
+# ------------------------------------------------------------------ queue
+@dataclass
+class QueueItem:
+    id: str
+    name: str
+    status: str = "pending"        # pending | running | done | error | cancelled
+    progress: Optional[Dict[str, Any]] = None
+    result: Optional[Dict[str, Any]] = None
+    error: str = ""
+    report: Optional[Dict[str, Any]] = None              # element txt report (auto apply)
+    full_prompt_report: Optional[Dict[str, Any]] = None  # full prompt save report (auto save)
+    image: Any = field(default=None, repr=False)
+
+    def to_dict(self, with_result: bool = True) -> Dict[str, Any]:
+        d = {k: v for k, v in asdict(self).items() if k != "image"}
+        if not with_result:
+            d.pop("result")
+        return d
+
+
+class AnalysisQueue:
+    """Analyse many images one after another.
+
+    ``add()`` may be called while ``run()`` is working (from another thread); ``run()``
+    keeps going until no pending item is left. With ``auto_apply`` new element items are
+    written right away, with ``auto_save_full_prompt`` the full prompts are saved.
+
+        q = AnalysisQueue(ImageAnalyzer(pm), auto_apply=True)
+        q.add_many(["a.jpg", "b.jpg"])
+        q.run(progress=lambda item, p: print(item.name, p))
+    """
+
+    def __init__(self, analyzer: ImageAnalyzer, auto_apply: bool = False, rating: str = "sfw",
+                 auto_save_full_prompt: bool = False):
+        self.analyzer = analyzer
+        self.auto_apply = auto_apply
+        self.rating = rating
+        self.auto_save_full_prompt = auto_save_full_prompt
+        self.items: List[QueueItem] = []
+        self.cancel = threading.Event()
+        self._lock = threading.Lock()
+        self._counter = 0
+        self.running = False
+
+    def add(self, image: Any, name: Optional[str] = None) -> QueueItem:
+        with self._lock:
+            self._counter += 1
+            if name is None:
+                name = os.path.basename(image) if isinstance(image, str) and os.path.isfile(image) else f"image {self._counter}"
+            item = QueueItem(id=f"{self._counter:04d}", name=name, image=image)
+            self.items.append(item)
+            return item
+
+    def add_many(self, images: List[Any]) -> List[QueueItem]:
+        return [self.add(i) for i in images]
+
+    def add_folder(self, folder: str, exts=(".png", ".jpg", ".jpeg", ".webp", ".bmp")) -> List[QueueItem]:
+        files = sorted(f for f in os.listdir(folder) if f.lower().endswith(exts))
+        return [self.add(os.path.join(folder, f)) for f in files]
+
+    def get(self, item_id: str) -> Optional[QueueItem]:
+        return next((i for i in self.items if i.id == item_id), None)
+
+    def remove(self, item_id: str) -> bool:
+        with self._lock:
+            item = self.get(item_id)
+            if item is None or item.status == "running":
+                return False
+            self.items.remove(item)
+            return True
+
+    def clear_finished(self) -> None:
+        with self._lock:
+            self.items = [i for i in self.items if i.status in ("pending", "running")]
+
+    def stop(self) -> None:
+        """Cancel the running image and every pending one."""
+        self.cancel.set()
+
+    def _next(self) -> Optional[QueueItem]:
+        with self._lock:
+            return next((i for i in self.items if i.status == "pending"), None)
+
+    def summary(self) -> Dict[str, Any]:
+        counts: Dict[str, int] = {}
+        for i in self.items:
+            counts[i.status] = counts.get(i.status, 0) + 1
+        total = len(self.items)
+        finished = sum(counts.get(s, 0) for s in ("done", "error", "cancelled"))
+        running = next((i for i in self.items if i.status == "running"), None)
+        frac = (running.progress or {}).get("percent", 0) / 100 if running else 0
+        return {"total": total, "counts": counts, "running": self.running,
+                "percent": round(100 * (finished + frac) / total, 1) if total else 0.0}
+
+    def run(self, progress: Optional[Callable[[QueueItem, Progress], None]] = None) -> List[QueueItem]:
+        """Process pending items in order. ``progress(item, Progress)`` is called for each update."""
+        self.running = True
+        self.cancel.clear()
+        try:
+            while True:
+                item = self._next()
+                if item is None:
+                    break
+                if self.cancel.is_set():
+                    for i in self.items:
+                        if i.status == "pending":
+                            i.status = "cancelled"
+                    break
+                item.status = "running"
+
+                def on_progress(p: Progress, item=item) -> None:
+                    item.progress = p.to_dict()
+                    if progress:
+                        progress(item, p)
+
+                try:
+                    result = self.analyzer.analyze(item.image, progress=on_progress, cancel=self.cancel)
+                    item.result = result
+                    if self.auto_apply and result["new"]:
+                        item.report = self.analyzer.apply(result["new"], self.rating)
+                    if self.auto_save_full_prompt and result.get("full_prompt"):
+                        item.full_prompt_report = self.analyzer.save_full_prompts([result["full_prompt"]])
+                    item.status = "done"
+                except AnalysisCancelled:
+                    item.status = "cancelled"
+                except Exception as exc:  # keep going with the next image
+                    item.error, item.status = f"{type(exc).__name__}: {exc}", "error"
+                item.image = None  # free memory (data URLs can be large)
+        finally:
+            self.running = False
+        return self.items
 
 
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(description="이미지를 분석해 요소 txt 에 새 항목을 추가합니다.")
-    parser.add_argument("images", nargs="+", help="이미지 파일 경로")
+    parser.add_argument("images", nargs="+", help="이미지 파일 또는 폴더 경로 (여러 개면 차례로 분석)")
     parser.add_argument("--apply", action="store_true", help="새 항목을 txt 에 실제로 추가 (없으면 미리보기)")
+    parser.add_argument("--full-prompt", action="store_true", help="이미지마다 풀 프롬프트도 생성")
+    parser.add_argument("--save-full-prompt", nargs="?", const="", default=None, metavar="FILE",
+                        help="풀 프롬프트를 파일에 저장 (경로 생략 시 설정의 기본 파일)")
     parser.add_argument("--rating", default="sfw", choices=RATINGS)
     parser.add_argument("--backend", choices=list(BACKENDS))
     parser.add_argument("--model-path", help="모델 폴더 (설정 파일 값 대신 사용)")
@@ -836,21 +1053,35 @@ def main(argv=None) -> None:
     for name in ("backend", "model_path", "model_id", "api_base"):
         if getattr(args, name):
             setattr(cfg, name, getattr(args, name))
+    if args.full_prompt or args.save_full_prompt is not None:
+        cfg.full_prompt = True
+    if args.save_full_prompt:
+        cfg.full_prompt_file = args.save_full_prompt
     if args.save_config:
         print("설정 저장:", save_config(cfg))
     analyzer = ImageAnalyzer(PromptMaker(user_data_dir=args.user_data), cfg)
-    def show(p: Progress) -> None:
-        print("\r" + str(p)[:150].ljust(150), end="", flush=True)
-
+    queue = AnalysisQueue(analyzer, auto_apply=args.apply, rating=args.rating,
+                          auto_save_full_prompt=args.save_full_prompt is not None)
     for path in args.images:
-        result = analyzer.analyze(path, progress=show)
-        print(f"\n== {path}")
-        for key, rows in result["elements"].items():
+        queue.add_folder(path) if os.path.isdir(path) else queue.add(path)
+    total = len(queue.items)
+
+    def show(item: QueueItem, p: Progress) -> None:
+        print("\r" + f"[{item.id}/{total:04d} {item.name}] {p}"[:160].ljust(160), end="", flush=True)
+
+    for item in queue.run(progress=show):
+        print(f"\n== {item.name}: {item.status} {item.error}")
+        if not item.result:
+            continue
+        for key, rows in item.result["elements"].items():
             for r in rows:
                 print(f"  [{r['status']:<11}] {key}: {r['text']}")
-        if args.apply:
-            rep = analyzer.apply(result["new"], args.rating)
-            print(f"  -> {rep['added_count']}개 추가")
+        if item.result.get("full_prompt"):
+            print(f"  풀 프롬프트: {item.result['full_prompt']}")
+        if item.report:
+            print(f"  -> {item.report['added_count']}개 추가")
+        if item.full_prompt_report:
+            print(f"  -> 풀 프롬프트 {item.full_prompt_report['saved_count']}개 저장: {item.full_prompt_report['path']}")
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ Rules:
 - If the examples use placeholders such as {her}, {her_obj}, {partner}, use the same placeholders instead of pronouns.
 - Be specific (colors, materials, cuts, light direction, place details), but do not invent things that are not in the image.
 - Put each item under the most specific key that fits (for example a bikini goes under swimwear when that key exists, a jacket under outerwear, shoes under footwear).
+{extra_rules}
 
 Example reply:
 {"hair": ["long wavy chestnut hair"], "location": ["on a sunny tropical beach"], "lighting": ["soft golden-hour sunlight"]}

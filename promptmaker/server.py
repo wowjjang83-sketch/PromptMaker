@@ -28,7 +28,24 @@ def make_handler(maker: PromptMaker):
         def _json(self, code: int, data) -> None:
             self._send(code, json.dumps(data, ensure_ascii=False).encode("utf-8"))
 
+        def _vision(self, method: str):
+            from . import vision_api  # optional feature, loaded on first use
+
+            try:
+                payload = {}
+                if method == "POST":
+                    length = int(self.headers.get("Content-Length", 0))
+                    payload = json.loads(self.rfile.read(length) or b"{}")
+                code, data = vision_api.handle(maker, method, self.path, payload)
+            except ImportError as exc:
+                code, data = 400, {"error": f"이미지 분석에 필요한 패키지가 없습니다: {exc}"}
+            except Exception as exc:
+                code, data = 400, {"error": f"{type(exc).__name__}: {exc}"}
+            self._json(code, data)
+
         def do_GET(self):
+            if self.path.startswith("/api/vision/"):
+                return self._vision("GET")
             if self.path.startswith("/api/info"):
                 return self._json(200, maker.info())
             if self.path.startswith("/api/reload"):
@@ -40,6 +57,8 @@ def make_handler(maker: PromptMaker):
             self._json(404, {"error": "not found"})
 
         def do_POST(self):
+            if self.path.startswith("/api/vision/"):
+                return self._vision("POST")
             if not self.path.startswith("/api/generate"):
                 return self._json(404, {"error": "not found"})
             length = int(self.headers.get("Content-Length", 0))

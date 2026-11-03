@@ -305,6 +305,55 @@ pm = PromptMaker(llm=MyLLM())
 pm.generate("카페", use_llm=True)
 ```
 
+### 7-1. 이미지 분석으로 요소 자동 추가 (선택 기능)
+
+이미지를 비전 모델로 분석해 요소별 영문 문구를 JSON 으로 받고, 기존 요소 txt 와 **중복되지 않는 항목만** 파일 끝에 추가합니다. 프롬프트 생성 자체는 여전히 LLM 을 쓰지 않으며, 이 기능을 쓸 때만 모델이 필요합니다.
+
+처리 과정: 이미지 → 비전 모델 (기본 `Qwen/Qwen3-VL-4B-Instruct`) → `{"hair": ["..."], "location": ["..."]}` → 파싱 → 안전 검사 + 중복 확인 → `elements/<요소>.txt` 끝에 추가
+
+**필요 패키지**: `pip install torch transformers pillow` (transformers 4.57 이상). ComfyUI 파이썬에는 보통 이미 설치되어 있습니다.
+
+**모델 설정** (`config/vision.json`, HTML 페이지의 "모델 설정" 에서 저장 가능, 깃에는 올라가지 않음)
+
+| 항목 | 설명 |
+|---|---|
+| `backend` | `transformers` (로컬 모델 폴더, 기본) 또는 `openai` (Ollama, LM Studio, llama.cpp `llama-server` 등 OpenAI 호환 서버. GGUF 모델은 이 방식으로 연결) |
+| `model_path` | 모델 폴더 위치 (`config.json` 과 `.safetensors` 가 있는 폴더). 비우면 `model_id` 를 자동 다운로드 |
+| `model_id` | Hugging Face 모델 id, 또는 `openai` 백엔드에서 서버의 모델명. 다른 모델(예: `Qwen/Qwen3-VL-8B-Instruct`)로 바꿀 수 있음 |
+| `api_base`, `api_key` | `openai` 백엔드의 서버 주소 / 키 |
+| `device`, `dtype` | `auto` / `cuda` / `cpu`, `auto` / `bfloat16` / `float16` / `float32` |
+| `max_items_per_key` | 요소당 최대 문구 수 (기본 3) |
+| `skip_keys` | 분석하지 않을 요소 (기본: casting, age, outfit_type, nationality, camera_movement, pacing) |
+
+**중복 확인**: 해당 요소의 모든 수위 파일(`<요소>.txt`, `.suggestive.txt`, `.explicit.txt`)과 사용자 데이터 폴더의 줄을 읽어, 가중치(`3::`), 줄 끝 태그(`#tag +tag !tag`), `{ }`, 앞의 a/an/the, 대소문자, 공백, 문장부호를 무시하고 비교합니다. 미성년자 연상 표현은 추가하지 않고, txt 파일이 없는 요소(JSON 전용 등)도 건너뜁니다. 기존 줄은 수정하지 않고 `# 이미지 분석 자동 추가 (날짜)` 주석 아래에 덧붙이기만 합니다.
+
+**사용 방법**
+
+- HTML 페이지: 아래쪽 "이미지 분석 → 요소 자동 추가" 에서 "찾아보기" 로 모델 폴더를 고르고, 이미지를 끌어다 놓고(또는 Ctrl+V) "이미지 분석". 새 항목만 체크되어 나오며 문구를 고친 뒤 "선택 항목 txt 에 추가".
+- ComfyUI: `PromptMaker 이미지 분석 → 요소 추가` 노드. `IMAGE` 입력, `model_path` 에 모델 폴더, `write_to_txt` 를 끄면 미리보기만 합니다. `save_as_default` 를 켜면 설정을 `config/vision.json` 에 저장합니다.
+- 명령줄:
+
+```bash
+python -m promptmaker.vision photo.jpg                       # 미리보기 (추가 안 함)
+python -m promptmaker.vision photo.jpg --apply               # 새 항목을 txt 에 추가
+python -m promptmaker.vision photo.jpg --model-path "F:\models\Qwen3-VL-4B-Instruct" --save-config
+python -m promptmaker.vision photo.jpg --backend openai --api-base http://127.0.0.1:11434/v1 --model-id qwen3-vl:4b
+```
+
+- 파이썬:
+
+```python
+from promptmaker import PromptMaker
+from promptmaker.vision import ImageAnalyzer, load_config
+
+pm = PromptMaker()
+an = ImageAnalyzer(pm, load_config())
+result = an.analyze("photo.jpg")      # {"elements": {요소: [{"text", "status"}]}, "new": {...}, "raw": 모델 응답}
+report = an.apply(result["new"])       # {"added": {...}, "skipped": {...}, "added_count": n}
+```
+
+분석 지시문은 `promptmaker/data/vision/analyze_prompt.txt` 에서 고칠 수 있습니다. 요소 목록과 예시 문구는 현재 요소 파일에서 자동으로 채워지므로 요소를 새로 추가해도 따로 고칠 필요가 없습니다.
+
 ## 8. 안전 규칙 (성인 전용)
 
 - 모든 인물은 20세 이상: `age` 값이 20 미만이면 20으로 보정하고 경고를 남깁니다. 주어 문장에는 `adult man` 등 성인임이 명시됩니다.

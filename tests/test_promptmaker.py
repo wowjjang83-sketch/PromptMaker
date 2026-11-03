@@ -321,3 +321,14 @@ class ModelProfileTests(unittest.TestCase):
     def test_old_profiles_removed(self):
         for old in ("flux", "sdxl", "wan_video"):
             self.assertNotIn(old, self.pm.info()["model_profiles"])
+
+
+class TimeOfDayTests(unittest.TestCase):
+    def test_dusk_never_gets_midday_sun(self):
+        pm = PromptMaker(translator=NoTranslator())
+        for seed in range(60):
+            r = pm.generate("beach at dusk", prompt_type="video", seed=seed, model_profile="none")
+            low = r.prompt.lower()
+            if "dusk" in low or "sunset" in low or "golden hour" in low:
+                self.assertNotIn("midday", low, r.prompt)
+                self.assertNotIn("noon", low, r.prompt)

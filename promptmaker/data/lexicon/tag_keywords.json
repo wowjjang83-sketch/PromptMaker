@@ -22,6 +22,7 @@
     "winter": ["winter", "snow", "snowy", "wool", "scarf", "coat", "boots", "turtleneck", "puffer"],
     "rain": ["rain", "rainy", "drizzle"],
     "overcast": ["overcast", "cloudy", "grey sky", "gray sky"],
+    "midday": ["midday", "noon", "high sun", "harsh sun"],
     "sunny": ["sunlight", "midday sun", "sunny", "sunbeam", "sun-drenched", "bright sun"],
     "snow": ["snow", "snowy", "snowflakes"],
     "night": ["night", "in the evening", "evening light", "midnight", "moonlight", "neon", "starry", "candlelight", "late at night", "club lighting", "string lights"],

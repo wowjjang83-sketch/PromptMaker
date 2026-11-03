@@ -1,0 +1,16 @@
+{
+  "id": "portrait_default",
+  "name": "기본 인물 사진 (요청 기본 템플릿)",
+  "type": "image",
+  "keywords": ["portrait", "photo", "woman"],
+  "description": "사진 스타일 > 인물 수 > 성별 > 국적 > 외모/나이 > 외모 스타일 > 의상 상태 > 포즈/행동 > 남성 상호작용 > 장소 > 조명 순서의 기본 템플릿",
+  "sentences": [
+    {"text": "A {photo_style} of {subject}."},
+    {"text": "{She} {has} {hair}, {makeup}, and {skin} skin."},
+    {"text": "{She} {wears} {attire}, {attire_state}."},
+    {"text": "{She} {is} {pose}, {action}, with {expression}."},
+    {"text": "{She} {is} {interaction}.", "when": "male > 0"},
+    {"text": "The scene takes place {location}."},
+    {"text": "{lighting}, {lighting_effect}."}
+  ]
+}

@@ -1,0 +1,25 @@
+# 외모 수준 (형용사)
+3::beautiful
+3::stunning
+2::gorgeous
+2::attractive
+elegant
+charming
+strikingly beautiful
+naturally pretty
+glamorous
+radiant
+graceful
+sophisticated
+cute
+alluring
+captivating
+breathtaking
+photogenic
+refined
+youthful-looking
+mature and confident
+girl-next-door
+model-like
+sultry
+fresh-faced

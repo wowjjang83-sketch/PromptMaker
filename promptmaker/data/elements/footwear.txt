@@ -1,0 +1,11 @@
+# 신발. "barefoot" 은 특별히 ", barefoot" 으로 처리됩니다.
+barefoot #summer
+strappy sandals #summer
+flip-flops #summer #beach
+white sneakers
+black ankle boots #winter
+knee-high leather boots #winter
+pointed stiletto heels #formal
+ballet flats
+platform loafers
+espadrille wedges #summer

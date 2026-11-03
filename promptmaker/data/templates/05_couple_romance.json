@@ -1,0 +1,33 @@
+{
+  "id": "couple_romance",
+  "name": "커플 로맨스",
+  "type": "image",
+  "keywords": ["couple", "romance", "romantic", "boyfriend", "lovers", "date"],
+  "description": "남녀 커플의 상호작용 중심 템플릿 (남성 1명 이상 필수)",
+  "casting_filter": {
+    "male_min": 1,
+    "male_max": 1,
+    "female_max": 1
+  },
+  "sentences": [
+    {
+      "text": "A {mood} {photo_style} of {subject} {location}."
+    },
+    {
+      "text": "{She} {is} {interaction}, with {expression}."
+    },
+    {
+      "text": "{She} {wears} {attire}, {attire_state}, and {has} {hair} with {makeup}."
+    },
+    {
+      "text": "{Partner} {is_m} dressed in {male_attire}."
+    },
+    {
+      "text": "{lighting} wraps around the couple, {lighting_effect}."
+    },
+    {
+      "text": "{camera}, {color_grade}.",
+      "probability": 0.7
+    }
+  ]
+}

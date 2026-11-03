@@ -1,0 +1,11 @@
+# 남성 인물 묘사 (형용사)
+handsome
+tall
+athletic
+well-dressed
+broad-shouldered
+bearded
+clean-shaven
+muscular
+charming
+rugged

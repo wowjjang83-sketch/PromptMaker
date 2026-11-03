@@ -1,0 +1,16 @@
+{
+  "id": "casual_snapshot",
+  "name": "일상 스냅샷",
+  "type": "image",
+  "keywords": ["snapshot", "selfie", "casual", "daily", "candid", "smartphone", "instagram"],
+  "description": "스마트폰/필름카메라로 찍은 듯한 자연스러운 일상 사진",
+  "casting_filter": {"male_max": 1},
+  "defaults": {"photo_style": "smartphone selfie-style photograph"},
+  "sentences": [
+    {"options": ["A casual {photo_style} of {subject} {location}.", "An unposed {photo_style} capturing {subject} {location}."]},
+    {"text": "{She} {is} {action}, with {expression}."},
+    {"text": "{She} {wears} {attire} and {has} {hair}, with {makeup}."},
+    {"text": "{She} {is} {interaction}.", "when": "male > 0"},
+    {"text": "{lighting}, {lighting_effect}, {color_grade}, authentic everyday vibe."}
+  ]
+}

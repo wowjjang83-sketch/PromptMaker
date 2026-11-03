@@ -1,0 +1,13 @@
+{
+  "label": "인물 수 / 성별 구성",
+  "description": "female / male 은 인물 수입니다. 템플릿 문법(she/they, the man/the men)과 조건문(when)에 사용됩니다.",
+  "default": "one woman",
+  "items": [
+    {"text": "one woman", "female": 1, "male": 0, "weight": 6},
+    {"text": "two women", "female": 2, "male": 0, "weight": 2},
+    {"text": "three women", "female": 3, "male": 0, "weight": 1},
+    {"text": "a woman and a man", "female": 1, "male": 1, "weight": 3},
+    {"text": "two women and a man", "female": 2, "male": 1, "weight": 1},
+    {"text": "a woman and two men", "female": 1, "male": 2, "weight": 0.5}
+  ]
+}

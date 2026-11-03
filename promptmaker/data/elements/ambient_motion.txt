@@ -1,0 +1,11 @@
+# [영상] 배경/환경의 움직임
+while raindrops streak down the window behind {her_obj}
+while petals drift slowly through the air
+while city lights flicker in the background +urban
+while curtains billow in a soft breeze +curtain
+while waves roll gently onto the shore
+while steam rises from a cup beside {her_obj}
+while snowflakes fall softly around {her_obj}
+while dust particles float in the light beams
+while neon signs buzz and flicker +urban
+while leaves rustle in the wind

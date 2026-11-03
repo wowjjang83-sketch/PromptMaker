@@ -1,0 +1,32 @@
+# 포즈 (현재분사구, 문장: "{She} {is} {pose}")
+standing confidently with one hand on {her} hip
+leaning against a wall with {her} arms crossed
+sitting cross-legged on the floor
+perched on the edge of a bed
+lying on {her} side propped up on one elbow
+looking back over {her} shoulder
+sitting on a high stool with legs crossed
+kneeling on a soft rug
+walking toward the camera
+leaning forward on a table
+stretching {her} arms above {her} head
+hugging {her} knees to {her} chest
+lounging on a velvet sofa
+twirling with {her} dress flaring out +dress
+sitting by the window with {her} chin in {her} hand
+tucking a strand of hair behind {her} ear
+resting {her} head on {her} folded arms
+standing in a relaxed contrapposto pose
+crouching down playfully
+lying on {her} back with hair spread out
+leaning on a railing
+sitting on the steps with one knee raised
+posing with both hands in {her} hair
+peeking from behind a curtain
+# 해변·물가 포즈 (장면에 sand / water 가 있을 때만 선택됨)
+sitting on the warm sand
+kneeling on the sand with {her} hands on {her} thighs
+wading knee-deep in the shallow water
+standing at the water's edge
+walking barefoot along the shoreline
+lying on a beach towel +beach

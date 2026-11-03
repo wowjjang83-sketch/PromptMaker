@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "promptmaker"
+version = "0.1.0"
+description = "LLM 없이 규칙/템플릿 기반으로 영문 자연어 이미지/영상 프롬프트를 생성하는 라이브러리"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = []
+
+[project.optional-dependencies]
+translate = ["deep-translator>=1.11"]
+
+[project.scripts]
+promptmaker = "promptmaker.cli:main"
+promptmaker-server = "promptmaker.server:main"
+
+[tool.setuptools]
+packages = ["promptmaker"]
+
+[tool.setuptools.package-data]
+promptmaker = ["data/**/*", "web/*"]

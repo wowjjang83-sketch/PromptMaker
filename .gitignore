@@ -1,0 +1,14 @@
+# 토큰/비밀 정보 (절대 커밋 금지)
+token/
+*.token
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/

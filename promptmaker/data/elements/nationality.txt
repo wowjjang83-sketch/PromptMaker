@@ -1,0 +1,47 @@
+# 국적 / 출신 (형용사 형태)
+3::Korean
+2::Japanese
+2::Chinese
+Taiwanese
+Thai
+Vietnamese
+Filipino
+Indonesian
+Malaysian
+Singaporean
+Mongolian
+Indian
+American
+Canadian
+Brazilian
+Mexican
+Argentinian
+Colombian
+French
+Italian
+Spanish
+Portuguese
+German
+Dutch
+Swedish
+Norwegian
+Russian
+Ukrainian
+Polish
+Czech
+British
+Irish
+Greek
+Turkish
+Egyptian
+Moroccan
+Nigerian
+Kenyan
+South African
+Australian
+New Zealander
+Persian
+Lebanese
+Israeli
+Hawaiian
+Eurasian

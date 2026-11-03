@@ -1,0 +1,165 @@
+{
+  "_comment": "키워드 -> 관련 단어. [단어, 확률]. 확률이 높을수록 자주 선택됩니다. elements 는 해당 요소에서 우선 선택(가중치 증가)할 항목이며, 목록에 없으면 후보로 추가됩니다.",
+  "rain": {
+    "aliases": ["rainy", "raining", "drizzle", "storm"],
+    "adjectives": [["moody", 0.8], ["melancholic", 0.5], ["wet", 0.7], ["glistening", 0.5]],
+    "verbs": [["raindrops trickling down the glass", 0.6], ["puddles reflecting the lights", 0.5]],
+    "nouns": [["rain-streaked windows", 0.5], ["a transparent umbrella", 0.4]],
+    "elements": {"time_weather": ["on a rainy evening"], "location": ["in a rainy city street with glowing reflections"], "ambient_motion": ["while raindrops streak down the window behind {her_obj}"], "attire_state": ["damp from the rain"], "action": ["holding an umbrella"]}
+  },
+  "cafe": {
+    "aliases": ["coffee", "coffeeshop", "café"],
+    "adjectives": [["cozy", 0.8], ["warm", 0.6], ["relaxed", 0.5]],
+    "verbs": [["steam curling from a latte", 0.6]],
+    "nouns": [["wooden tables", 0.5], ["soft jazz ambiance", 0.3]],
+    "elements": {"location": ["in a cozy cafe with wooden interiors"], "action": ["sipping a cup of coffee"], "ambient_motion": ["while steam rises from a cup beside {her_obj}"], "lighting": ["warm tungsten lamp light"]}
+  },
+  "beach": {
+    "aliases": ["sea", "ocean", "shore", "seaside", "summer"],
+    "adjectives": [["sun-drenched", 0.8], ["breezy", 0.6], ["carefree", 0.5], ["tropical", 0.5]],
+    "verbs": [["waves washing over the sand", 0.6], ["sea breeze tousling {her} hair", 0.5]],
+    "nouns": [["turquoise water", 0.6], ["palm trees", 0.4]],
+    "elements": {"location": ["on a sunny tropical beach"], "outfit_type": ["swimwear"], "swimwear": ["a white string bikini", "a sleek black one-piece swimsuit"], "dress": ["a flowing floral sundress"], "lighting": ["soft golden-hour sunlight", "bright midday sun with crisp shadows"], "ambient_motion": ["while waves roll gently onto the shore"]}
+  },
+  "night": {
+    "aliases": ["midnight", "evening", "nighttime"],
+    "adjectives": [["mysterious", 0.6], ["intimate", 0.6], ["dark", 0.4]],
+    "verbs": [["city lights twinkling in the distance", 0.6]],
+    "nouns": [["glowing streetlights", 0.5]],
+    "elements": {"time_weather": ["late at night", "under a clear starry sky"], "lighting": ["cool blue moonlight", "pink and teal neon glow"]}
+  },
+  "neon": {
+    "aliases": ["cyberpunk", "nightlife", "club"],
+    "adjectives": [["electric", 0.7], ["vibrant", 0.7], ["futuristic", 0.5]],
+    "verbs": [["neon signs buzzing overhead", 0.6]],
+    "nouns": [["holographic signs", 0.4], ["wet asphalt reflections", 0.5]],
+    "elements": {"lighting": ["pink and teal neon glow", "red ambient club lighting"], "location": ["in a neon-lit Seoul alley at night"], "color_grade": ["vibrant neon color palette"], "photo_style": ["neon-noir cinematic photograph", "cyberpunk-inspired photograph"]}
+  },
+  "snow": {
+    "aliases": ["winter", "snowy", "cold"],
+    "adjectives": [["serene", 0.6], ["crisp", 0.6], ["cozy", 0.5]],
+    "verbs": [["snowflakes settling on {her} hair", 0.6], ["breath visible in the cold air", 0.4]],
+    "nouns": [["frosted windows", 0.4]],
+    "elements": {"time_weather": ["on a snowy winter day"], "location": ["in a snowy mountain cabin"], "outerwear": ["a long camel wool coat"], "top": ["a cozy oversized knit sweater"], "ambient_motion": ["while snowflakes fall softly around {her_obj}"]}
+  },
+  "bedroom": {
+    "aliases": ["bed", "morning", "sheets"],
+    "adjectives": [["intimate", 0.7], ["lazy", 0.5], ["soft", 0.6]],
+    "verbs": [["morning light spilling across the sheets", 0.6]],
+    "nouns": [["rumpled white linen", 0.5]],
+    "elements": {"location": ["in a sunlit bedroom with white linen sheets"], "pose": ["perched on the edge of a bed", "lying on {her} side propped up on one elbow"], "outfit_type": ["sleepwear"], "sleepwear": ["a satin pajama set", "an oversized sleep shirt"], "action": ["stretching after waking up"]}
+  },
+  "office": {
+    "aliases": ["work", "business", "secretary", "ceo"],
+    "adjectives": [["professional", 0.7], ["sleek", 0.5], ["confident", 0.6]],
+    "verbs": [["papers scattered across the desk", 0.4]],
+    "nouns": [["a glass-walled office", 0.5]],
+    "elements": {"top": ["a crisp office blouse"], "bottom": ["a pencil skirt"], "location": ["in a modern apartment with floor-to-ceiling windows"]}
+  },
+  "hanbok": {
+    "aliases": ["traditional", "palace", "joseon"],
+    "adjectives": [["graceful", 0.8], ["timeless", 0.6], ["elegant", 0.6]],
+    "verbs": [["silk ribbons fluttering in the breeze", 0.5]],
+    "nouns": [["wooden lattice doors", 0.5]],
+    "elements": {"outfit_type": ["traditional"], "traditional": ["a traditional Korean hanbok"], "location": ["in a traditional Korean hanok courtyard"], "nationality": ["Korean"]}
+  },
+  "cherry": {
+    "aliases": ["blossom", "sakura", "spring"],
+    "adjectives": [["romantic", 0.7], ["dreamy", 0.7], ["fresh", 0.5]],
+    "verbs": [["pink petals drifting through the air", 0.7]],
+    "nouns": [["cherry blossom branches", 0.6]],
+    "elements": {"location": ["on a quiet Tokyo street lined with cherry blossoms"], "time_weather": ["on a bright spring afternoon"], "ambient_motion": ["while petals drift slowly through the air"], "color_grade": ["muted pastel colors"]}
+  },
+  "sunset": {
+    "aliases": ["dusk", "golden", "twilight"],
+    "adjectives": [["warm", 0.8], ["nostalgic", 0.5], ["glowing", 0.6]],
+    "verbs": [["the sky melting into orange and pink", 0.6]],
+    "nouns": [["long soft shadows", 0.4]],
+    "elements": {"lighting": ["warm sunset glow", "soft golden-hour sunlight"], "time_weather": ["at dusk"], "location": ["in a field of golden wheat at sunset", "in a desert at golden hour"]}
+  },
+  "dance": {
+    "aliases": ["dancing", "dancer", "kpop", "idol"],
+    "adjectives": [["energetic", 0.7], ["dynamic", 0.6], ["rhythmic", 0.5]],
+    "verbs": [["motion blur trailing {her} movements", 0.5]],
+    "nouns": [["a polished wooden stage", 0.3]],
+    "elements": {"action": ["dancing to soft music"], "motion": ["spinning slowly in place", "swaying {her} hips to the music"], "pose": ["twirling with {her} dress flaring out"], "video_style": ["music-video style sequence"]}
+  },
+  "bar": {
+    "aliases": ["wine", "cocktail", "jazz", "pub"],
+    "adjectives": [["sultry", 0.6], ["intimate", 0.6], ["sophisticated", 0.6]],
+    "verbs": [["ice clinking in a glass", 0.4]],
+    "nouns": [["amber bottles on the shelves", 0.5]],
+    "elements": {"location": ["in a dimly lit jazz bar"], "action": ["holding a glass of red wine"], "lighting": ["warm tungsten lamp light", "moody low-key lighting"]}
+  },
+  "pool": {
+    "aliases": ["swimming", "swimsuit", "bikini", "resort"],
+    "adjectives": [["luxurious", 0.6], ["sun-soaked", 0.7], ["relaxed", 0.5]],
+    "verbs": [["water droplets glistening on {her} skin", 0.7]],
+    "nouns": [["crystal-clear water", 0.5]],
+    "elements": {"location": ["by an infinity pool at a resort"], "outfit_type": ["swimwear"], "swimwear": ["a sleek black one-piece swimsuit", "a bikini with a sheer sarong tied at the hip"], "skin": ["glistening, slightly sweaty"]}
+  },
+  "forest": {
+    "aliases": ["woods", "nature", "garden", "flower", "flowers"],
+    "adjectives": [["ethereal", 0.6], ["peaceful", 0.7], ["lush", 0.6]],
+    "verbs": [["sunbeams filtering through the leaves", 0.7]],
+    "nouns": [["moss-covered stones", 0.4], ["wildflowers", 0.5]],
+    "elements": {"location": ["in a bamboo forest", "in a lush botanical greenhouse", "in a lavender field in Provence"], "lighting": ["dappled sunlight through leaves"]}
+  },
+  "city": {
+    "aliases": ["street", "urban", "downtown", "seoul", "tokyo"],
+    "adjectives": [["urban", 0.7], ["stylish", 0.6], ["bustling", 0.5]],
+    "verbs": [["traffic lights blurring in the background", 0.5]],
+    "nouns": [["towering skyscrapers", 0.4]],
+    "elements": {"location": ["on a rooftop overlooking the city skyline", "in a neon-lit Seoul alley at night"], "photo_style": ["candid street photograph"]}
+  },
+  "vintage": {
+    "aliases": ["retro", "film", "analog", "90s", "80s"],
+    "adjectives": [["nostalgic", 0.8], ["timeless", 0.5], ["grainy", 0.5]],
+    "verbs": [["light leaks bleeding into the frame", 0.5]],
+    "nouns": [["film grain", 0.6]],
+    "elements": {"photo_style": ["analog 35mm film photograph", "vintage 1990s flash photograph", "retro 1980s glamour photograph"], "color_grade": ["soft faded film look", "warm film tones"]}
+  },
+  "smile": {
+    "aliases": ["happy", "cheerful", "laugh", "laughing"],
+    "adjectives": [["joyful", 0.8], ["bright", 0.6], ["lighthearted", 0.5]],
+    "verbs": [],
+    "nouns": [],
+    "elements": {"expression": ["a bright, cheerful grin", "a gentle smile"], "action": ["laughing naturally", "smiling softly at the camera"]}
+  },
+  "sad": {
+    "aliases": ["lonely", "melancholy", "tears"],
+    "adjectives": [["melancholic", 0.8], ["wistful", 0.6], ["quiet", 0.5]],
+    "verbs": [["a single tear catching the light", 0.4]],
+    "nouns": [],
+    "elements": {"expression": ["a melancholic expression", "a dreamy faraway look"], "action": ["gazing out into the distance"]}
+  },
+  "sexy": {
+    "aliases": ["seductive", "sensual", "hot", "glamour"],
+    "adjectives": [["sensual", 0.8], ["alluring", 0.7], ["confident", 0.6]],
+    "verbs": [],
+    "nouns": [],
+    "elements": {"expression": ["a confident, sultry gaze", "a flirtatious glance"], "beauty": ["alluring", "sultry"], "mood": ["sensual"]}
+  },
+  "couple": {
+    "aliases": ["boyfriend", "lover", "lovers", "date", "romance", "romantic", "husband"],
+    "adjectives": [["romantic", 0.8], ["tender", 0.6], ["intimate", 0.6]],
+    "verbs": [],
+    "nouns": [],
+    "elements": {"casting": ["a woman and a man"], "mood": ["romantic", "intimate"]}
+  },
+  "man": {
+    "aliases": ["men", "male", "guy"],
+    "adjectives": [],
+    "verbs": [],
+    "nouns": [],
+    "elements": {"casting": ["a woman and a man"]}
+  },
+  "studio": {
+    "aliases": ["photoshoot"],
+    "adjectives": [["polished", 0.7], ["clean", 0.6]],
+    "verbs": [],
+    "nouns": [],
+    "elements": {"location": ["in a minimalist white photo studio"], "photo_style": ["high-fashion editorial photograph", "glossy magazine cover photograph"], "lighting": ["bright high-key studio lighting"]}
+  },
+  "gravure": {"aliases": ["pictorial", "idol"], "adjectives": [["playful", 0.7], ["sun-kissed", 0.6], ["glossy", 0.6], ["youthful-looking", 0.3]], "verbs": [["posing playfully for the camera", 0.6]], "nouns": [], "elements": {"photo_style": ["Japanese gravure magazine photograph", "gravure photo shoot image"], "outfit_type": ["swimwear"], "swimwear": ["a white string bikini", "a sleek black one-piece swimsuit"], "expression": ["a bright, cheerful grin", "a playful wink", "a shy, bashful expression"]}}
+}

@@ -12,7 +12,7 @@ leaning forward on a table
 stretching {her} arms above {her} head
 hugging {her} knees to {her} chest
 lounging on a velvet sofa
-twirling with {her} dress flaring out
+twirling with {her} dress flaring out +hem
 sitting by the window with {her} chin in {her} hand
 tucking a strand of hair behind {her} ear
 resting {her} head on {her} folded arms
@@ -23,3 +23,10 @@ leaning on a railing
 sitting on the steps with one knee raised
 posing with both hands in {her} hair
 peeking from behind a curtain
+# 해변·물가 포즈 (장면에 sand / water 가 있을 때만 선택됨)
+sitting on the warm sand
+kneeling on the sand with {her} hands on {her} thighs
+wading knee-deep in the shallow water
+standing at the water's edge
+walking barefoot along the shoreline
+lying on a beach towel #summer +beach

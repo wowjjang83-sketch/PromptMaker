@@ -247,6 +247,8 @@ async function generate() {
         <button class="secondary" data-copy="${i}" style="padding:4px 10px">복사</button></div>
       <p>${esc(r.prompt)}</p>
       ${r.warnings.map(w => `<div class="warn">⚠ ${esc(w)}</div>`).join("")}
+      <details><summary class="hint">선택 과정 (장면 태그: ${esc((r.lexicon.scene_tags || []).join(", "))})</summary>
+        <pre style="white-space:pre-wrap;font-size:12px">${esc((r.lexicon.trace || []).join("\n"))}</pre></details>
     </div>`).join("");
   document.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => {
     navigator.clipboard.writeText(data.results[+b.dataset.copy].prompt); b.textContent = "복사됨";

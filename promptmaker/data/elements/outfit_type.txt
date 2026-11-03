@@ -1,0 +1,9 @@
+# 의상 구성 (어떤 조합으로 입을지). 텍스트는 내부 이름이므로 바꾸지 마세요.
+# 사용 가능: top_bottom, dress, swimwear, sleepwear, traditional, sportswear (+ lingerie 는 suggestive 파일)
+# 확률은 가중치와 장면 태그(relations.json 의 affinity)로 정해집니다.
+3::top_bottom #casual
+2::dress
+swimwear #swim #summer
+sleepwear #sleep #indoor
+0.5::traditional #traditional
+0.7::sportswear #sport

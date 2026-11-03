@@ -211,3 +211,48 @@ class ServerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CoherenceTests(unittest.TestCase):
+    """Relation engine: the scene decides what fits (beach -> swimwear, never a bed)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.pm = PromptMaker(translator=NoTranslator())
+
+    def _run(self, text, n=150, **kw):
+        return [self.pm.generate(text, GenerateOptions(mode="random", seed=i, **kw)) for i in range(n)]
+
+    def test_beach_gravure_never_bedroom_things(self):
+        banned = ["bed ", "sheets", "pajama", "sleep shirt", "nightgown", "lingerie", "candle",
+                  "sofa", "snow", "ankle boots", "stiletto", "tucked in", "dress flaring"]
+        swim = 0
+        for r in self._run("gravure photoshoot on the beach"):
+            p = r.prompt.lower()
+            for w in banned:
+                self.assertNotIn(w, p, r.prompt)
+            swim += any(w in p for w in ("bikini", "swimsuit", "monokini", "swim"))
+        self.assertGreater(swim, 120)  # swimwear is the overwhelming choice
+
+    def test_bedroom_has_no_beach_props(self):
+        for r in self._run("photo in the bedroom", n=100):
+            p = r.prompt.lower()
+            for w in ("sand", "shoreline", "wading", "beach towel", "splashing water"):
+                self.assertNotIn(w, p, r.prompt)
+
+    def test_inline_tags_are_parsed(self):
+        from promptmaker.data_loader import _parse_txt_line
+        it = _parse_txt_line("2::lying on a beach towel #summer +beach !night")
+        self.assertEqual(it.text, "lying on a beach towel")
+        self.assertEqual((it.weight, it.tags, it.requires, it.excludes), (2.0, {"summer"}, {"beach"}, {"night"}))
+
+    def test_conflicts_give_zero_weight(self):
+        rel = self.pm.relations
+        from promptmaker.data_loader import Item
+        mult, why = rel.explain(Item("a lace bralette", tags={"lingerie"}), rel.closure({"beach"}), True)
+        self.assertEqual(mult, 0.0)
+        self.assertIn("충돌", why)
+
+    def test_trace_is_reported(self):
+        r = self.pm.generate("gravure photoshoot on the beach", GenerateOptions(mode="random", seed=3))
+        self.assertTrue(any(line.startswith("location:") for line in r.lexicon.get("trace", [])))

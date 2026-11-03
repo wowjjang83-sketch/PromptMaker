@@ -49,7 +49,8 @@ _KO_VIDEO = ("영상", "동영상", "비디오", "클립", "뮤비")
 # so "beach" locks the location and not "honey-blonde beach waves" in hair.
 # Groups share a keyword; a keyword consumed by an earlier group is not used by later groups.
 LOCK_GROUPS = (("time_weather",), ("location",), ("photo_style", "video_style"),
-               ("attire", "male_attire"), ("pose", "action", "motion"), ("expression",),
+               ("swimwear", "dress", "top", "bottom", "sleepwear", "lingerie", "traditional", "sportswear",
+                "outerwear", "footwear", "accessory", "male_attire"), ("pose", "action", "motion"), ("expression",),
                ("lighting",), ("hair",), ("makeup",), ("skin",), ("camera",), ("color_grade",),
                ("mood",))
 LOCKABLE = tuple(k for g in LOCK_GROUPS for k in g)
@@ -162,6 +163,7 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
     # direct item matches -> locked pools
     skip = GENERIC | STOPWORDS | set(NUM_WORDS) | FEMALE_SINGULAR | FEMALE_PLURAL | MALE_SINGULAR \
         | MALE_PLURAL | set(COUNTRY_TO_ADJ) | {n.lower() for n in nat_items}
+    skip.discard("gravure")  # also a style word
     keywords = [w for w in dict.fromkeys(words) if len(w) >= 3 and w not in skip]
     lemmas = {k: {k, simple_lemma(k)} for k in keywords}
     used = set()

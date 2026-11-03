@@ -18,6 +18,7 @@ from .data_loader import (PACKAGE_DATA_DIR, RATINGS, Element, Item, Template, lo
                           load_json, load_templates, load_text_files)
 from .intent import Intent, extract
 from .lexicon import LexiconResult, analyze
+from .relations import Relations, SceneContext
 from .translator import DictionaryTranslator, GoogleTranslator, NoTranslator, Translator, is_english
 
 MODES = ("manual", "random", "random_by_type", "random_by_element")
@@ -104,6 +105,9 @@ class PromptMaker:
         self.ko_en: Dict[str, str] = load_json(self.data_dirs, "lexicon/ko_en.json")
         self.system_prompts: Dict[str, str] = load_text_files(self.data_dirs, "system")
         self.model_examples: Dict[str, str] = load_text_files(self.data_dirs, "model_examples")
+        self.relations = Relations.load(load_json(self.data_dirs, "lexicon/relations.json"),
+                                        load_json(self.data_dirs, "lexicon/tag_keywords.json"))
+        self.relations.auto_tag(self.elements)
 
     def list_templates(self, prompt_type: Optional[str] = None) -> List[Template]:
         return [t for t in self.templates.values() if prompt_type in (None, t.type)]
@@ -196,7 +200,8 @@ class PromptMaker:
             prompt=prompt, prompt_type=template.type, template_id=template.id,
             template_name=template.name, seed=seed, original_input=user_input,
             english_input=english, translated=translated, picks=filler.picks,
-            lexicon={**lex.to_dict(), "intent": intent.to_dict()}, warnings=warnings, system_prompt=system_prompt,
+            lexicon={**lex.to_dict(), "intent": intent.to_dict(), "trace": filler.ctx.trace,
+                     "scene_tags": sorted(filler.ctx.tags)}, warnings=warnings, system_prompt=system_prompt,
             model_example=model_example,
         )
 
@@ -258,6 +263,13 @@ class PromptMaker:
         return rng.choice(pool)
 
 
+SCENE_TAGS = {"beach", "pool", "bedroom", "bathroom", "cafe", "bar", "street", "studio", "nature",
+              "urban", "indoor", "outdoor"}
+PICK_ORDER = ["location", "time_weather", "photo_style", "video_style", "attire", "attire_state",
+              "pose", "action", "motion", "interaction", "expression", "ambient_motion", "lighting",
+              "lighting_effect", "camera", "camera_movement", "color_grade", "mood", "pacing",
+              "male_attire"]
+
 INTENT_NOISE = {"taken", "shot", "wearing", "year", "old", "years", "year-old", "years-old",
                 "model", "models", "idol", "idols", "actress", "solo", "alone", "twenties",
                 "thirties", "early", "late", "mid", "gravure", "pictorial",
@@ -282,15 +294,22 @@ class _Filler:
         self.english = english
         self.warnings = warnings
         self.picks: Dict[str, str] = {}
+        self.cache: Dict[str, List[str]] = {}
+        self.ctx = SceneContext(maker.relations)
+        req_tags = maker.relations.tags_for_request(english) if english else set()
+        self.ctx.add(req_tags, provider=bool(req_tags & SCENE_TAGS))
+        self.ctx.add(template.raw.get("tags", []))
         self.cast = self._choose_casting()
         self.computed = self._computed_slots()
+        self._prepick()
 
     # ---------------------------------------------------------- element picks
     def _is_random(self, key: str) -> bool:
         if self.o.mode in ("random", "random_by_type"):
             return True
         if self.o.mode == "random_by_element":
-            return key in self.o.random_elements or "*" in self.o.random_elements
+            r = self.o.random_elements
+            return key in r or "*" in r or ("attire" in r and key in self.maker.relations.garments)
         return False
 
     def _candidates(self, key: str) -> List[Item]:
@@ -310,40 +329,139 @@ class _Filler:
             return el.default
         return items[0].text if items else None
 
+    def _weighted_pick(self, key: str, items: List[Item], n: int,
+                       deterministic: bool = False) -> List[Item]:
+        """Pick n items using base weight x request boost x scene-context relations."""
+        boosts = self.lex.boost_for(key)
+        scored = self.ctx.weigh(items, boosts)
+        valid = [(it, w, why) for it, w, why in scored if w > 0]
+        if not valid:
+            # nothing satisfies the relation rules: fall back to plain weights, but say so
+            self.warnings.append(f"'{key}': 장면 규칙에 맞는 항목이 없어 규칙 없이 선택했습니다.")
+            valid = [(it, it.weight * boosts.get(it.text.lower(), 1.0), "규칙 완화") for it in items]
+        chosen: List[Item] = []
+        pool = list(valid)
+        for _ in range(min(n, len(pool))):
+            if deterministic:
+                idx = 0
+            else:
+                idx = self.rng.choices(range(len(pool)), weights=[w for _, w, _ in pool], k=1)[0]
+            it, w, why = pool.pop(idx)
+            chosen.append(it)
+            self.ctx.trace.append(f"{key}: {it.text}" + (f"  [{why}]" if why else ""))
+        return chosen
+
+    def _commit(self, key: str, items: List[Item]) -> List[str]:
+        provider = key in self.maker.relations.providers
+        for it in items:
+            self.ctx.add(it.tags, provider=provider)
+        texts = [it.text for it in items]
+        self.cache[key] = texts
+        return texts
+
     def pick(self, key: str, n: int = 1) -> List[str]:
+        if key in self.cache and len(self.cache[key]) >= min(n, len(self.cache[key]) or n):
+            return self.cache[key][:n]
+        items = self._candidates(key)
+        by_text = {i.text.lower(): i for i in items}
         if key in self.selections:
             value = str(self.selections[key])
             values = [v.strip() for v in value.split("|") if v.strip()] if "|" in value else [value]
-            return values[:max(n, 1)] if n > 1 else [values[0]]
-        items = self._candidates(key)
+            values = values[:max(n, 1)] if n > 1 else [values[0]]
+            chosen = [by_text.get(v.lower(), Item(text=v)) for v in values]
+            if not any(c.tags for c in chosen):  # user's own text: tag it on the fly
+                rel = self.maker.relations
+                for c in chosen:
+                    c.tags = rel.tags_in_text(c.text) | rel.props_in_text(c.text)
+            return self._commit(key, chosen)
         pool_texts = self.intent.pools.get(key)
         if pool_texts:  # the request mentioned this element: choose only among matches
             allowed = {t.lower() for t in pool_texts}
             restricted = [i for i in items if i.text.lower() in allowed]
             if restricted:
-                items = restricted
-                boosts = self.lex.boost_for(key)
-                pool = list(items)
-                chosen = []
-                for _ in range(min(n, len(pool))):
-                    weights = [i.weight * boosts.get(i.text.lower(), 1.0) for i in pool]
-                    idx = self.rng.choices(range(len(pool)), weights=weights, k=1)[0]
-                    chosen.append(pool.pop(idx).text)
-                return chosen
+                return self._commit(key, self._weighted_pick(key, restricted, n))
         if not items:
             return []
         if not self._is_random(key):
             default = self._default_for(key, items)
-            if n == 1 or default is None:
-                return [default] if default else []
-        boosts = self.lex.boost_for(key)
-        pool = list(items)
-        chosen: List[str] = []
-        for _ in range(min(n, len(pool))):
-            weights = [i.weight * boosts.get(i.text.lower(), 1.0) for i in pool]
-            idx = self.rng.choices(range(len(pool)), weights=weights, k=1)[0]
-            chosen.append(pool.pop(idx).text)
-        return chosen
+            ordered = sorted(items, key=lambda i: 0 if default and i.text == default else 1)
+            return self._commit(key, self._weighted_pick(key, ordered, n, deterministic=True))
+        return self._commit(key, self._weighted_pick(key, items, n))
+
+    # ---------------------------------------------------------- outfit
+    OUTFIT_PARTS = {"top_bottom": ("top", "bottom"), "dress": ("dress",), "swimwear": ("swimwear",),
+                    "sleepwear": ("sleepwear",), "traditional": ("traditional",),
+                    "sportswear": ("sportswear",), "lingerie": ("lingerie",)}
+
+    def _outfit(self) -> str:
+        """Compose a coherent outfit: type -> garments -> layer -> shoes / accessories."""
+        if "attire" in self.cache:
+            return grammar.join_list(self.cache["attire"])
+        if "attire" in self.selections or "outfit_type" not in self.maker.elements:
+            vals = self.pick("attire")
+            return vals[0] if vals else ""
+        forced = None
+        for otype, parts in self.OUTFIT_PARTS.items():
+            if any(p in self.intent.pools or p in self.selections for p in parts):
+                forced = otype
+                break
+        if forced:
+            otype = forced
+            self.selections.setdefault("outfit_type", forced)
+        otype = (self.pick("outfit_type") or ["top_bottom"])[0]
+        self.ctx.add({otype})
+        parts = self.OUTFIT_PARTS.get(otype, ("top", "bottom"))
+        garments = [g for g in (next(iter(self.pick(p)), "") for p in parts) if g]
+        if not garments:
+            return ""
+        main = grammar.join_list(garments)
+        layered = otype in ("top_bottom", "dress", "traditional")
+        cold = bool(self.ctx.tags & {"winter", "rain", "snow"})
+        if layered and "outerwear" in self.maker.elements and \
+                self.rng.random() < (0.6 if cold else 0.15) and "summer" not in self.ctx.tags:
+            outer = self.pick("outerwear")
+            if outer:
+                main += f" under {outer[0]}"
+        extras, barefoot = [], False
+        if otype != "sleepwear" and "footwear" in self.maker.elements and self.rng.random() < 0.5:
+            if otype == "swimwear":  # only beach-friendly shoes with swimwear
+                self.intent.pools.setdefault("footwear", [i.text for i in self.maker.elements["footwear"].items
+                                                          if "summer" in i.tags])
+            shoe = self.pick("footwear")
+            if shoe and shoe[0].lower() == "barefoot":
+                barefoot = True
+            elif shoe:
+                extras.append(shoe[0])
+        if "accessory" in self.maker.elements and self.rng.random() < 0.4:
+            acc = self.pick("accessory")
+            if acc:
+                extras.append(acc[0])
+        text = main + (f" with {grammar.join_list(extras)}" if extras else "") + (", barefoot" if barefoot else "")
+        self.cache["attire"] = [text]
+        self.picks["attire"] = text
+        return text
+
+    # ---------------------------------------------------------- order
+    def _template_slots(self) -> Dict[str, int]:
+        slots: Dict[str, int] = {}
+        for s in self.t.sentences:
+            for text in [s.get("text", "")] + list(s.get("options", [])):
+                for m in _SLOT_RE.finditer(text):
+                    k, n = m.group(1), int(m.group(2) or 1)
+                    slots[k] = max(slots.get(k, 0), n)
+        return slots
+
+    def _prepick(self) -> None:
+        """Choose elements in dependency order (scene first) so relations can apply."""
+        slots = self._template_slots()
+        ordered = [k for k in PICK_ORDER if k in slots] + [k for k in slots if k not in PICK_ORDER]
+        for key in ordered:
+            if key in self.computed:
+                continue
+            if key == "attire":
+                self._outfit()
+            elif key in self.maker.elements or key in self.selections:
+                self.pick(key, slots[key])
 
     def _choose_casting(self) -> Dict[str, Any]:
         el = self.maker.elements.get("casting")
@@ -526,6 +644,9 @@ class _Filler:
                 value = self.computed[key]
                 if "{" in value:
                     value = self._resolve(value, depth + 1) or ""
+            elif key == "attire":
+                value = self._outfit()
+                value = self._resolve(value, depth + 1) or "" if "{" in value else value
             else:
                 n = int(num) if num else 1
                 vals = self.pick(key, n)

@@ -1,8 +1,8 @@
 # 조명 (명사구, 문장 시작)
 soft golden-hour sunlight
 diffused natural window light
-dramatic Rembrandt lighting
-moody low-key lighting
+dramatic Rembrandt lighting #indoor
+moody low-key lighting #indoor
 bright high-key studio lighting
 warm tungsten lamp light
 cool blue moonlight

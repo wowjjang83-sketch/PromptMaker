@@ -183,6 +183,7 @@
         <label class="check"><input type="checkbox" id="v_full_prompt"> 풀 프롬프트도 생성 (이미지를 묘사하는 영문 프롬프트 한 문단)</label>
         <label class="check"><input type="checkbox" id="v_auto_save_fp"> 풀 프롬프트 자동 저장</label>
         <label class="check"><input type="checkbox" id="v_auto_apply"> 새 요소 항목을 검토 없이 바로 txt 에 추가</label>
+        <label class="check"><input type="checkbox" id="v_unload" checked> 분석이 끝나면 모델 언로드 + GPU 캐시 비우기</label>
         <p class="hint" id="v_fp_path"></p>
 
         <label>이미지 (여러 장 가능)</label>
@@ -373,6 +374,7 @@ async function vLoadConfig() {
   $("v_skip").value = c.skip_keys.join(", ");
   $("v_cfg_path").textContent = "설정 파일: " + d.config_path;
   $("v_full_prompt").checked = !!c.full_prompt; $("v_auto_save_fp").disabled = !c.full_prompt;
+  $("v_unload").checked = c.unload_after !== false;
   $("v_fp_path").textContent = "풀 프롬프트 저장 파일: " + d.full_prompt_path;
   const rt = d.runtime || {};
   $("v_runtime").innerHTML = !rt.torch
@@ -502,7 +504,9 @@ function vRenderQueue(d) {
     const idx = d.items.indexOf(running) + 1;
     $("v_qline").textContent = `대기열 ${idx}/${s.total} · ${running.name} · 전체 ${s.percent}%`;
   } else if (s.total && !s.running) {
-    $("v_qline").textContent = `대기열 끝 · 전체 ${s.total}장`;
+    const u = s.last_unload;
+    $("v_qline").textContent = `대기열 끝 · 전체 ${s.total}장` +
+      (u ? ` · 모델 언로드됨${u.gpu_freed_mb ? ` (GPU ${(u.gpu_freed_mb / 1024).toFixed(1)}GB 비움)` : ""}` : "");
   }
   if (!V_PINNED) {  // 사용자가 고르지 않았으면 분석 중이거나 마지막으로 끝난 항목을 보여 줌
     const last = running || [...d.items].reverse().find(i => i.status === "done");
@@ -596,6 +600,7 @@ $("v_qstop").onclick = async () => { const r = await postJSON("/api/vision/queue
 $("v_qclear").onclick = async () => { const r = await postJSON("/api/vision/queue/clear", {}); vRenderQueue(await r.json()); };
 // 옵션은 바로 서버 대기열에 반영 (분석 중인 대기열의 다음 이미지부터 적용)
 ["v_auto_apply", "v_auto_save_fp", "v_rating"].forEach(id => $(id).addEventListener("change", () => postJSON("/api/vision/queue", { ...queueOptions(), images: [] }).catch(() => {})));
+$("v_unload").onchange = () => postJSON("/api/vision/config", { config: { unload_after: $("v_unload").checked } });
 $("v_full_prompt").onchange = async () => {
   await postJSON("/api/vision/config", { config: { full_prompt: $("v_full_prompt").checked } });
   if (!$("v_full_prompt").checked) $("v_auto_save_fp").checked = false;

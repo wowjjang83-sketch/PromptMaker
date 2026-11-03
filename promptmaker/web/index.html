@@ -39,6 +39,33 @@
   .error { color:var(--err); font-size:14px; }
   pre { font-size:11px; overflow:auto; background:var(--bg); padding:8px; border-radius:6px; max-height:260px; }
   .hint { font-size:12px; color:var(--muted); margin-top:4px; }
+  /* 이미지 분석 */
+  [hidden] { display:none !important; }
+  #vision { grid-column:1 / -1; }
+  .v-grid { display:grid; grid-template-columns:320px 1fr; gap:16px; }
+  @media (max-width:900px) { .v-grid { grid-template-columns:1fr; } }
+  .drop { border:2px dashed var(--line); border-radius:8px; padding:14px; text-align:center; color:var(--muted); font-size:13px; cursor:pointer; }
+  .drop.over { border-color:var(--accent); color:var(--accent); }
+  .drop img { max-width:100%; max-height:260px; display:block; margin:8px auto 0; border-radius:6px; }
+  .browser { border:1px solid var(--line); border-radius:6px; margin-top:6px; max-height:240px; overflow:auto; font-size:12px; }
+  .browser div { padding:4px 8px; cursor:pointer; border-bottom:1px solid var(--line); word-break:break-all; }
+  .browser div:hover { background:var(--bg); }
+  .browser .file { color:var(--muted); cursor:default; }
+  .ok { color:#2b8a3e; font-size:12px; } .bad { color:var(--err); font-size:12px; }
+  .v-progress { border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; }
+  .v-bar { height:10px; background:var(--bg); border-radius:5px; overflow:hidden; margin:8px 0; }
+  .v-bar div { height:100%; width:0; background:var(--accent); transition:width .3s; }
+  .v-stage { font-size:14px; font-weight:600; display:flex; justify-content:space-between; gap:8px; }
+  .v-stats { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:6px 12px; font-size:12px; color:var(--muted); }
+  .v-stats b { color:var(--text); font-weight:600; }
+  .v-steps { display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; font-size:11px; }
+  .v-steps span { padding:2px 8px; border-radius:10px; border:1px solid var(--line); color:var(--muted); }
+  .v-steps span.on { border-color:var(--accent); color:var(--accent); } .v-steps span.fin { color:#2b8a3e; border-color:#2b8a3e; }
+  .v-key { margin-top:10px; font-size:13px; font-weight:600; }
+  .v-item { display:grid; grid-template-columns:22px 1fr 64px; gap:6px; align-items:center; margin-top:4px; }
+  .v-item input[type=text] { padding:4px 8px; font-size:13px; }
+  .badge { font-size:11px; padding:2px 6px; border-radius:10px; text-align:center; border:1px solid var(--line); color:var(--muted); }
+  .badge.new { color:#2b8a3e; border-color:#2b8a3e; }
 </style>
 </head>
 <body>
@@ -95,6 +122,74 @@
     <h2>결과</h2>
     <div id="results"><p class="hint">옵션을 고르고 "프롬프트 생성"을 누르세요.</p></div>
     <details><summary>상세 정보 (번역, 키워드, 관련 단어, 선택된 요소)</summary><pre id="debug">-</pre></details>
+  </section>
+
+  <section id="vision">
+    <h2>이미지 분석 → 요소 자동 추가</h2>
+    <p class="hint">이미지를 비전 모델(기본: Qwen3-VL-4B)로 분석해 요소별 문구를 뽑고, 기존 요소 txt 와 중복되지 않는 항목만 골라 추가합니다.</p>
+    <div class="v-grid">
+      <div>
+        <details id="v_settings">
+          <summary>모델 설정</summary>
+          <label for="v_backend">백엔드</label>
+          <select id="v_backend">
+            <option value="transformers">transformers (로컬 모델 폴더)</option>
+            <option value="openai">OpenAI 호환 서버 (Ollama, LM Studio, llama-server)</option>
+          </select>
+          <div id="v_local">
+            <label for="v_model_path">모델 위치: 폴더 또는 .safetensors 파일 (비우면 기본 모델 자동 다운로드)</label>
+            <div class="row" style="gap:6px"><input type="text" id="v_model_path" placeholder="예: F:\models\Qwen3-VL-4B-Instruct" style="flex:3">
+              <button class="secondary" id="v_browse_btn" style="flex:1;padding:6px">찾아보기</button></div>
+            <div id="v_check" class="hint"></div>
+            <div id="v_browser" class="browser" hidden></div>
+            <div class="row"><div><label for="v_device">장치</label>
+              <select id="v_device"><option value="auto">자동</option><option value="cuda">GPU (cuda)</option><option value="cpu">CPU</option></select></div>
+              <div><label for="v_dtype">정밀도</label>
+              <select id="v_dtype"><option>auto</option><option>bfloat16</option><option>float16</option><option>float32</option></select></div></div>
+            <div id="v_runtime" class="hint"></div>
+          </div>
+          <label for="v_model_id">기본 모델 (HF id 또는 폴더. 단일 파일일 때 설정을 가져올 원본 / 서버 백엔드면 서버의 모델명)</label>
+          <input type="text" id="v_model_id">
+          <div id="v_remote">
+            <label for="v_api_base">서버 주소</label>
+            <input type="text" id="v_api_base" placeholder="http://127.0.0.1:11434/v1">
+          </div>
+          <div class="row"><div><label for="v_max_items">요소당 최대 개수</label><input type="number" id="v_max_items" min="1" max="10"></div>
+            <div><label for="v_max_tokens">최대 토큰</label><input type="number" id="v_max_tokens" min="128" max="8192"></div></div>
+          <label for="v_skip">분석 제외 요소 (쉼표 구분)</label>
+          <input type="text" id="v_skip">
+          <div class="actions"><button class="secondary" id="v_save">설정 저장</button></div>
+          <p class="hint" id="v_cfg_path"></p>
+        </details>
+
+        <label>이미지</label>
+        <div class="drop" id="v_drop">클릭하거나 이미지를 끌어다 놓으세요 (Ctrl+V 붙여넣기 가능)<img id="v_preview" hidden alt=""></div>
+        <input type="file" id="v_file" accept="image/*" hidden>
+        <label for="v_rating">추가할 파일 수위</label>
+        <select id="v_rating"><option value="sfw">일반 (&lt;요소&gt;.txt)</option><option value="suggestive">suggestive (&lt;요소&gt;.suggestive.txt)</option><option value="explicit">explicit (&lt;요소&gt;.explicit.txt)</option></select>
+        <div class="actions"><button id="v_analyze">이미지 분석</button></div>
+        <p class="hint">처음 실행할 때는 모델을 불러오느라 시간이 걸립니다.</p>
+      </div>
+      <div>
+        <div class="v-progress" id="v_progress" hidden>
+          <div class="v-stage"><span id="v_stage">-</span><span id="v_pct">0%</span></div>
+          <div class="v-bar"><div id="v_bar"></div></div>
+          <div class="v-stats">
+            <span>경과 <b id="v_elapsed">0:00</b></span>
+            <span>남은 시간 <b id="v_eta">계산 중</b></span>
+            <span>입력 토큰 <b id="v_in">-</b></span>
+            <span>출력 토큰 <b id="v_out">-</b></span>
+            <span>속도 <b id="v_rate">-</b></span>
+          </div>
+          <div class="v-steps" id="v_steps"></div>
+          <div class="actions"><button class="secondary" id="v_cancel" style="padding:4px 10px">분석 취소</button></div>
+        </div>
+        <div id="v_result"><p class="hint">이미지를 고르고 "이미지 분석"을 누르세요. 새 항목만 기본 선택되며, 문구를 고친 뒤 추가할 수 있습니다.</p></div>
+        <div class="actions" id="v_apply_bar" hidden><button id="v_apply">선택 항목 txt 에 추가</button></div>
+        <div id="v_report"></div>
+        <details><summary>모델 원본 응답</summary><pre id="v_raw">-</pre></details>
+      </div>
+    </div>
   </section>
 </main>
 <script>
@@ -196,6 +291,171 @@ $("reset").onclick = () => { document.querySelectorAll("#elements select").forEa
 $("reload").onclick = async () => { await fetch("/api/reload"); await loadInfo(); };
 $("mode_hint").textContent = MODE_HINT[$("mode").value];
 loadInfo().catch(() => { $("results").innerHTML = '<p class="error">서버에 연결할 수 없습니다. <code>python -m promptmaker.server</code> 로 실행한 뒤 http://127.0.0.1:8765 에서 열어 주세요.</p>'; });
+
+// ---------------------------------------------------------------- 이미지 분석
+let V_IMAGE = null;
+const V_STATUS = { new: "새 항목", duplicate: "중복", unsafe: "제외", unknown_key: "없는 키" };
+const postJSON = (url, body) => fetch(url, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body) });
+
+function vShowBackend() {
+  const local = $("v_backend").value === "transformers";
+  $("v_local").hidden = !local; $("v_remote").hidden = local;
+}
+function vShowCheck(c) { $("v_check").innerHTML = c ? `<span class="${c.ok ? "ok" : "bad"}">${esc(c.message)}</span>` : ""; }
+
+async function vLoadConfig() {
+  const res = await fetch("/api/vision/config"); const d = await res.json();
+  if (!res.ok) { $("v_cfg_path").textContent = d.error; return; }
+  const c = d.config;
+  $("v_backend").value = c.backend; $("v_model_path").value = c.model_path; $("v_model_id").value = c.model_id;
+  $("v_api_base").value = c.api_base; $("v_device").value = c.device; $("v_dtype").value = c.dtype;
+  $("v_max_items").value = c.max_items_per_key; $("v_max_tokens").value = c.max_new_tokens;
+  $("v_skip").value = c.skip_keys.join(", ");
+  $("v_cfg_path").textContent = "설정 파일: " + d.config_path;
+  const rt = d.runtime || {};
+  $("v_runtime").innerHTML = !rt.torch
+    ? `<span class="bad">이 서버 파이썬(${esc(rt.python)})에 torch 가 없습니다.</span>`
+    : rt.cuda ? `<span class="ok">GPU 사용 가능: ${esc(rt.gpu)}</span>`
+    : `<span class="bad">이 서버 파이썬은 GPU(CUDA)를 쓸 수 없어 CPU 로만 분석합니다 (느림). CUDA torch 가 있는 파이썬으로 서버를 실행하면 GPU 를 씁니다.</span>`;
+  if (!rt.cuda && c.device === "cuda") $("v_device").value = "auto";
+  vShowBackend(); vShowCheck(d.check);
+  if (!c.model_path && c.backend === "transformers") $("v_settings").open = true;
+}
+
+async function vSaveConfig() {
+  const config = {
+    backend: $("v_backend").value, model_path: $("v_model_path").value.trim(), model_id: $("v_model_id").value.trim(),
+    api_base: $("v_api_base").value.trim(), device: $("v_device").value, dtype: $("v_dtype").value,
+    max_items_per_key: parseInt($("v_max_items").value, 10) || 3, max_new_tokens: parseInt($("v_max_tokens").value, 10) || 1024,
+    skip_keys: $("v_skip").value,
+  };
+  const res = await postJSON("/api/vision/config", { config });
+  const d = await res.json();
+  if (!res.ok) { vShowCheck({ ok: false, message: d.error }); return false; }
+  vShowCheck(d.check); $("v_save").textContent = "저장됨"; setTimeout(() => $("v_save").textContent = "설정 저장", 1200);
+  return true;
+}
+
+async function vBrowse(path) {
+  const box = $("v_browser"); box.hidden = false;
+  const res = await fetch("/api/vision/browse?path=" + encodeURIComponent(path || ""));
+  const d = await res.json();
+  if (!res.ok) { box.innerHTML = `<div class="bad">${esc(d.error)}</div>`; return; }
+  const rows = [];
+  if (d.path) rows.push(`<div data-pick="${esc(d.path)}"><b>✔ 이 폴더 선택:</b> ${esc(d.path)}</div>`, `<div data-go="${esc(d.parent)}">⬆ 상위 폴더</div>`);
+  const sep = d.path && !/[\\/]$/.test(d.path) ? (d.path.includes("\\") ? "\\" : "/") : "";
+  d.dirs.forEach(n => rows.push(`<div data-go="${esc(d.path + sep + n)}">📁 ${esc(n)}</div>`));
+  d.files.forEach(n => rows.push(/\.safetensors$/i.test(n)
+    ? `<div data-pick="${esc(d.path + sep + n)}">📄 ${esc(n)} <b>(이 파일 선택)</b></div>`
+    : `<div class="file">${esc(n)}</div>`));
+  box.innerHTML = rows.join("");
+  if (d.check) vShowCheck(d.check);
+  box.querySelectorAll("[data-go]").forEach(el => el.onclick = () => vBrowse(el.dataset.go));
+  box.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => { $("v_model_path").value = el.dataset.pick; box.hidden = true; $("v_model_path").onchange(); });
+}
+
+function vSetImage(file) {
+  if (!file || !file.type.startsWith("image/")) return;
+  const reader = new FileReader();
+  reader.onload = () => { V_IMAGE = reader.result; $("v_preview").src = V_IMAGE; $("v_preview").hidden = false; };
+  reader.readAsDataURL(file);
+}
+
+function vRender(data) {
+  const keys = Object.keys(data.elements);
+  if (!keys.length) { $("v_result").innerHTML = '<p class="hint">인식된 요소가 없습니다. 모델 원본 응답을 확인하세요.</p>'; $("v_apply_bar").hidden = true; return; }
+  $("v_result").innerHTML = keys.map(k => `<div class="v-key">${esc(k)}</div>` + data.elements[k].map(r => {
+    const ok = r.status === "new";
+    return `<div class="v-item"><input type="checkbox" data-vkey="${esc(k)}" ${ok ? "checked" : "disabled"}>
+      <input type="text" value="${esc(r.text)}" ${ok ? "" : "disabled"}><span class="badge ${ok ? "new" : ""}">${V_STATUS[r.status] || esc(r.status)}</span></div>`;
+  }).join("")).join("");
+  $("v_apply_bar").hidden = !Object.keys(data.new).length;
+}
+
+const V_STAGES = [["load_model", "모델 로딩"], ["prepare", "준비"], ["generate", "생성"], ["parse", "해석·중복 확인"], ["done", "완료"]];
+let V_JOB = null;
+const fmtTime = s => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+
+function vShowProgress(p, status, startedAt) {
+  $("v_progress").hidden = false;
+  const pct = status === "done" ? 100 : p.percent || 0;
+  $("v_bar").style.width = pct + "%"; $("v_pct").textContent = pct.toFixed(1) + "%";
+  $("v_stage").textContent = status === "queued" ? "대기 중 (다른 분석이 끝나면 시작)" : (p.message || "-");
+  // elapsed ticks locally between polls; server value wins when it is ahead
+  const local = (Date.now() - startedAt) / 1000;
+  $("v_elapsed").textContent = fmtTime(Math.max(local, p.elapsed || 0));
+  $("v_eta").textContent = status === "done" ? "0:00" : p.eta == null ? (p.stage === "load_model" ? "모델 로딩 후 계산" : "계산 중") : "약 " + fmtTime(p.eta);
+  $("v_in").textContent = p.input_tokens ? p.input_tokens.toLocaleString() : "-";
+  $("v_out").textContent = p.output_tokens || p.stage === "generate"
+    ? `${p.output_tokens || 0} / 예상 ${p.expected_tokens || "?"} (최대 ${p.max_new_tokens})` : "-";
+  $("v_rate").textContent = p.tokens_per_sec ? p.tokens_per_sec.toFixed(1) + " tok/s" : "-";
+  const idx = V_STAGES.findIndex(s => s[0] === p.stage);
+  $("v_steps").innerHTML = V_STAGES.map(([k, label], i) =>
+    `<span class="${status === "done" || i < idx ? "fin" : i === idx ? "on" : ""}">${label}</span>`).join("");
+}
+
+async function vAnalyze() {
+  if (!V_IMAGE) { $("v_result").innerHTML = '<p class="error">이미지를 먼저 선택하세요.</p>'; return; }
+  if ($("v_settings").open && !(await vSaveConfig())) return;
+  $("v_result").innerHTML = ""; $("v_report").innerHTML = ""; $("v_apply_bar").hidden = true;
+  $("v_analyze").disabled = true; $("v_cancel").disabled = false; $("v_cancel").parentElement.hidden = false;
+  const startedAt = Date.now();
+  try {
+    const res = await postJSON("/api/vision/jobs", { image: V_IMAGE });
+    let job = await res.json();
+    if (!res.ok) { $("v_result").innerHTML = `<p class="error">${esc(job.error)}</p>`; return; }
+    V_JOB = job.id;
+    while (job.status === "queued" || job.status === "running") {
+      vShowProgress(job.progress, job.status, startedAt);
+      await new Promise(r => setTimeout(r, 700));
+      const r = await fetch("/api/vision/jobs/" + V_JOB);
+      job = await r.json();
+      if (!r.ok) throw new Error(job.error);
+    }
+    vShowProgress(job.status === "done" ? job.result.stats : job.progress, job.status, startedAt);
+    if (job.status === "done") { $("v_raw").textContent = job.result.raw; vRender(job.result); }
+    else if (job.status === "cancelled") { $("v_stage").textContent = "취소됨"; $("v_result").innerHTML = '<p class="hint">분석을 취소했습니다.</p>'; }
+    else { $("v_stage").textContent = "오류"; $("v_result").innerHTML = `<p class="error">${esc(job.error)}</p>`; }
+  } catch (e) {
+    $("v_result").innerHTML = `<p class="error">${esc(e)}</p>`;
+  } finally { $("v_analyze").disabled = false; $("v_cancel").parentElement.hidden = true; V_JOB = null; }
+}
+
+$("v_cancel").onclick = async () => {
+  if (!V_JOB) return;
+  $("v_cancel").disabled = true; $("v_stage").textContent = "취소하는 중…";
+  await postJSON(`/api/vision/jobs/${V_JOB}/cancel`, {});
+};
+
+async function vApply() {
+  const items = {};
+  const checked = [...document.querySelectorAll("#v_result input[data-vkey]:checked")];
+  checked.forEach(c => { const t = c.nextElementSibling.value.trim(); if (t) (items[c.dataset.vkey] ||= []).push(t); });
+  const res = await postJSON("/api/vision/apply", { items, rating: $("v_rating").value });
+  const d = await res.json();
+  if (!res.ok) { $("v_report").innerHTML = `<p class="error">${esc(d.error)}</p>`; return; }
+  const skipped = Object.entries(d.skipped).flatMap(([k, rows]) => rows.map(r => `${k}: ${r.text} (${V_STATUS[r.reason] || r.reason})`));
+  $("v_report").innerHTML = `<p class="ok">${d.added_count}개 항목을 추가했습니다.</p>` +
+    Object.entries(d.added).map(([k, v]) => `<div class="hint">${esc(k)} ← ${v.map(esc).join(" / ")}</div>`).join("") +
+    (skipped.length ? `<div class="warn">건너뜀: ${skipped.map(esc).join(" / ")}</div>` : "");
+  checked.forEach(c => { c.checked = false; c.disabled = true; c.nextElementSibling.disabled = true; c.parentElement.querySelector(".badge").textContent = "처리됨"; });
+  $("v_apply_bar").hidden = true;
+  if (d.added_count) await loadInfo();
+}
+
+$("v_backend").onchange = vShowBackend;
+$("v_browse_btn").onclick = () => vBrowse($("v_model_path").value.trim());
+$("v_model_path").onchange = async () => { const r = await fetch("/api/vision/check?path=" + encodeURIComponent($("v_model_path").value.trim())); vShowCheck(await r.json()); };
+$("v_save").onclick = vSaveConfig;
+$("v_analyze").onclick = vAnalyze;
+$("v_apply").onclick = vApply;
+$("v_drop").onclick = () => $("v_file").click();
+$("v_file").onchange = e => vSetImage(e.target.files[0]);
+$("v_drop").ondragover = e => { e.preventDefault(); $("v_drop").classList.add("over"); };
+$("v_drop").ondragleave = () => $("v_drop").classList.remove("over");
+$("v_drop").ondrop = e => { e.preventDefault(); $("v_drop").classList.remove("over"); vSetImage(e.dataTransfer.files[0]); };
+document.addEventListener("paste", e => { const f = [...(e.clipboardData?.files || [])].find(f => f.type.startsWith("image/")); if (f) vSetImage(f); });
+vLoadConfig().catch(() => {});
 </script>
 </body>
 </html>

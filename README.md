@@ -35,6 +35,7 @@ print(result.prompt)
 | `promptmaker/data/lexicon/` | 관련 단어 사전, 오프라인 한영 사전 |
 | `promptmaker/data/system/`, `model_examples/` | 고정 입력 (시스템 프롬프트, 모델별 예시) — 추후 LLM 옵션용 |
 | `promptmaker/web/index.html` | HTML 테스트 페이지 |
+| `promptmaker/vision.py` | (선택) 이미지 분석 → 요소 txt 자동 추가 (기본 모델 Qwen3-VL-4B, 교체 가능) |
 | `comfyui_nodes.py`, `__init__.py` | ComfyUI 커스텀 노드 |
 | `tools/github_auto.py` | 토큰 파일 기반 GitHub 자동 관리 |
 | `docs/GUIDE.md` | **사용 가이드 (필독)** |

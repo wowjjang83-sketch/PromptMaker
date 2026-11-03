@@ -358,6 +358,66 @@ pm = PromptMaker(llm=MyLLM())
 pm.generate("카페", use_llm=True)
 ```
 
+### 7-1. 이미지 분석으로 요소 자동 추가 (선택 기능)
+
+이미지를 비전 모델로 분석해 요소별 영문 문구를 JSON 으로 받고, 기존 요소 txt 와 **중복되지 않는 항목만** 파일 끝에 추가합니다. 프롬프트 생성 자체는 여전히 LLM 을 쓰지 않으며, 이 기능을 쓸 때만 모델이 필요합니다.
+
+처리 과정: 이미지 → 비전 모델 (기본 `Qwen/Qwen3-VL-4B-Instruct`) → `{"hair": ["..."], "location": ["..."]}` → 파싱 → 안전 검사 + 중복 확인 → `elements/<요소>.txt` 끝에 추가
+
+**필요 패키지**: `pip install torch transformers pillow` (transformers 4.57 이상). ComfyUI 파이썬에는 보통 이미 설치되어 있습니다.
+
+**GPU 로 쓰려면**: HTML 테스트 서버를 CUDA 용 torch 가 있는 파이썬으로 실행해야 합니다. `config/python_path.txt` 첫 줄에 그 파이썬 경로(예: `F:\AI_Dev\ComfyUI_20261014\python_embeded\python.exe`)를 적거나 환경변수 `PROMPTMAKER_PYTHON` 을 지정한 뒤 `run_server.bat` 을 실행하세요. 모델 설정 화면에 현재 서버 파이썬의 GPU 사용 가능 여부가 표시됩니다. 이미 받아 둔 Hugging Face 모델은 인터넷 접속 없이 캐시에서 읽습니다.
+
+**모델 설정** (`config/vision.json`, HTML 페이지의 "모델 설정" 에서 저장 가능, 깃에는 올라가지 않음)
+
+| 항목 | 설명 |
+|---|---|
+| `backend` | `transformers` (로컬 모델 폴더, 기본) 또는 `openai` (Ollama, LM Studio, llama.cpp `llama-server` 등 OpenAI 호환 서버. GGUF 모델은 이 방식으로 연결) |
+| `model_path` | 모델 폴더 (`config.json` 과 `.safetensors` 가 있는 폴더) 또는 **단일 `.safetensors` 파일** (ComfyUI 용 FP8 파일 포함, 자동으로 풀어서 읽음). 비우면 `model_id` 를 자동 다운로드 |
+| `model_id` | Hugging Face 모델 id 또는 폴더. 다른 모델(예: `Qwen/Qwen3-VL-8B-Instruct`)로 바꿀 수 있음. 단일 파일을 쓸 때는 설정·토크나이저를 여기서 가져오므로 같은 구조의 원본 모델로 두세요. `openai` 백엔드에서는 서버의 모델명 |
+| `api_base`, `api_key` | `openai` 백엔드의 서버 주소 / 키 |
+| `device`, `dtype` | `auto` / `cuda` / `cpu`, `auto` / `bfloat16` / `float16` / `float32` |
+| `max_items_per_key` | 요소당 최대 문구 수 (기본 3) |
+| `skip_keys` | 분석하지 않을 요소 (기본: casting, age, outfit_type, nationality, camera_movement, pacing) |
+
+**중복 확인**: 해당 요소의 모든 수위 파일(`<요소>.txt`, `.suggestive.txt`, `.explicit.txt`)과 사용자 데이터 폴더의 줄을 읽어, 가중치(`3::`), 줄 끝 태그(`#tag +tag !tag`), `{ }`, 앞의 a/an/the, 대소문자, 공백, 문장부호를 무시하고 비교합니다. 미성년자 연상 표현은 추가하지 않고, txt 파일이 없는 요소(JSON 전용 등)도 건너뜁니다. 기존 줄은 수정하지 않고 `# 이미지 분석 자동 추가 (날짜)` 주석 아래에 덧붙이기만 합니다.
+
+**사용 방법**
+
+- HTML 페이지: 아래쪽 "이미지 분석 → 요소 자동 추가" 에서 "찾아보기" 로 모델 폴더를 고르고, 이미지를 끌어다 놓고(또는 Ctrl+V) "이미지 분석". 새 항목만 체크되어 나오며 문구를 고친 뒤 "선택 항목 txt 에 추가".
+- ComfyUI: `PromptMaker 이미지 분석 → 요소 추가` 노드. `IMAGE` 입력, `model_path` 에 모델 폴더나 `.safetensors` 파일, `write_to_txt` 를 끄면 미리보기만 합니다. `save_as_default` 를 켜면 설정을 `config/vision.json` 에 저장합니다.
+- 명령줄:
+
+```bash
+python -m promptmaker.vision photo.jpg                       # 미리보기 (추가 안 함)
+python -m promptmaker.vision photo.jpg --apply               # 새 항목을 txt 에 추가
+python -m promptmaker.vision photo.jpg --model-path "F:\models\Qwen3-VL-4B-Instruct" --save-config
+python -m promptmaker.vision photo.jpg --backend openai --api-base http://127.0.0.1:11434/v1 --model-id qwen3-vl:4b
+```
+
+- 파이썬:
+
+```python
+from promptmaker import PromptMaker
+from promptmaker.vision import ImageAnalyzer, load_config
+
+pm = PromptMaker()
+an = ImageAnalyzer(pm, load_config())
+result = an.analyze("photo.jpg")      # {"elements": {요소: [{"text", "status"}]}, "new": {...}, "raw": 모델 응답}
+report = an.apply(result["new"])       # {"added": {...}, "skipped": {...}, "added_count": n}
+```
+
+**진행 상황**: 분석 중에 단계(모델 로딩 → 준비 → 생성 → 해석·중복 확인), 입력/출력 토큰 수, 생성 속도(tok/s), 경과 시간, 남은 예상 시간을 보여 줍니다. 예상 시간은 첫 분석에서는 요소 수로 어림하고, 이후에는 앞선 분석의 출력 길이로 계산합니다. HTML 페이지에는 진행 막대와 "분석 취소" 버튼이, ComfyUI 노드에는 노드 진행 막대와 콘솔 표시가 나오고 ComfyUI 의 중단 버튼으로 멈출 수 있습니다. 파이썬에서는:
+
+```python
+import threading
+stop = threading.Event()
+result = an.analyze("photo.jpg", progress=lambda p: print(p), cancel=stop)   # p: Progress (stage, percent, input_tokens, output_tokens, tokens_per_sec, elapsed, eta)
+print(result["stats"])
+```
+
+분석 지시문은 `promptmaker/data/vision/analyze_prompt.txt` 에서 고칠 수 있습니다. 요소 목록과 예시 문구는 현재 요소 파일에서 자동으로 채워지므로 요소를 새로 추가해도 따로 고칠 필요가 없습니다.
+
 ## 8. 안전 규칙 (성인 전용)
 
 - 모든 인물은 20세 이상: `age` 값이 20 미만이면 20으로 보정하고 경고를 남깁니다. 주어 문장에는 `adult man` 등 성인임이 명시됩니다.

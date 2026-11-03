@@ -380,7 +380,7 @@ function vShowProgress(p, status, startedAt) {
   $("v_progress").hidden = false;
   const pct = status === "done" ? 100 : p.percent || 0;
   $("v_bar").style.width = pct + "%"; $("v_pct").textContent = pct.toFixed(1) + "%";
-  $("v_stage").textContent = status === "queued" ? "대기 중" : (p.message || "-");
+  $("v_stage").textContent = status === "queued" ? "대기 중 (다른 분석이 끝나면 시작)" : (p.message || "-");
   // elapsed ticks locally between polls; server value wins when it is ahead
   const local = (Date.now() - startedAt) / 1000;
   $("v_elapsed").textContent = fmtTime(Math.max(local, p.elapsed || 0));
@@ -398,7 +398,7 @@ async function vAnalyze() {
   if (!V_IMAGE) { $("v_result").innerHTML = '<p class="error">이미지를 먼저 선택하세요.</p>'; return; }
   if ($("v_settings").open && !(await vSaveConfig())) return;
   $("v_result").innerHTML = ""; $("v_report").innerHTML = ""; $("v_apply_bar").hidden = true;
-  $("v_analyze").disabled = true; $("v_cancel").disabled = false;
+  $("v_analyze").disabled = true; $("v_cancel").disabled = false; $("v_cancel").parentElement.hidden = false;
   const startedAt = Date.now();
   try {
     const res = await postJSON("/api/vision/jobs", { image: V_IMAGE });
@@ -418,7 +418,7 @@ async function vAnalyze() {
     else { $("v_stage").textContent = "오류"; $("v_result").innerHTML = `<p class="error">${esc(job.error)}</p>`; }
   } catch (e) {
     $("v_result").innerHTML = `<p class="error">${esc(e)}</p>`;
-  } finally { $("v_analyze").disabled = false; $("v_cancel").disabled = true; V_JOB = null; }
+  } finally { $("v_analyze").disabled = false; $("v_cancel").parentElement.hidden = true; V_JOB = null; }
 }
 
 $("v_cancel").onclick = async () => {

@@ -4,6 +4,7 @@ token/
 .env
 # 이미지 분석 모델 설정 (로컬 경로/API 키 포함 가능)
 config/vision.json
+config/python_path.txt
 
 # Python
 __pycache__/

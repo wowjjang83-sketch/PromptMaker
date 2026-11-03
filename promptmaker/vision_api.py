@@ -72,6 +72,8 @@ def handle(maker, method: str, path: str, payload: Dict[str, Any]) -> Tuple[int,
             return 404, {"error": "작업을 찾을 수 없습니다."}
         if method == "POST" and parts[2:] == ["cancel"]:
             job["cancel"].set()
+            if job["status"] == "queued":  # never started: done right away
+                job["status"] = "cancelled"
             return 200, {"ok": True}
         if method == "GET":
             return 200, _public(job)

@@ -19,9 +19,12 @@ if errorlevel 1 (
 ) else (
   set PY=python
 )
-rem Optional: python with CUDA torch for image analysis, e.g.
+rem Optional: python with CUDA torch for image analysis (GPU). Either
 rem   set PROMPTMAKER_PYTHON=F:\ComfyUI\python_embeded\python.exe
+rem or put that path on the first line of config\python_path.txt
+if not defined PROMPTMAKER_PYTHON if exist "%~dp0config\python_path.txt" set /p PROMPTMAKER_PYTHON=<"%~dp0config\python_path.txt"
 if defined PROMPTMAKER_PYTHON set PY="%PROMPTMAKER_PYTHON%"
+echo Python: %PY%
 
 set USERDATA=
 if exist "%~dp0user_data" set USERDATA=--user-data "%~dp0user_data"
@@ -29,5 +32,6 @@ if exist "%~dp0user_data" set USERDATA=--user-data "%~dp0user_data"
 echo PromptMaker test server: http://127.0.0.1:%PORT%
 echo Close this window or press Ctrl+C to stop.
 start "" "http://127.0.0.1:%PORT%"
-%PY% -m promptmaker.server --port %PORT% %USERDATA%
+rem Put this folder on sys.path explicitly: embedded pythons (ComfyUI) ignore the current folder.
+%PY% -c "import sys; sys.path.insert(0, r'%~dp0.'); from promptmaker.server import main; main()" --port %PORT% %USERDATA%
 pause

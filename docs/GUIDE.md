@@ -366,6 +366,8 @@ pm.generate("카페", use_llm=True)
 
 **필요 패키지**: `pip install torch transformers pillow` (transformers 4.57 이상). ComfyUI 파이썬에는 보통 이미 설치되어 있습니다.
 
+**GPU 로 쓰려면**: HTML 테스트 서버를 CUDA 용 torch 가 있는 파이썬으로 실행해야 합니다. `config/python_path.txt` 첫 줄에 그 파이썬 경로(예: `F:\AI_Dev\ComfyUI_20261014\python_embeded\python.exe`)를 적거나 환경변수 `PROMPTMAKER_PYTHON` 을 지정한 뒤 `run_server.bat` 을 실행하세요. 모델 설정 화면에 현재 서버 파이썬의 GPU 사용 가능 여부가 표시됩니다. 이미 받아 둔 Hugging Face 모델은 인터넷 접속 없이 캐시에서 읽습니다.
+
 **모델 설정** (`config/vision.json`, HTML 페이지의 "모델 설정" 에서 저장 가능, 깃에는 올라가지 않음)
 
 | 항목 | 설명 |
@@ -403,6 +405,15 @@ pm = PromptMaker()
 an = ImageAnalyzer(pm, load_config())
 result = an.analyze("photo.jpg")      # {"elements": {요소: [{"text", "status"}]}, "new": {...}, "raw": 모델 응답}
 report = an.apply(result["new"])       # {"added": {...}, "skipped": {...}, "added_count": n}
+```
+
+**진행 상황**: 분석 중에 단계(모델 로딩 → 준비 → 생성 → 해석·중복 확인), 입력/출력 토큰 수, 생성 속도(tok/s), 경과 시간, 남은 예상 시간을 보여 줍니다. 예상 시간은 첫 분석에서는 요소 수로 어림하고, 이후에는 앞선 분석의 출력 길이로 계산합니다. HTML 페이지에는 진행 막대와 "분석 취소" 버튼이, ComfyUI 노드에는 노드 진행 막대와 콘솔 표시가 나오고 ComfyUI 의 중단 버튼으로 멈출 수 있습니다. 파이썬에서는:
+
+```python
+import threading
+stop = threading.Event()
+result = an.analyze("photo.jpg", progress=lambda p: print(p), cancel=stop)   # p: Progress (stage, percent, input_tokens, output_tokens, tokens_per_sec, elapsed, eta)
+print(result["stats"])
 ```
 
 분석 지시문은 `promptmaker/data/vision/analyze_prompt.txt` 에서 고칠 수 있습니다. 요소 목록과 예시 문구는 현재 요소 파일에서 자동으로 채워지므로 요소를 새로 추가해도 따로 고칠 필요가 없습니다.

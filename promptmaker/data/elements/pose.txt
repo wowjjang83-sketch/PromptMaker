@@ -12,7 +12,7 @@ leaning forward on a table
 stretching {her} arms above {her} head
 hugging {her} knees to {her} chest
 lounging on a velvet sofa
-twirling with {her} dress flaring out +hem
+twirling with {her} dress flaring out +dress
 sitting by the window with {her} chin in {her} hand
 tucking a strand of hair behind {her} ear
 resting {her} head on {her} folded arms
@@ -29,4 +29,4 @@ kneeling on the sand with {her} hands on {her} thighs
 wading knee-deep in the shallow water
 standing at the water's edge
 walking barefoot along the shoreline
-lying on a beach towel #summer +beach
+lying on a beach towel +beach

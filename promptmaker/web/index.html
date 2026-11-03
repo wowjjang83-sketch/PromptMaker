@@ -128,7 +128,7 @@
             <option value="openai">OpenAI 호환 서버 (Ollama, LM Studio, llama-server)</option>
           </select>
           <div id="v_local">
-            <label for="v_model_path">모델 폴더 위치 (비우면 기본 모델 자동 다운로드)</label>
+            <label for="v_model_path">모델 위치: 폴더 또는 .safetensors 파일 (비우면 기본 모델 자동 다운로드)</label>
             <div class="row" style="gap:6px"><input type="text" id="v_model_path" placeholder="예: F:\models\Qwen3-VL-4B-Instruct" style="flex:3">
               <button class="secondary" id="v_browse_btn" style="flex:1;padding:6px">찾아보기</button></div>
             <div id="v_check" class="hint"></div>
@@ -138,7 +138,7 @@
               <div><label for="v_dtype">정밀도</label>
               <select id="v_dtype"><option>auto</option><option>bfloat16</option><option>float16</option><option>float32</option></select></div></div>
           </div>
-          <label for="v_model_id">모델 이름 (HF id 또는 서버의 모델명)</label>
+          <label for="v_model_id">기본 모델 (HF id 또는 폴더. 단일 파일일 때 설정을 가져올 원본 / 서버 백엔드면 서버의 모델명)</label>
           <input type="text" id="v_model_id">
           <div id="v_remote">
             <label for="v_api_base">서버 주소</label>
@@ -316,11 +316,13 @@ async function vBrowse(path) {
   if (d.path) rows.push(`<div data-pick="${esc(d.path)}"><b>✔ 이 폴더 선택:</b> ${esc(d.path)}</div>`, `<div data-go="${esc(d.parent)}">⬆ 상위 폴더</div>`);
   const sep = d.path && !/[\\/]$/.test(d.path) ? (d.path.includes("\\") ? "\\" : "/") : "";
   d.dirs.forEach(n => rows.push(`<div data-go="${esc(d.path + sep + n)}">📁 ${esc(n)}</div>`));
-  d.files.forEach(n => rows.push(`<div class="file">${esc(n)}</div>`));
+  d.files.forEach(n => rows.push(/\.safetensors$/i.test(n)
+    ? `<div data-pick="${esc(d.path + sep + n)}">📄 ${esc(n)} <b>(이 파일 선택)</b></div>`
+    : `<div class="file">${esc(n)}</div>`));
   box.innerHTML = rows.join("");
   if (d.check) vShowCheck(d.check);
   box.querySelectorAll("[data-go]").forEach(el => el.onclick = () => vBrowse(el.dataset.go));
-  box.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => { $("v_model_path").value = el.dataset.pick; box.hidden = true; });
+  box.querySelectorAll("[data-pick]").forEach(el => el.onclick = () => { $("v_model_path").value = el.dataset.pick; box.hidden = true; $("v_model_path").onchange(); });
 }
 
 function vSetImage(file) {

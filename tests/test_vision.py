@@ -129,6 +129,22 @@ class AnalyzerTests(VisionTestCase):
         self.assertEqual(again.skip_keys, ["age", "casting"])
         self.assertEqual(vision.load_config(os.path.join(self.tmp, "missing.json")).model_id, vision.DEFAULT_MODEL_ID)
 
+    def test_single_file_fp8_dequant(self):
+        try:
+            import torch
+            from safetensors.torch import save_file
+        except ImportError:
+            self.skipTest("torch/safetensors 없음")
+        path = os.path.join(self.tmp, "m.safetensors")
+        w = torch.tensor([[1.0, -2.0], [0.5, 4.0]])
+        save_file({"a.weight": (w / 0.5).to(torch.float8_e4m3fn), "a.weight_scale": torch.tensor(0.5),
+                   "a.comfy_quant": torch.tensor(list(b'{"format": "float8_e4m3fn"}'), dtype=torch.uint8),
+                   "a.bias": torch.ones(2)}, path)
+        self.assertTrue(vision.check_model_path(path)["ok"])
+        sd = vision.load_single_file(path, torch.float32)
+        self.assertEqual(sorted(sd), ["a.bias", "a.weight"])
+        self.assertTrue(torch.allclose(sd["a.weight"], w))
+
     def test_check_model_path(self):
         self.assertTrue(vision.check_model_path("")["ok"])
         self.assertFalse(vision.check_model_path(os.path.join(self.tmp, "nope"))["ok"])

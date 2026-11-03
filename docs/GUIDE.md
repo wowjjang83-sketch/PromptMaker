@@ -371,8 +371,8 @@ pm.generate("카페", use_llm=True)
 | 항목 | 설명 |
 |---|---|
 | `backend` | `transformers` (로컬 모델 폴더, 기본) 또는 `openai` (Ollama, LM Studio, llama.cpp `llama-server` 등 OpenAI 호환 서버. GGUF 모델은 이 방식으로 연결) |
-| `model_path` | 모델 폴더 위치 (`config.json` 과 `.safetensors` 가 있는 폴더). 비우면 `model_id` 를 자동 다운로드 |
-| `model_id` | Hugging Face 모델 id, 또는 `openai` 백엔드에서 서버의 모델명. 다른 모델(예: `Qwen/Qwen3-VL-8B-Instruct`)로 바꿀 수 있음 |
+| `model_path` | 모델 폴더 (`config.json` 과 `.safetensors` 가 있는 폴더) 또는 **단일 `.safetensors` 파일** (ComfyUI 용 FP8 파일 포함, 자동으로 풀어서 읽음). 비우면 `model_id` 를 자동 다운로드 |
+| `model_id` | Hugging Face 모델 id 또는 폴더. 다른 모델(예: `Qwen/Qwen3-VL-8B-Instruct`)로 바꿀 수 있음. 단일 파일을 쓸 때는 설정·토크나이저를 여기서 가져오므로 같은 구조의 원본 모델로 두세요. `openai` 백엔드에서는 서버의 모델명 |
 | `api_base`, `api_key` | `openai` 백엔드의 서버 주소 / 키 |
 | `device`, `dtype` | `auto` / `cuda` / `cpu`, `auto` / `bfloat16` / `float16` / `float32` |
 | `max_items_per_key` | 요소당 최대 문구 수 (기본 3) |
@@ -383,7 +383,7 @@ pm.generate("카페", use_llm=True)
 **사용 방법**
 
 - HTML 페이지: 아래쪽 "이미지 분석 → 요소 자동 추가" 에서 "찾아보기" 로 모델 폴더를 고르고, 이미지를 끌어다 놓고(또는 Ctrl+V) "이미지 분석". 새 항목만 체크되어 나오며 문구를 고친 뒤 "선택 항목 txt 에 추가".
-- ComfyUI: `PromptMaker 이미지 분석 → 요소 추가` 노드. `IMAGE` 입력, `model_path` 에 모델 폴더, `write_to_txt` 를 끄면 미리보기만 합니다. `save_as_default` 를 켜면 설정을 `config/vision.json` 에 저장합니다.
+- ComfyUI: `PromptMaker 이미지 분석 → 요소 추가` 노드. `IMAGE` 입력, `model_path` 에 모델 폴더나 `.safetensors` 파일, `write_to_txt` 를 끄면 미리보기만 합니다. `save_as_default` 를 켜면 설정을 `config/vision.json` 에 저장합니다.
 - 명령줄:
 
 ```bash

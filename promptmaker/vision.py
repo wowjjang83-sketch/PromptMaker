@@ -48,8 +48,8 @@ APPEND_HEADER = "# 이미지 분석 자동 추가 ({date})"
 @dataclass
 class VisionConfig:
     backend: str = "transformers"          # "transformers" | "openai"
-    model_path: str = ""                   # local folder; empty -> model_id
-    model_id: str = DEFAULT_MODEL_ID       # Hugging Face id or server model name
+    model_path: str = ""                   # local folder or single .safetensors file; empty -> model_id
+    model_id: str = DEFAULT_MODEL_ID       # HF id / folder (also config source for a single file) or server model name
     api_base: str = "http://127.0.0.1:11434/v1"  # for backend "openai"
     api_key: str = ""
     device: str = "auto"                   # "auto" | "cpu" | "cuda"
@@ -93,6 +93,37 @@ def save_config(cfg: VisionConfig, path: Optional[str] = None) -> str:
     return path
 
 
+def is_single_file(path: str) -> bool:
+    return path.lower().endswith(".safetensors") and os.path.isfile(path)
+
+
+def load_single_file(path: str, dtype) -> Dict[str, Any]:
+    """Read a single .safetensors file into a transformers state dict.
+
+    ComfyUI style fp8 checkpoints (``<name>.weight`` in float8 + ``weight_scale`` +
+    ``comfy_quant``) are dequantised to ``dtype``.
+    """
+    from safetensors import safe_open
+
+    sd: Dict[str, Any] = {}
+    with safe_open(path, framework="pt") as f:
+        keys = list(f.keys())
+        skip = {k for k in keys if k.endswith((".comfy_quant", ".weight_scale", ".input_scale"))}
+        for key in keys:
+            if key in skip:
+                continue
+            t = f.get_tensor(key)
+            if t.dtype.is_floating_point and t.element_size() == 1:  # float8
+                scale_key = key[:-len("weight")] + "weight_scale" if key.endswith("weight") else None
+                t = t.to(dtype)
+                if scale_key in skip:
+                    t = t * f.get_tensor(scale_key).to(dtype)
+            elif t.dtype.is_floating_point:
+                t = t.to(dtype)
+            sd[key] = t
+    return sd
+
+
 def check_model_path(path: str) -> Dict[str, Any]:
     """Quick sanity check for the model location picked in the UI."""
     path = (path or "").strip()
@@ -103,7 +134,9 @@ def check_model_path(path: str) -> Dict[str, Any]:
     if os.path.isfile(path):
         if path.lower().endswith(".gguf"):
             return {"ok": False, "message": "GGUF 파일은 llama-server 등으로 띄운 뒤 'openai' 백엔드로 연결하세요."}
-        return {"ok": False, "message": "모델 파일이 아니라 모델 폴더(config.json 이 있는 폴더)를 지정하세요."}
+        if is_single_file(path):
+            return {"ok": True, "message": "단일 가중치 파일: 설정·토크나이저는 '모델 이름'의 기본 모델에서 가져옵니다."}
+        return {"ok": False, "message": "모델 폴더(config.json 이 있는 폴더)나 .safetensors 파일을 지정하세요."}
     files = set(os.listdir(path))
     if "config.json" not in files:
         return {"ok": False, "message": "폴더에 config.json 이 없습니다. 모델 폴더가 맞는지 확인하세요."}
@@ -169,13 +202,33 @@ class TransformersBackend:
         from transformers import AutoModelForImageTextToText, AutoProcessor
 
         dtype = "auto" if cfg.dtype == "auto" else getattr(torch, cfg.dtype)
-        kwargs: Dict[str, Any] = {"dtype": dtype}
-        if cfg.device == "auto":
-            kwargs["device_map"] = "auto" if torch.cuda.is_available() else None
-        self.model = AutoModelForImageTextToText.from_pretrained(cfg.model_ref, **kwargs)
-        if cfg.device in ("cpu", "cuda"):
-            self.model.to(cfg.device)
-        self.processor = AutoProcessor.from_pretrained(cfg.model_ref)
+        if is_single_file(cfg.model_ref):
+            # One .safetensors file (e.g. a fine-tune saved for ComfyUI): weights from the file,
+            # config / tokenizer / image processor from the base model (model_id).
+            from transformers import AutoConfig
+
+            base = cfg.model_id
+            config = AutoConfig.from_pretrained(base)
+            load_dtype = torch.bfloat16 if dtype == "auto" else dtype
+            self.model = AutoModelForImageTextToText.from_config(config, dtype=load_dtype)
+            missing, unexpected = self.model.load_state_dict(load_single_file(cfg.model_ref, load_dtype), strict=False)
+            missing = [k for k in missing if k != "lm_head.weight"]  # tied to embed_tokens
+            if missing or unexpected:
+                raise ValueError(f"가중치 파일이 기본 모델({base})과 맞지 않습니다. "
+                                 f"누락 {len(missing)}개 (예: {missing[:2]}), 불필요 {len(unexpected)}개 (예: {unexpected[:2]})")
+            self.model.tie_weights()
+            self.model.eval()
+            device = cfg.device if cfg.device in ("cpu", "cuda") else ("cuda" if torch.cuda.is_available() else "cpu")
+            self.model.to(device)
+        else:
+            base = cfg.model_ref
+            kwargs: Dict[str, Any] = {"dtype": dtype}
+            if cfg.device == "auto":
+                kwargs["device_map"] = "auto" if torch.cuda.is_available() else None
+            self.model = AutoModelForImageTextToText.from_pretrained(base, **kwargs)
+            if cfg.device in ("cpu", "cuda"):
+                self.model.to(cfg.device)
+        self.processor = AutoProcessor.from_pretrained(base)
         self.max_new_tokens = cfg.max_new_tokens
 
     def chat(self, image, prompt: str) -> str:

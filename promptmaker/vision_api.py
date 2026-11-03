@@ -56,11 +56,82 @@ def _public(job: Dict[str, Any]) -> Dict[str, Any]:
     return {k: v for k, v in job.items() if k != "cancel"}
 
 
+# One shared image queue per server: images dropped on the page are analysed in order.
+_queue: Dict[str, Any] = {"q": None, "thread": None}
+
+
+def _get_queue(maker) -> vision.AnalysisQueue:
+    if _queue["q"] is None:
+        _queue["q"] = vision.AnalysisQueue(vision.ImageAnalyzer(maker))
+    return _queue["q"]
+
+
+def _queue_state(q: vision.AnalysisQueue) -> Dict[str, Any]:
+    return {"summary": q.summary(), "items": [i.to_dict(with_result=False) for i in q.items],
+            "options": {"auto_apply": q.auto_apply, "rating": q.rating,
+                        "auto_save_full_prompt": q.auto_save_full_prompt}}
+
+
+def _start_worker(maker, q: vision.AnalysisQueue) -> None:
+    t = _queue["thread"]
+    if t is not None and t.is_alive():
+        return  # the running loop picks up new items by itself
+
+    def work() -> None:
+        with _run_lock:
+            q.analyzer = vision.ImageAnalyzer(maker)  # pick up the latest model settings
+            q.run()
+
+    _queue["thread"] = threading.Thread(target=work, daemon=True, name="vision-queue")
+    _queue["thread"].start()
+
+
+def _handle_queue(maker, method: str, parts, payload: Dict[str, Any]) -> Tuple[int, Any]:
+    q = _get_queue(maker)
+    for opt in ("auto_apply", "auto_save_full_prompt"):
+        if opt in payload:
+            setattr(q, opt, bool(payload[opt]))
+    if payload.get("rating"):
+        q.rating = payload["rating"]
+    if method == "GET" and not parts:
+        return 200, _queue_state(q)
+    if method == "POST" and not parts:
+        images = payload.get("images") or []
+        if not images:  # options only
+            return 200, _queue_state(q)
+        for img in images:
+            if isinstance(img, dict):
+                q.add(img["image"], img.get("name"))
+            else:
+                q.add(img)
+        _start_worker(maker, q)
+        return 200, _queue_state(q)
+    if method == "POST" and parts == ["stop"]:
+        q.stop()
+        return 200, _queue_state(q)
+    if method == "POST" and parts == ["clear"]:
+        q.clear_finished()
+        return 200, _queue_state(q)
+    item = q.get(parts[0]) if parts else None
+    if item is None:
+        return 404, {"error": "대기열 항목을 찾을 수 없습니다."}
+    if method == "GET" and len(parts) == 1:
+        return 200, item.to_dict()
+    if method == "POST" and parts[1:] == ["remove"]:
+        return (200, _queue_state(q)) if q.remove(item.id) else (400, {"error": "분석 중인 항목은 뺄 수 없습니다."})
+    return 404, {"error": "not found"}
+
+
 def handle(maker, method: str, path: str, payload: Dict[str, Any]) -> Tuple[int, Any]:
     url = urlparse(path)
     route = url.path[len("/api/vision"):].strip("/")
     query = {k: v[-1] for k, v in parse_qs(url.query).items()}
 
+    if route == "queue" or route.startswith("queue/"):
+        return _handle_queue(maker, method, [p for p in route.split("/")[1:] if p], payload)
+    if route == "full_prompts" and method == "POST":
+        prompts = [str(p) for p in payload.get("prompts") or [] if str(p).strip()]
+        return 200, vision.save_full_prompts(prompts, vision.load_config().full_prompt_path)
     if route == "jobs" and method == "POST":
         if not payload.get("image"):
             return 400, {"error": "이미지가 없습니다."}
@@ -82,7 +153,8 @@ def handle(maker, method: str, path: str, payload: Dict[str, Any]) -> Tuple[int,
         cfg = vision.load_config()
         return 200, {"config": cfg.to_dict(hide_key=True), "config_path": vision.CONFIG_PATH,
                      "backends": list(vision.BACKENDS), "default_model_id": vision.DEFAULT_MODEL_ID,
-                     "check": vision.check_model_path(cfg.model_path), "runtime": vision.runtime_info()}
+                     "check": vision.check_model_path(cfg.model_path), "runtime": vision.runtime_info(),
+                     "full_prompt_path": cfg.full_prompt_path}
     if method == "POST" and route == "config":
         old = vision.load_config()
         data = dict(payload.get("config", payload))

@@ -384,13 +384,16 @@ pm.generate("카페", use_llm=True)
 
 **사용 방법**
 
-- HTML 페이지: 아래쪽 "이미지 분석 → 요소 자동 추가" 에서 "찾아보기" 로 모델 폴더를 고르고, 이미지를 끌어다 놓고(또는 Ctrl+V) "이미지 분석". 새 항목만 체크되어 나오며 문구를 고친 뒤 "선택 항목 txt 에 추가".
-- ComfyUI: `PromptMaker 이미지 분석 → 요소 추가` 노드. `IMAGE` 입력, `model_path` 에 모델 폴더나 `.safetensors` 파일, `write_to_txt` 를 끄면 미리보기만 합니다. `save_as_default` 를 켜면 설정을 `config/vision.json` 에 저장합니다.
+- HTML 페이지: 아래쪽 "이미지 분석 → 요소 자동 추가" 에서 "찾아보기" 로 모델 폴더나 파일을 고르고, 이미지를 **여러 장** 끌어다 놓으면(또는 클릭해서 고르기, Ctrl+V) 대기열에 들어가 차례로 분석합니다. 분석 중에도 더 넣을 수 있고, "대기열 중지" 로 멈춥니다. 대기열에서 이미지를 누르면 그 결과가 나오며, 새 항목만 체크되어 있으니 문구를 고친 뒤 "선택 항목 txt 에 추가". "새 요소 항목을 검토 없이 바로 txt 에 추가" 를 켜면 대기열이 알아서 추가합니다.
+- ComfyUI: `PromptMaker 이미지 분석 → 요소 추가` 노드. `image` 입력(배치면 여러 장)이나 `image_folder`(폴더의 이미지 전부)를 대기열로 차례로 분석, `full_prompt`/`save_full_prompt` 로 풀 프롬프트 생성·저장(출력 `full_prompt`), `model_path` 에 모델 폴더나 `.safetensors` 파일, `write_to_txt` 를 끄면 미리보기만 합니다. `save_as_default` 를 켜면 설정을 `config/vision.json` 에 저장합니다.
 - 명령줄:
 
 ```bash
 python -m promptmaker.vision photo.jpg                       # 미리보기 (추가 안 함)
 python -m promptmaker.vision photo.jpg --apply               # 새 항목을 txt 에 추가
+python -m promptmaker.vision a.jpg b.jpg F:\photos --apply   # 여러 장/폴더를 차례로 분석
+python -m promptmaker.vision photo.jpg --full-prompt         # 풀 프롬프트도 생성해서 보여 줌
+python -m promptmaker.vision F:\photos --save-full-prompt    # 풀 프롬프트를 파일에 저장 (경로를 주면 그 파일)
 python -m promptmaker.vision photo.jpg --model-path "F:\models\Qwen3-VL-4B-Instruct" --save-config
 python -m promptmaker.vision photo.jpg --backend openai --api-base http://127.0.0.1:11434/v1 --model-id qwen3-vl:4b
 ```
@@ -405,7 +408,19 @@ pm = PromptMaker()
 an = ImageAnalyzer(pm, load_config())
 result = an.analyze("photo.jpg")      # {"elements": {요소: [{"text", "status"}]}, "new": {...}, "raw": 모델 응답}
 report = an.apply(result["new"])       # {"added": {...}, "skipped": {...}, "added_count": n}
+
+# 여러 장: 대기열 (분석 중에 다른 스레드에서 add 해도 이어서 처리)
+from promptmaker.vision import AnalysisQueue
+q = AnalysisQueue(an, auto_apply=True, auto_save_full_prompt=True)
+q.add_many(["a.jpg", "b.jpg"]); q.add_folder("F:/photos")
+for item in q.run(progress=lambda item, p: print(item.name, p)):
+    print(item.status, item.result and item.result["full_prompt"])
+
+# 풀 프롬프트: 설정의 full_prompt=True 면 result["full_prompt"] 에 한 문단이 들어옴
+an.save_full_prompts([result["full_prompt"]])   # 중복·미성년 표현 제외하고 output/full_prompts.txt 에 한 줄씩
 ```
+
+**풀 프롬프트**: 설정에서 "풀 프롬프트도 생성" (`full_prompt`) 을 켜면 같은 분석 한 번에 요소 목록과 함께 이미지를 묘사하는 영문 프롬프트 한 문단을 받습니다. 저장 버튼(또는 자동 저장)을 누르면 `output/full_prompts.txt` (설정 `full_prompt_file` 로 변경) 에 한 줄씩, 이미 있는 프롬프트와 미성년자 연상 표현은 빼고 덧붙입니다. 출력이 길어지므로 분석 시간이 조금 늘어납니다.
 
 **진행 상황**: 분석 중에 단계(모델 로딩 → 준비 → 생성 → 해석·중복 확인), 입력/출력 토큰 수, 생성 속도(tok/s), 경과 시간, 남은 예상 시간을 보여 줍니다. 예상 시간은 첫 분석에서는 요소 수로 어림하고, 이후에는 앞선 분석의 출력 길이로 계산합니다. HTML 페이지에는 진행 막대와 "분석 취소" 버튼이, ComfyUI 노드에는 노드 진행 막대와 콘솔 표시가 나오고 ComfyUI 의 중단 버튼으로 멈출 수 있습니다. 파이썬에서는:
 

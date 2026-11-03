@@ -183,6 +183,71 @@ class AnalyzerTests(VisionTestCase):
         self.assertTrue(vision.check_model_path(self.tmp)["ok"])
 
 
+FULL_REPLY = json.dumps({"location": ["inside a glass conservatory full of orchids"],
+                         "full_prompt": "A woman in her late twenties stands in a glass conservatory.\nSoft light."})
+
+
+class QueueAndFullPromptTests(VisionTestCase):
+    def analyzer(self, reply=FULL_REPLY, full=True):
+        maker = PromptMaker(data_dir=self.data, translator=NoTranslator())
+        cfg = vision.VisionConfig(full_prompt=full, full_prompt_file=os.path.join(self.tmp, "out", "fp.txt"))
+        return vision.ImageAnalyzer(maker, cfg, backend=FakeBackend(reply))
+
+    def test_full_prompt_requested_and_split(self):
+        an = self.analyzer()
+        res = an.analyze(_png_bytes())
+        self.assertIn('"full_prompt"', an._backend.prompts[0])
+        self.assertEqual(res["full_prompt"], "A woman in her late twenties stands in a glass conservatory. Soft light.")
+        self.assertNotIn("full_prompt", res["elements"])
+        off = self.analyzer(full=False)
+        self.assertEqual(off.analyze(_png_bytes())["full_prompt"], "")
+        self.assertNotIn('"full_prompt"', off._backend.prompts[0])
+
+    def test_save_full_prompts_dedup_and_safety(self):
+        path = os.path.join(self.tmp, "out", "fp.txt")
+        r1 = vision.save_full_prompts(["A calm portrait of an adult woman.", "a calm portrait of an adult woman",
+                                       "A schoolgirl in a classroom."], path)
+        self.assertEqual(r1["saved"], ["A calm portrait of an adult woman."])
+        self.assertEqual([s["reason"] for s in r1["skipped"]], ["duplicate", "unsafe"])
+        r2 = vision.save_full_prompts(["A calm portrait of an adult woman.", "A second prompt."], path)
+        self.assertEqual(r2["saved"], ["A second prompt."])
+        with open(path, encoding="utf-8") as f:
+            lines = f.read().splitlines()
+        self.assertEqual(lines[0][0], "#")
+        self.assertEqual(lines[1:], ["A calm portrait of an adult woman.", "A second prompt."])
+
+    def test_queue_runs_in_order_with_auto_options(self):
+        an = self.analyzer()
+        q = vision.AnalysisQueue(an, auto_apply=True, auto_save_full_prompt=True)
+        q.add_many([_png_bytes(), _png_bytes()])
+        folder = os.path.join(self.tmp, "imgs")
+        os.makedirs(folder)
+        for n in ("b.png", "a.png", "skip.txt"):
+            with open(os.path.join(folder, n), "wb") as f:
+                f.write(_png_bytes())
+        self.assertEqual([i.name for i in q.add_folder(folder)], ["a.png", "b.png"])
+        seen = []
+        items = q.run(progress=lambda item, p: seen.append(item.id))
+        self.assertEqual([i.status for i in items], ["done"] * 4)
+        self.assertEqual(sorted(set(seen)), [i.id for i in items])
+        self.assertEqual(items[0].report["added_count"], 1)   # first image adds the location
+        self.assertIsNone(items[1].report)   # same answer again: all duplicates, nothing to add
+        self.assertEqual(items[0].full_prompt_report["saved_count"], 1)
+        self.assertEqual(items[1].full_prompt_report["saved_count"], 0)
+        self.assertEqual(q.summary()["percent"], 100.0)
+
+    def test_queue_errors_and_stop(self):
+        an = self.analyzer(reply="no json")
+        q = vision.AnalysisQueue(an)
+        q.add_many([_png_bytes(), _png_bytes()])
+        items = q.run()
+        self.assertEqual([i.status for i in items], ["error", "error"])  # keeps going after an error
+        q2 = vision.AnalysisQueue(self.analyzer())
+        q2.add_many([_png_bytes(), _png_bytes()])
+        q2.run(progress=lambda item, p: q2.stop())
+        self.assertEqual([i.status for i in q2.items], ["cancelled", "cancelled"])
+
+
 class VisionServerTests(VisionTestCase):
     def test_api(self):
         from http.server import ThreadingHTTPServer
@@ -190,6 +255,9 @@ class VisionServerTests(VisionTestCase):
 
         maker = PromptMaker(data_dir=self.data, translator=NoTranslator())
         old_cfg, old_get = vision.CONFIG_PATH, vision.get_backend
+        from promptmaker import vision_api
+
+        vision_api._queue["q"] = None
         vision.CONFIG_PATH = os.path.join(self.tmp, "vision.json")
         vision.get_backend = lambda cfg, progress=None: FakeBackend('{"mood": ["romantic"], "pose": ["kneeling on a picnic blanket"]}')
         srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(maker))
@@ -203,7 +271,8 @@ class VisionServerTests(VisionTestCase):
                 return json.loads(r.read())
         try:
             self.assertEqual(call("config")["config"]["model_id"], vision.DEFAULT_MODEL_ID)
-            saved = call("config", {"config": {"api_key": "secret", "max_items_per_key": 2}})
+            saved = call("config", {"config": {"api_key": "secret", "max_items_per_key": 2,
+                                               "full_prompt_file": os.path.join(self.tmp, "fp.txt")}})
             self.assertEqual(saved["config"]["api_key"], "***")
             self.assertEqual(vision.load_config().api_key, "secret")
             img = "data:image/png;base64," + base64.b64encode(_png_bytes()).decode()
@@ -225,6 +294,24 @@ class VisionServerTests(VisionTestCase):
             self.assertEqual(job["status"], "done")
             self.assertEqual(job["progress"]["stage"], "done")
             self.assertIn("runtime", call("config"))
+            # queue: two images in one request, analysed one after another
+            state = call("queue", {"images": [{"name": "one.png", "image": img}, {"name": "two.png", "image": img}],
+                                   "auto_apply": False})
+            self.assertEqual([i["name"] for i in state["items"]][-2:], ["one.png", "two.png"])
+            for _ in range(100):
+                state = call("queue")
+                if not state["summary"]["running"] and not state["summary"]["counts"].get("pending"):
+                    break
+                time.sleep(0.05)
+            self.assertEqual([i["status"] for i in state["items"]], ["done", "done"])
+            self.assertNotIn("result", state["items"][0])
+            one = call("queue/" + state["items"][0]["id"])
+            self.assertIn("elements", one["result"])
+            state = call("queue/clear", {})
+            self.assertEqual(state["items"], [])
+            saved = call("full_prompts", {"prompts": ["An adult woman reading by a window."]})
+            self.assertEqual(saved["saved_count"], 1)
+            self.assertTrue(os.path.isfile(saved["path"]))
         finally:
             srv.shutdown()
             srv.server_close()

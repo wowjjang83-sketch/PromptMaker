@@ -453,7 +453,8 @@ class _Filler:
             acc = self.pick("accessory")
             if acc:
                 extras.append(acc[0])
-        text = main + (f" with {grammar.join_list(extras)}" if extras else "") + (", barefoot" if barefoot else "")
+        joiner = ", paired with " if " with " in main else " with "  # avoid "with ... with ..."
+        text = main + (joiner + grammar.join_list(extras) if extras else "") + (", barefoot" if barefoot else "")
         self.cache["attire"] = [text]
         self.picks["attire"] = text
         return text

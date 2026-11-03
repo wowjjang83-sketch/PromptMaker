@@ -128,6 +128,77 @@ def _casting(words: List[str], text: str, intent: Intent) -> None:
             intent.female_noun = NOUN_OVERRIDES[w]
 
 
+# ---------------------------------------------------------------- attribute phrases
+# "white miniskirt", "fair skin": the modifier belongs to that noun only, so it must
+# not leak into other elements ("white" studio, "bright" afternoon).
+GARMENT_NOUNS = {
+    "bottom": ["miniskirt", "mini skirt", "mini-skirt", "skirt", "shorts", "hot pants", "jeans", "pants",
+               "trousers", "leggings"],
+    "top": ["crop top", "tank top", "top", "blouse", "shirt", "t-shirt", "tee", "sweater", "camisole",
+            "hoodie", "turtleneck", "tube top", "bralette"],
+    "dress": ["mini dress", "sundress", "slip dress", "dress", "gown"],
+    "swimwear": ["bikini", "swimsuit", "monokini", "one-piece"],
+    "outerwear": ["coat", "jacket", "blazer", "cardigan", "trench"],
+    "footwear": ["high heels", "heels", "boots", "sneakers", "sandals", "loafers", "flats"],
+    "sleepwear": ["pajamas", "pyjamas", "nightgown", "bathrobe"],
+    "traditional": ["hanbok", "kimono", "yukata", "qipao", "ao dai"],
+}
+MODIFIERS = {"white", "black", "red", "pink", "blue", "navy", "green", "yellow", "purple", "beige", "brown",
+             "grey", "gray", "silver", "gold", "golden", "ivory", "cream", "pastel", "denim", "leather",
+             "lace", "satin", "silk", "sheer", "pleated", "tight", "short", "long", "mini", "floral",
+             "striped", "knit", "cropped", "oversized", "sequined", "velvet", "tweed", "wet", "see-through",
+             "high-waisted", "low-rise", "frilly", "ruffled", "transparent"}
+SKIN_TONES = {"bright": ["fair", "porcelain", "pale", "luminous"], "fair": ["fair", "porcelain"],
+              "light": ["fair", "porcelain"], "pale": ["pale", "porcelain", "fair"], "white": ["fair", "porcelain", "pale"],
+              "porcelain": ["porcelain"], "glowing": ["glow", "luminous", "dewy"], "dewy": ["dewy"],
+              "tan": ["tan", "bronzed", "sun-kissed"], "tanned": ["tan", "bronzed", "sun-kissed"],
+              "dark": ["dark", "deep", "ebony"], "brown": ["brown", "caramel", "deep"],
+              "olive": ["olive"], "smooth": ["smooth"], "glossy": ["glow", "glistening"]}
+
+
+def _phrases(text: str, elements: Dict[str, Element], intent: Intent) -> set:
+    """Lock garments / skin tone written as '<modifier> <noun>'. Returns the words used."""
+    used = set()
+    low = text.lower()
+    for key, nouns in GARMENT_NOUNS.items():
+        if key not in elements:
+            continue
+        for noun in nouns:
+            m = re.search(r"((?:[a-z-]+\s+){0,3})\b" + re.escape(noun) + r"s?\b", low)
+            if not m:
+                continue
+            # keep only the modifiers directly in front of the noun
+            pre = m.group(1).split()
+            while pre and pre[0] not in MODIFIERS:
+                pre.pop(0)
+            mods = [w for w in pre if w in MODIFIERS]
+            used |= set(mods) | set(noun.replace("-", " ").split())
+            canon = "mini skirt" if noun in ("miniskirt", "mini-skirt") else noun
+            if not mods:
+                break  # a bare noun: the normal keyword search picks matching items
+            items = [i.text for i in elements[key].items
+                     if all(_word_in(w, i.text) for w in mods) and _word_in(canon.split()[-1], i.text)]
+            if items:
+                intent.pools[key] = items
+            else:  # nothing like it in the list: use the user's own words
+                phrase = " ".join(mods + [canon])
+                intent.locks[key] = ("an " if phrase[0] in "aeiou" else "a ") + phrase \
+                    if not canon.endswith(("s", "jeans", "pants", "shorts", "heels", "boots")) else phrase
+            break
+    m = re.search(r"\b([a-z-]+)[- ]skin(?:ned)?\b|\bskin\s+(?:is|that is)\s+([a-z-]+)", low)
+    if m and "skin" in elements:
+        adj = m.group(1) or m.group(2)
+        tones = SKIN_TONES.get(adj)
+        if tones:
+            items = [i.text for i in elements["skin"].items if any(_word_in(t, i.text) for t in tones)]
+            if items:
+                intent.pools["skin"] = items
+            else:
+                intent.locks["skin"] = adj
+            used |= {adj, "skin"}
+    return used
+
+
 def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent:
     intent = Intent()
     text = english or ""
@@ -166,7 +237,11 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
     skip.discard("gravure")  # also a style word
     keywords = [w for w in dict.fromkeys(words) if len(w) >= 3 and w not in skip]
     lemmas = {k: {k, simple_lemma(k)} for k in keywords}
-    used = set()
+    used = _phrases(text, elements, intent)
+    intent.consumed.extend(sorted(used))
+    if used and intent.female is None and intent.male is None:
+        # the request describes one person's look ("fair skin, white miniskirt"): one woman
+        intent.female, intent.male = 1, 0
     for group in LOCK_GROUPS:
         group_kws = set()
         for key in group:
@@ -182,7 +257,7 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
                         hits.append(item.text)
                         group_kws.add(kw)
                         break
-            if hits:
+            if hits and key not in intent.pools and key not in intent.locks:
                 intent.pools[key] = hits
         used |= group_kws
         for kw in group_kws:

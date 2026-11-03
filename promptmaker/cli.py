@@ -25,6 +25,8 @@ def main(argv=None) -> int:
     p.add_argument("--random", dest="random_elements", default="",
                    help="요소별 랜덤에서 랜덤으로 뽑을 요소 (쉼표 구분)")
     p.add_argument("--seed", type=int, default=None)
+    p.add_argument("--model", dest="model_profile", default=None,
+                   help="대상 모델 형식 (krea2, qwen2.1, moss, minimax_h3, none). 비우면 이미지 krea2 / 영상 minimax_h3")
     p.add_argument("--count", type=int, default=1)
     p.add_argument("--no-translate", action="store_true")
     p.add_argument("--user-data", default=None)
@@ -40,6 +42,9 @@ def main(argv=None) -> int:
         print()
         for k, e in sorted(maker.elements.items()):
             print(f"{k}: {len(e.items)}개")
+        print()
+        for m in maker.model_profiles.values():
+            print(f"[모델:{m.type}] {m.id} - {m.label}" + (" (기본)" if m.default_for else ""))
         return 0
 
     if args.check:
@@ -50,7 +55,7 @@ def main(argv=None) -> int:
         prompt_type=args.prompt_type, template=args.template, mode=args.mode,
         content_rating=args.content_rating, selections=selections,
         random_elements=[s.strip() for s in args.random_elements.split(",") if s.strip()],
-        seed=args.seed, translate=not args.no_translate,
+        seed=args.seed, translate=not args.no_translate, model_profile=args.model_profile,
     )
     try:
         results = maker.generate_batch(args.text, args.count, opts)
@@ -62,6 +67,8 @@ def main(argv=None) -> int:
             print(json.dumps(r.to_dict(), ensure_ascii=False, indent=2))
         else:
             print(r.prompt)
+            if r.negative_prompt:
+                print(f"[negative] {r.negative_prompt}")
             for w in r.warnings:
                 print(f"  ! {w}", file=sys.stderr)
             print()

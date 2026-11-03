@@ -90,6 +90,38 @@ class PromptMakerReload:
         return (f"templates={len(_MAKER.templates)}, elements={len(_MAKER.elements)}",)
 
 
+class _ComfyProgress:
+    """Progress bar on the node + console line + ComfyUI's cancel button, for vision.ImageAnalyzer."""
+
+    def __init__(self, batch: int):
+        self.batch, self.index = batch, 0
+        self._stage, self._printed = "", 0.0
+        try:
+            from comfy.utils import ProgressBar
+
+            self.bar = ProgressBar(100 * batch)
+        except ImportError:  # outside ComfyUI
+            self.bar = None
+
+    def __call__(self, p) -> None:
+        import time
+
+        if self.bar is not None:
+            self.bar.update_absolute(int(100 * self.index + p.percent), 100 * self.batch)
+        now = time.monotonic()
+        if p.stage != self._stage or now - self._printed >= 2:  # console: stage changes + every 2 s
+            print(f"[PromptMaker 이미지 분석 {self.index + 1}/{self.batch}] {p}", flush=True)
+            self._stage, self._printed = p.stage, now
+
+    def is_set(self) -> bool:  # used as the "cancel" flag
+        try:
+            import comfy.model_management as mm
+
+            return mm.processing_interrupted()
+        except ImportError:
+            return False
+
+
 class PromptMakerImageAnalyze:
     """이미지 -> 비전 모델(기본 Qwen3-VL-4B) -> 요소별 문구 -> 중복 확인 후 요소 txt 에 추가."""
 
@@ -136,9 +168,21 @@ class PromptMakerImageAnalyze:
             vision.save_config(cfg)
         analyzer = vision.ImageAnalyzer(_MAKER, cfg)
         lines, merged, added = [], {}, 0
-        for i in range(image.shape[0]):  # ComfyUI IMAGE: [B, H, W, C] float 0..1
+        batch = image.shape[0]
+        reporter = _ComfyProgress(batch)
+        for i in range(batch):  # ComfyUI IMAGE: [B, H, W, C] float 0..1
             arr = (image[i].cpu().numpy() * 255).clip(0, 255).astype(np.uint8)
-            result = analyzer.analyze(Image.fromarray(arr))
+            reporter.index = i
+            try:
+                result = analyzer.analyze(Image.fromarray(arr), progress=reporter, cancel=reporter)
+            except vision.AnalysisCancelled:
+                import comfy.model_management as mm
+
+                mm.throw_exception_if_processing_interrupted()  # ComfyUI's own "interrupted" handling
+                raise
+            s = result["stats"]
+            lines.append(f"== 이미지 {i + 1}/{batch}: 입력 {s['input_tokens']} 토큰, 출력 {s['output_tokens']} 토큰, "
+                         f"{s['tokens_per_sec']:.1f} tok/s, {vision._fmt_time(s['elapsed'])} 소요")
             for key, rows in result["elements"].items():
                 merged.setdefault(key, []).extend(rows)
                 lines += [f"[{r['status']}] {key}: {r['text']}" for r in rows]

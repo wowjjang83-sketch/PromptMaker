@@ -19,6 +19,9 @@ if errorlevel 1 (
 ) else (
   set PY=python
 )
+rem Optional: python with CUDA torch for image analysis, e.g.
+rem   set PROMPTMAKER_PYTHON=F:\ComfyUI\python_embeded\python.exe
+if defined PROMPTMAKER_PYTHON set PY="%PROMPTMAKER_PYTHON%"
 
 set USERDATA=
 if exist "%~dp0user_data" set USERDATA=--user-data "%~dp0user_data"

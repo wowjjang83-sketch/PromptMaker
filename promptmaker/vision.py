@@ -23,11 +23,14 @@ from __future__ import annotations
 import argparse
 import base64
 import datetime
+import gc
 import io
 import json
 import os
 import re
+import sys
 import threading
+import time
 import urllib.request
 from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -93,15 +96,35 @@ def save_config(cfg: VisionConfig, path: Optional[str] = None) -> str:
     return path
 
 
+_runtime: Dict[str, Any] = {}
+
+
+def runtime_info() -> Dict[str, Any]:
+    """Python / torch / GPU status of this process, shown next to the device option."""
+    if not _runtime:
+        info: Dict[str, Any] = {"python": sys.executable, "torch": None, "cuda": False, "gpu": ""}
+        try:
+            import torch
+
+            info["torch"] = torch.__version__
+            info["cuda"] = torch.cuda.is_available()
+            if info["cuda"]:
+                info["gpu"] = torch.cuda.get_device_name(0)
+        except ImportError:
+            pass
+        _runtime.update(info)
+    return dict(_runtime)
+
+
 def is_single_file(path: str) -> bool:
     return path.lower().endswith(".safetensors") and os.path.isfile(path)
 
 
-def load_single_file(path: str, dtype) -> Dict[str, Any]:
+def load_single_file(path: str, dtype, on_tensor: Optional[Callable[[int, int], None]] = None) -> Dict[str, Any]:
     """Read a single .safetensors file into a transformers state dict.
 
     ComfyUI style fp8 checkpoints (``<name>.weight`` in float8 + ``weight_scale`` +
-    ``comfy_quant``) are dequantised to ``dtype``.
+    ``comfy_quant``) are dequantised to ``dtype``. ``on_tensor(done, total)`` reports progress.
     """
     from safetensors import safe_open
 
@@ -109,7 +132,9 @@ def load_single_file(path: str, dtype) -> Dict[str, Any]:
     with safe_open(path, framework="pt") as f:
         keys = list(f.keys())
         skip = {k for k in keys if k.endswith((".comfy_quant", ".weight_scale", ".input_scale"))}
-        for key in keys:
+        for i, key in enumerate(keys, 1):
+            if on_tensor and (i % 50 == 0 or i == len(keys)):
+                on_tensor(i, len(keys))
             if key in skip:
                 continue
             t = f.get_tensor(key)
@@ -153,6 +178,8 @@ def browse(path: str = "") -> Dict[str, Any]:
             return {"path": "", "parent": "", "dirs": drives, "files": []}
         path = "/"
     path = os.path.abspath(path)
+    if os.path.isfile(path):  # a picked model file: show the folder it is in
+        path = os.path.dirname(path)
     if not os.path.isdir(path):
         raise FileNotFoundError(path)
     dirs, files = [], []
@@ -195,12 +222,160 @@ def _to_data_url(img) -> str:
     return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
 
 
+# ------------------------------------------------------------------ progress
+class AnalysisCancelled(RuntimeError):
+    """Raised inside an analysis when the caller asked to stop."""
+
+
+@dataclass
+class Progress:
+    """One progress report. ``percent`` is the overall progress of the whole analysis."""
+
+    stage: str                      # "load_model" | "prepare" | "generate" | "parse" | "done"
+    message: str = ""
+    percent: float = 0.0
+    input_tokens: int = 0           # prompt + image tokens
+    output_tokens: int = 0          # generated so far
+    expected_tokens: int = 0        # estimate of the final answer length
+    max_new_tokens: int = 0
+    tokens_per_sec: float = 0.0
+    elapsed: float = 0.0            # seconds since the analysis started
+    eta: Optional[float] = None     # estimated seconds left (None = unknown)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+    def __str__(self) -> str:
+        parts = [f"[{self.percent:5.1f}%] {self.message}"]
+        if self.input_tokens:
+            parts.append(f"입력 {self.input_tokens} 토큰")
+        if self.stage == "generate" or self.output_tokens:
+            parts.append(f"출력 {self.output_tokens}/{self.expected_tokens or self.max_new_tokens} 토큰")
+        if self.tokens_per_sec:
+            parts.append(f"{self.tokens_per_sec:.1f} tok/s")
+        parts.append(f"경과 {_fmt_time(self.elapsed)}")
+        if self.eta is not None:
+            parts.append(f"남은 시간 약 {_fmt_time(self.eta)}")
+        return " | ".join(parts)
+
+
+def _fmt_time(sec: float) -> str:
+    sec = int(max(0, sec))
+    return f"{sec // 60}:{sec % 60:02d}"
+
+
+# Overall percent range of each stage.
+_STAGE_RANGE = {"load_model": (0, 15), "prepare": (15, 20), "generate": (20, 95), "parse": (95, 100), "done": (100, 100)}
+
+
+class ProgressReporter:
+    """Turns stage updates into :class:`Progress` objects for a callback, and handles cancel.
+
+    ``callback(progress)`` is called from the analysis thread; ``cancel`` is a
+    ``threading.Event`` (or anything with ``is_set()``) checked at every update.
+    """
+
+    def __init__(self, callback: Optional[Callable[[Progress], None]] = None, cancel=None,
+                 max_new_tokens: int = 0):
+        self.callback = callback
+        self.cancel = cancel
+        self.start = time.monotonic()
+        self.state = Progress(stage="prepare", max_new_tokens=max_new_tokens)
+        self._gen_start: Optional[float] = None
+        self._last_emit = 0.0
+
+    def check(self) -> None:
+        if self.cancel is not None and self.cancel.is_set():
+            raise AnalysisCancelled("분석이 취소되었습니다.")
+
+    def update(self, stage: Optional[str] = None, message: Optional[str] = None,
+               fraction: Optional[float] = None, force: bool = True, **fields) -> None:
+        """``fraction`` (0..1) is the progress inside the current stage."""
+        self.check()
+        s = self.state
+        if stage:
+            s.stage = stage
+        if message is not None:
+            s.message = message
+        for k, v in fields.items():
+            setattr(s, k, v)
+        lo, hi = _STAGE_RANGE.get(s.stage, (0, 100))
+        s.percent = round(lo + (hi - lo) * min(max(fraction or 0.0, 0.0), 1.0), 1)
+        s.elapsed = round(time.monotonic() - self.start, 1)
+        now = time.monotonic()
+        if self.callback and (force or now - self._last_emit >= 0.25):
+            self._last_emit = now
+            self.callback(Progress(**asdict(s)))
+
+    # --- generation helpers used by the backends
+    def generation_started(self, input_tokens: int, expected_tokens: int) -> None:
+        self._gen_start = time.monotonic()
+        self.update("generate", f"답변 생성 중 (입력 {input_tokens} 토큰 처리)", 0.0,
+                    input_tokens=input_tokens, expected_tokens=expected_tokens, output_tokens=0)
+
+    def token(self, count: int) -> None:
+        s = self.state
+        out = s.output_tokens + count
+        elapsed = time.monotonic() - (self._gen_start or self.start)
+        rate = out / elapsed if elapsed > 0 else 0.0
+        expected = max(s.expected_tokens, out + 1) if out < s.max_new_tokens else s.max_new_tokens
+        eta = (expected - out) / rate if rate > 0 else None
+        self.update(None, "답변 생성 중", out / expected if expected else 0.0, force=False,
+                    output_tokens=out, expected_tokens=expected, tokens_per_sec=round(rate, 2),
+                    eta=None if eta is None else round(eta, 1))
+
+
+def _hf_kwargs(ref: str) -> Dict[str, Any]:
+    """Use the local Hugging Face cache without contacting the Hub when the model is already there."""
+    if os.path.isdir(ref):
+        return {}
+    try:
+        from huggingface_hub import try_to_load_from_cache
+
+        if isinstance(try_to_load_from_cache(ref, "config.json"), str):
+            return {"local_files_only": True}
+    except Exception:
+        pass
+    return {}
+
+
+def _accepts(fn, name: str) -> bool:
+    import inspect
+
+    try:
+        return name in inspect.signature(fn).parameters
+    except (TypeError, ValueError):
+        return False
+
+
+class _TokenStreamer:
+    """transformers streamer that counts generated tokens (the first ``put`` is the prompt)."""
+
+    def __init__(self, reporter: ProgressReporter):
+        self.reporter = reporter
+        self.prompt_seen = False
+
+    def put(self, value) -> None:
+        if not self.prompt_seen:
+            self.prompt_seen = True
+            return
+        self.reporter.token(int(value.numel()) if hasattr(value, "numel") else 1)
+
+    def end(self) -> None:
+        pass
+
+
 # ------------------------------------------------------------------ backends
 class TransformersBackend:
-    def __init__(self, cfg: VisionConfig):
+    def __init__(self, cfg: VisionConfig, progress: Optional[ProgressReporter] = None):
         import torch
         from transformers import AutoModelForImageTextToText, AutoProcessor
 
+        if cfg.device == "cuda" and not torch.cuda.is_available():
+            raise RuntimeError(
+                f"이 서버의 파이썬({sys.executable}, torch {torch.__version__})은 GPU(CUDA)를 쓸 수 없습니다. "
+                "장치를 '자동' 또는 'CPU'로 바꾸거나, CUDA 용 torch 가 설치된 파이썬으로 서버를 실행하세요 "
+                "(예: set PROMPTMAKER_PYTHON=ComfyUI\\python_embeded\\python.exe 후 run_server.bat).")
         dtype = "auto" if cfg.dtype == "auto" else getattr(torch, cfg.dtype)
         if is_single_file(cfg.model_ref):
             # One .safetensors file (e.g. a fine-tune saved for ComfyUI): weights from the file,
@@ -208,7 +383,7 @@ class TransformersBackend:
             from transformers import AutoConfig
 
             base = cfg.model_id
-            config = AutoConfig.from_pretrained(base)
+            config = AutoConfig.from_pretrained(base, **_hf_kwargs(base))
             load_dtype = torch.bfloat16 if dtype == "auto" else dtype
             try:  # skip random init (minutes on CPU); every weight comes from the file
                 from transformers.initialization import no_init_weights
@@ -216,7 +391,15 @@ class TransformersBackend:
                 from contextlib import nullcontext as no_init_weights
             with no_init_weights():
                 self.model = AutoModelForImageTextToText.from_config(config, dtype=load_dtype)
-            missing, unexpected = self.model.load_state_dict(load_single_file(cfg.model_ref, load_dtype), strict=False)
+
+            def on_tensor(done: int, total: int) -> None:
+                if progress:
+                    progress.update("load_model", f"가중치 파일 읽는 중 ({done}/{total})", 0.1 + 0.8 * done / total,
+                                    force=done == total)
+
+            state = load_single_file(cfg.model_ref, load_dtype, on_tensor)
+            missing, unexpected = self.model.load_state_dict(state, strict=False)
+            del state
             missing = [k for k in missing if k != "lm_head.weight"]  # tied to embed_tokens
             if missing or unexpected:
                 raise ValueError(f"가중치 파일이 기본 모델({base})과 맞지 않습니다. "
@@ -224,19 +407,26 @@ class TransformersBackend:
             self.model.tie_weights()
             self.model.eval()
             device = cfg.device if cfg.device in ("cpu", "cuda") else ("cuda" if torch.cuda.is_available() else "cpu")
+            if progress:
+                progress.update("load_model", f"모델을 {device.upper()} 로 옮기는 중", 0.95)
             self.model.to(device)
         else:
             base = cfg.model_ref
+            if progress:
+                progress.update("load_model", f"모델 불러오는 중: {base}", 0.1)
             kwargs: Dict[str, Any] = {"dtype": dtype}
             if cfg.device == "auto":
                 kwargs["device_map"] = "auto" if torch.cuda.is_available() else None
-            self.model = AutoModelForImageTextToText.from_pretrained(base, **kwargs)
+            self.model = AutoModelForImageTextToText.from_pretrained(base, **kwargs, **_hf_kwargs(base))
             if cfg.device in ("cpu", "cuda"):
                 self.model.to(cfg.device)
-        self.processor = AutoProcessor.from_pretrained(base)
+        self.processor = AutoProcessor.from_pretrained(base, **_hf_kwargs(base))
         self.max_new_tokens = cfg.max_new_tokens
+        self.history: List[int] = []  # output lengths of earlier runs, for the time estimate
+        self.usage: Dict[str, int] = {}
 
-    def chat(self, image, prompt: str) -> str:
+    def chat(self, image, prompt: str, progress: Optional[ProgressReporter] = None,
+             expected_tokens: int = 0) -> str:
         import torch
 
         messages = [{"role": "user", "content": [{"type": "image", "image": image},
@@ -244,21 +434,35 @@ class TransformersBackend:
         inputs = self.processor.apply_chat_template(messages, tokenize=True, add_generation_prompt=True,
                                                     return_dict=True, return_tensors="pt")
         inputs = inputs.to(self.model.device)
+        n_in = int(inputs["input_ids"].shape[1])
+        kwargs: Dict[str, Any] = {}
+        if progress:
+            if self.history:
+                expected_tokens = int(sum(self.history[-5:]) / len(self.history[-5:]) * 1.1)
+            progress.generation_started(n_in, min(expected_tokens or self.max_new_tokens, self.max_new_tokens))
+            kwargs["streamer"] = _TokenStreamer(progress)
         with torch.inference_mode():
-            out = self.model.generate(**inputs, max_new_tokens=self.max_new_tokens, do_sample=False)
-        out = out[:, inputs["input_ids"].shape[1]:]
+            out = self.model.generate(**inputs, max_new_tokens=self.max_new_tokens, do_sample=False, **kwargs)
+        out = out[:, n_in:]
+        self.history.append(int(out.shape[1]))
+        self.usage = {"input_tokens": n_in, "output_tokens": int(out.shape[1])}
         return self.processor.batch_decode(out, skip_special_tokens=True)[0]
 
 
 class OpenAIBackend:
-    def __init__(self, cfg: VisionConfig):
+    def __init__(self, cfg: VisionConfig, progress: Optional[ProgressReporter] = None):
         self.cfg = cfg
+        self.history: List[int] = []
+        self.usage: Dict[str, int] = {}
 
-    def chat(self, image, prompt: str) -> str:
+    def chat(self, image, prompt: str, progress: Optional[ProgressReporter] = None,
+             expected_tokens: int = 0) -> str:
         body = {
             "model": self.cfg.model_id,
             "temperature": 0,
             "max_tokens": self.cfg.max_new_tokens,
+            "stream": True,
+            "stream_options": {"include_usage": True},
             "messages": [{"role": "user", "content": [
                 {"type": "image_url", "image_url": {"url": _to_data_url(image)}},
                 {"type": "text", "text": prompt},
@@ -268,9 +472,37 @@ class OpenAIBackend:
                                      data=json.dumps(body).encode("utf-8"),
                                      headers={"Content-Type": "application/json",
                                               "Authorization": f"Bearer {self.cfg.api_key or 'none'}"})
+        if progress:
+            if self.history:
+                expected_tokens = int(sum(self.history[-5:]) / len(self.history[-5:]) * 1.1)
+            progress.generation_started(0, min(expected_tokens or self.cfg.max_new_tokens, self.cfg.max_new_tokens))
+        text, usage, chunks = [], {}, 0
         with urllib.request.urlopen(req, timeout=600) as res:
-            data = json.loads(res.read().decode("utf-8"))
-        return data["choices"][0]["message"]["content"]
+            if "text/event-stream" not in res.headers.get("Content-Type", ""):  # server ignored "stream"
+                data = json.loads(res.read().decode("utf-8"))
+                usage = data.get("usage") or {}
+                text.append(data["choices"][0]["message"]["content"])
+            else:
+                for raw in res:
+                    line = raw.decode("utf-8").strip()
+                    if not line.startswith("data:") or line == "data: [DONE]":
+                        continue
+                    data = json.loads(line[5:])
+                    usage = data.get("usage") or usage
+                    for choice in data.get("choices") or []:
+                        piece = (choice.get("delta") or {}).get("content") or ""
+                        if piece:
+                            text.append(piece)
+                            chunks += 1
+                            if progress:
+                                progress.token(1)  # one streamed chunk is usually one token
+        self.usage = {"input_tokens": int(usage.get("prompt_tokens", 0)),
+                      "output_tokens": int(usage.get("completion_tokens", chunks))}
+        self.history.append(self.usage["output_tokens"])
+        if progress and self.usage["input_tokens"]:
+            progress.update(None, None, 1.0, input_tokens=self.usage["input_tokens"],
+                            output_tokens=self.usage["output_tokens"])
+        return "".join(text)
 
 
 BACKENDS: Dict[str, Callable[[VisionConfig], Any]] = {
@@ -282,15 +514,28 @@ _backend_cache: Dict[Tuple, Any] = {}
 _backend_lock = threading.Lock()
 
 
-def get_backend(cfg: VisionConfig):
-    key = (cfg.backend, cfg.model_ref, cfg.api_base, cfg.device, cfg.dtype, cfg.max_new_tokens)
+def _backend_key(cfg: VisionConfig) -> Tuple:
+    return (cfg.backend, cfg.model_ref, cfg.model_id, cfg.api_base, cfg.device, cfg.dtype, cfg.max_new_tokens)
+
+
+def is_loaded(cfg: VisionConfig) -> bool:
+    return _backend_key(cfg) in _backend_cache
+
+
+def get_backend(cfg: VisionConfig, progress: Optional[ProgressReporter] = None):
+    key = _backend_key(cfg)
     with _backend_lock:
         if key not in _backend_cache:
             if cfg.backend not in BACKENDS:
                 raise ValueError(f"알 수 없는 백엔드: {cfg.backend} (사용 가능: {', '.join(BACKENDS)})")
             if cfg.backend == "transformers":
                 _backend_cache.clear()  # keep only one local model in memory
-            _backend_cache[key] = BACKENDS[cfg.backend](cfg)
+                gc.collect()
+            if progress:
+                progress.update("load_model", f"모델 준비 중 ({cfg.backend})", 0.0)
+            _backend_cache[key] = BACKENDS[cfg.backend](cfg, progress)
+            if progress:
+                progress.update("load_model", "모델 준비 완료", 1.0)
         return _backend_cache[key]
 
 
@@ -516,16 +761,43 @@ class ImageAnalyzer:
     def backend(self):
         return self._backend or get_backend(self.config)
 
-    def analyze(self, image: Any) -> Dict[str, Any]:
+    def analyze(self, image: Any, progress: Optional[Callable[[Progress], None]] = None,
+                cancel=None) -> Dict[str, Any]:
+        """Analyse one image.
+
+        ``progress(Progress)`` receives stage, token counts, speed, elapsed time and the
+        estimated time left; ``cancel`` (e.g. ``threading.Event``) stops the analysis with
+        :class:`AnalysisCancelled` when set.
+        """
+        rep = ProgressReporter(progress, cancel, max_new_tokens=int(self.config.max_new_tokens))
+        rep.update("prepare", "이미지와 지시문 준비 중", 0.0)
         img = load_image(image, self.config.max_image_side)
         prompt, keys = build_prompt(self.data_dirs, self.config)
-        raw = self.backend.chat(img, prompt)
+        if self._backend is not None:
+            backend = self._backend
+        else:
+            if not is_loaded(self.config):
+                rep.update("load_model", "모델 불러오는 중 (처음 한 번만)", 0.0)
+            backend = get_backend(self.config, rep)
+        rep.update("prepare", f"요소 {len(keys)}개로 지시문 구성 완료", 1.0)
+        # First-run estimate: roughly a short phrase for half of the keys.
+        expected = min(int(self.config.max_new_tokens), 20 + 12 * len(keys))
+        if _accepts(backend.chat, "progress"):
+            raw = backend.chat(img, prompt, progress=rep, expected_tokens=expected)
+        else:
+            raw = backend.chat(img, prompt)
+        rep.update("parse", "응답 해석 및 중복 확인 중", 0.0)
         found = parse_response(raw)
         limit = max(1, int(self.config.max_items_per_key))
         found = {k: v[:limit] for k, v in found.items() if k not in self.config.skip_keys}
         rows = classify(self.data_dirs, found, keys)
         new = {k: [r["text"] for r in v if r["status"] == "new"] for k, v in rows.items()}
-        return {"elements": rows, "new": {k: v for k, v in new.items() if v}, "raw": raw}
+        usage = dict(getattr(backend, "usage", {}) or {})
+        n_new = sum(len(v) for v in new.values())
+        rep.update("done", f"완료: 새 항목 {n_new}개", 1.0, eta=0.0, **{k: v for k, v in usage.items()
+                                                                       if k in ("input_tokens", "output_tokens")})
+        stats = rep.state.to_dict()
+        return {"elements": rows, "new": {k: v for k, v in new.items() if v}, "raw": raw, "stats": stats}
 
     def apply(self, items: Dict[str, List[str]], rating: str = "sfw") -> Dict[str, Any]:
         report = append_items(self.write_dir, items, rating=rating, search_dirs=self.data_dirs)
@@ -533,8 +805,9 @@ class ImageAnalyzer:
             self.maker.reload()
         return report
 
-    def analyze_and_apply(self, image: Any, rating: str = "sfw") -> Dict[str, Any]:
-        result = self.analyze(image)
+    def analyze_and_apply(self, image: Any, rating: str = "sfw",
+                          progress: Optional[Callable[[Progress], None]] = None, cancel=None) -> Dict[str, Any]:
+        result = self.analyze(image, progress, cancel)
         result["report"] = self.apply(result["new"], rating)
         return result
 
@@ -561,9 +834,12 @@ def main(argv=None) -> None:
     if args.save_config:
         print("설정 저장:", save_config(cfg))
     analyzer = ImageAnalyzer(PromptMaker(user_data_dir=args.user_data), cfg)
+    def show(p: Progress) -> None:
+        print("\r" + str(p)[:150].ljust(150), end="", flush=True)
+
     for path in args.images:
-        result = analyzer.analyze(path)
-        print(f"== {path}")
+        result = analyzer.analyze(path, progress=show)
+        print(f"\n== {path}")
         for key, rows in result["elements"].items():
             for r in rows:
                 print(f"  [{r['status']:<11}] {key}: {r['text']}")

@@ -46,6 +46,8 @@ def make_handler(maker: PromptMaker):
         def do_GET(self):
             if self.path.startswith("/api/vision/"):
                 return self._vision("GET")
+            if self.path == "/favicon.ico":
+                return self._send(204, b"", "image/x-icon")
             if self.path.startswith("/api/info"):
                 return self._json(200, maker.info())
             if self.path.startswith("/api/reload"):

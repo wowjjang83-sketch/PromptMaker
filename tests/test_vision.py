@@ -5,6 +5,7 @@ import os
 import shutil
 import tempfile
 import threading
+import time
 import unittest
 import urllib.request
 
@@ -120,6 +121,34 @@ class AnalyzerTests(VisionTestCase):
         self.assertEqual(rep["added_count"], 2)
         self.assertIn("a sleek silver bob", [i.text for i in maker.elements["hair"].items])  # reloaded
 
+    def test_progress_and_cancel(self):
+        class StreamingFake:
+            usage = {}
+
+            def chat(self, image, prompt, progress=None, expected_tokens=0):
+                progress.generation_started(321, expected_tokens)
+                for _ in range(5):
+                    progress.token(1)
+                self.usage = {"input_tokens": 321, "output_tokens": 5}
+                return '{"mood": ["wistful"]}'
+
+        maker = PromptMaker(data_dir=self.data, translator=NoTranslator())
+        events = []
+        an = vision.ImageAnalyzer(maker, vision.VisionConfig(max_new_tokens=50), backend=StreamingFake())
+        res = an.analyze(_png_bytes(), progress=events.append)
+        stages = [e.stage for e in events]
+        self.assertEqual(stages[0], "prepare")
+        self.assertIn("generate", stages)
+        self.assertEqual(stages[-1], "done")
+        self.assertEqual(events[-1].percent, 100)
+        self.assertTrue(all(a.percent <= b.percent for a, b in zip(events, events[1:])))
+        self.assertEqual((res["stats"]["input_tokens"], res["stats"]["output_tokens"]), (321, 5))
+        self.assertIn("입력 321 토큰", str(events[-1]))
+        cancel = threading.Event()
+        cancel.set()
+        with self.assertRaises(vision.AnalysisCancelled):
+            an.analyze(_png_bytes(), cancel=cancel)
+
     def test_config_roundtrip(self):
         path = os.path.join(self.tmp, "cfg", "vision.json")
         cfg = vision.VisionConfig.from_dict({"backend": "openai", "skip_keys": "age, casting", "bogus": 1})
@@ -162,7 +191,7 @@ class VisionServerTests(VisionTestCase):
         maker = PromptMaker(data_dir=self.data, translator=NoTranslator())
         old_cfg, old_get = vision.CONFIG_PATH, vision.get_backend
         vision.CONFIG_PATH = os.path.join(self.tmp, "vision.json")
-        vision.get_backend = lambda cfg: FakeBackend('{"mood": ["romantic"], "pose": ["kneeling on a picnic blanket"]}')
+        vision.get_backend = lambda cfg, progress=None: FakeBackend('{"mood": ["romantic"], "pose": ["kneeling on a picnic blanket"]}')
         srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(maker))
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         base = f"http://127.0.0.1:{srv.server_address[1]}/api/vision/"
@@ -184,6 +213,18 @@ class VisionServerTests(VisionTestCase):
             self.assertEqual(rep["added_count"], 1)
             self.assertIn("kneeling on a picnic blanket", self.read("pose.txt"))
             self.assertIn("dirs", call("browse?path=" + urllib.request.quote(self.tmp)))
+            # picking a file shows its folder instead of failing
+            listing = call("browse?path=" + urllib.request.quote(os.path.join(self.data, "elements", "pose.txt")))
+            self.assertIn("pose.txt", listing["files"])
+            job = call("jobs", {"image": img})
+            for _ in range(100):
+                job = call("jobs/" + job["id"])
+                if job["status"] not in ("queued", "running"):
+                    break
+                time.sleep(0.05)
+            self.assertEqual(job["status"], "done")
+            self.assertEqual(job["progress"]["stage"], "done")
+            self.assertIn("runtime", call("config"))
         finally:
             srv.shutdown()
             srv.server_close()

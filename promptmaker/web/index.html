@@ -52,6 +52,15 @@
   .browser div:hover { background:var(--bg); }
   .browser .file { color:var(--muted); cursor:default; }
   .ok { color:#2b8a3e; font-size:12px; } .bad { color:var(--err); font-size:12px; }
+  .v-progress { border:1px solid var(--line); border-radius:8px; padding:12px; margin-bottom:12px; }
+  .v-bar { height:10px; background:var(--bg); border-radius:5px; overflow:hidden; margin:8px 0; }
+  .v-bar div { height:100%; width:0; background:var(--accent); transition:width .3s; }
+  .v-stage { font-size:14px; font-weight:600; display:flex; justify-content:space-between; gap:8px; }
+  .v-stats { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:6px 12px; font-size:12px; color:var(--muted); }
+  .v-stats b { color:var(--text); font-weight:600; }
+  .v-steps { display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; font-size:11px; }
+  .v-steps span { padding:2px 8px; border-radius:10px; border:1px solid var(--line); color:var(--muted); }
+  .v-steps span.on { border-color:var(--accent); color:var(--accent); } .v-steps span.fin { color:#2b8a3e; border-color:#2b8a3e; }
   .v-key { margin-top:10px; font-size:13px; font-weight:600; }
   .v-item { display:grid; grid-template-columns:22px 1fr 64px; gap:6px; align-items:center; margin-top:4px; }
   .v-item input[type=text] { padding:4px 8px; font-size:13px; }
@@ -137,6 +146,7 @@
               <select id="v_device"><option value="auto">자동</option><option value="cuda">GPU (cuda)</option><option value="cpu">CPU</option></select></div>
               <div><label for="v_dtype">정밀도</label>
               <select id="v_dtype"><option>auto</option><option>bfloat16</option><option>float16</option><option>float32</option></select></div></div>
+            <div id="v_runtime" class="hint"></div>
           </div>
           <label for="v_model_id">기본 모델 (HF id 또는 폴더. 단일 파일일 때 설정을 가져올 원본 / 서버 백엔드면 서버의 모델명)</label>
           <input type="text" id="v_model_id">
@@ -161,6 +171,19 @@
         <p class="hint">처음 실행할 때는 모델을 불러오느라 시간이 걸립니다.</p>
       </div>
       <div>
+        <div class="v-progress" id="v_progress" hidden>
+          <div class="v-stage"><span id="v_stage">-</span><span id="v_pct">0%</span></div>
+          <div class="v-bar"><div id="v_bar"></div></div>
+          <div class="v-stats">
+            <span>경과 <b id="v_elapsed">0:00</b></span>
+            <span>남은 시간 <b id="v_eta">계산 중</b></span>
+            <span>입력 토큰 <b id="v_in">-</b></span>
+            <span>출력 토큰 <b id="v_out">-</b></span>
+            <span>속도 <b id="v_rate">-</b></span>
+          </div>
+          <div class="v-steps" id="v_steps"></div>
+          <div class="actions"><button class="secondary" id="v_cancel" style="padding:4px 10px">분석 취소</button></div>
+        </div>
         <div id="v_result"><p class="hint">이미지를 고르고 "이미지 분석"을 누르세요. 새 항목만 기본 선택되며, 문구를 고친 뒤 추가할 수 있습니다.</p></div>
         <div class="actions" id="v_apply_bar" hidden><button id="v_apply">선택 항목 txt 에 추가</button></div>
         <div id="v_report"></div>
@@ -289,6 +312,12 @@ async function vLoadConfig() {
   $("v_max_items").value = c.max_items_per_key; $("v_max_tokens").value = c.max_new_tokens;
   $("v_skip").value = c.skip_keys.join(", ");
   $("v_cfg_path").textContent = "설정 파일: " + d.config_path;
+  const rt = d.runtime || {};
+  $("v_runtime").innerHTML = !rt.torch
+    ? `<span class="bad">이 서버 파이썬(${esc(rt.python)})에 torch 가 없습니다.</span>`
+    : rt.cuda ? `<span class="ok">GPU 사용 가능: ${esc(rt.gpu)}</span>`
+    : `<span class="bad">이 서버 파이썬은 GPU(CUDA)를 쓸 수 없어 CPU 로만 분석합니다 (느림). CUDA torch 가 있는 파이썬으로 서버를 실행하면 GPU 를 씁니다.</span>`;
+  if (!rt.cuda && c.device === "cuda") $("v_device").value = "auto";
   vShowBackend(); vShowCheck(d.check);
   if (!c.model_path && c.backend === "transformers") $("v_settings").open = true;
 }
@@ -343,20 +372,60 @@ function vRender(data) {
   $("v_apply_bar").hidden = !Object.keys(data.new).length;
 }
 
+const V_STAGES = [["load_model", "모델 로딩"], ["prepare", "준비"], ["generate", "생성"], ["parse", "해석·중복 확인"], ["done", "완료"]];
+let V_JOB = null;
+const fmtTime = s => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+
+function vShowProgress(p, status, startedAt) {
+  $("v_progress").hidden = false;
+  const pct = status === "done" ? 100 : p.percent || 0;
+  $("v_bar").style.width = pct + "%"; $("v_pct").textContent = pct.toFixed(1) + "%";
+  $("v_stage").textContent = status === "queued" ? "대기 중" : (p.message || "-");
+  // elapsed ticks locally between polls; server value wins when it is ahead
+  const local = (Date.now() - startedAt) / 1000;
+  $("v_elapsed").textContent = fmtTime(Math.max(local, p.elapsed || 0));
+  $("v_eta").textContent = status === "done" ? "0:00" : p.eta == null ? (p.stage === "load_model" ? "모델 로딩 후 계산" : "계산 중") : "약 " + fmtTime(p.eta);
+  $("v_in").textContent = p.input_tokens ? p.input_tokens.toLocaleString() : "-";
+  $("v_out").textContent = p.output_tokens || p.stage === "generate"
+    ? `${p.output_tokens || 0} / 예상 ${p.expected_tokens || "?"} (최대 ${p.max_new_tokens})` : "-";
+  $("v_rate").textContent = p.tokens_per_sec ? p.tokens_per_sec.toFixed(1) + " tok/s" : "-";
+  const idx = V_STAGES.findIndex(s => s[0] === p.stage);
+  $("v_steps").innerHTML = V_STAGES.map(([k, label], i) =>
+    `<span class="${status === "done" || i < idx ? "fin" : i === idx ? "on" : ""}">${label}</span>`).join("");
+}
+
 async function vAnalyze() {
   if (!V_IMAGE) { $("v_result").innerHTML = '<p class="error">이미지를 먼저 선택하세요.</p>'; return; }
   if ($("v_settings").open && !(await vSaveConfig())) return;
-  $("v_result").innerHTML = '<p class="hint">분석 중… (모델 로딩 포함 수십 초 이상 걸릴 수 있습니다)</p>';
-  $("v_report").innerHTML = ""; $("v_apply_bar").hidden = true; $("v_analyze").disabled = true;
+  $("v_result").innerHTML = ""; $("v_report").innerHTML = ""; $("v_apply_bar").hidden = true;
+  $("v_analyze").disabled = true; $("v_cancel").disabled = false;
+  const startedAt = Date.now();
   try {
-    const res = await postJSON("/api/vision/analyze", { image: V_IMAGE });
-    const d = await res.json();
-    if (!res.ok) { $("v_result").innerHTML = `<p class="error">${esc(d.error)}</p>`; return; }
-    $("v_raw").textContent = d.raw; vRender(d);
+    const res = await postJSON("/api/vision/jobs", { image: V_IMAGE });
+    let job = await res.json();
+    if (!res.ok) { $("v_result").innerHTML = `<p class="error">${esc(job.error)}</p>`; return; }
+    V_JOB = job.id;
+    while (job.status === "queued" || job.status === "running") {
+      vShowProgress(job.progress, job.status, startedAt);
+      await new Promise(r => setTimeout(r, 700));
+      const r = await fetch("/api/vision/jobs/" + V_JOB);
+      job = await r.json();
+      if (!r.ok) throw new Error(job.error);
+    }
+    vShowProgress(job.status === "done" ? job.result.stats : job.progress, job.status, startedAt);
+    if (job.status === "done") { $("v_raw").textContent = job.result.raw; vRender(job.result); }
+    else if (job.status === "cancelled") { $("v_stage").textContent = "취소됨"; $("v_result").innerHTML = '<p class="hint">분석을 취소했습니다.</p>'; }
+    else { $("v_stage").textContent = "오류"; $("v_result").innerHTML = `<p class="error">${esc(job.error)}</p>`; }
   } catch (e) {
     $("v_result").innerHTML = `<p class="error">${esc(e)}</p>`;
-  } finally { $("v_analyze").disabled = false; }
+  } finally { $("v_analyze").disabled = false; $("v_cancel").disabled = true; V_JOB = null; }
 }
+
+$("v_cancel").onclick = async () => {
+  if (!V_JOB) return;
+  $("v_cancel").disabled = true; $("v_stage").textContent = "취소하는 중…";
+  await postJSON(`/api/vision/jobs/${V_JOB}/cancel`, {});
+};
 
 async function vApply() {
   const items = {};

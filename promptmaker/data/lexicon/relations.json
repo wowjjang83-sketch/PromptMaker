@@ -3,7 +3,7 @@
   "implies": {
     "beach": ["outdoor", "summer", "sand", "water", "sea"],
     "pool": ["water", "summer"],
-    "bedroom": ["indoor", "bed", "window", "floor", "wall"],
+    "bedroom": ["indoor", "bed", "window", "floor", "wall", "cushion", "sofa"],
     "bathroom": ["indoor", "mirror", "wall", "floor"],
     "cafe": ["indoor", "table", "chair", "window", "wall"],
     "bar": ["night", "table", "chair", "wall"],
@@ -21,6 +21,9 @@
     ["day", "night"],
     ["golden_hour", "night"],
     ["rain", "sunny"],
+    ["overcast", "golden_hour"],
+    ["overcast", "sunny"],
+    ["overcast", "night"],
     ["snow", "sunny"],
     ["night", "sunny"],
     ["lying", "street"],

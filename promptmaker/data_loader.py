@@ -202,7 +202,7 @@ def normalize_phrase(key: str, text: str) -> str:
     if key not in PHRASE_KEYS:
         return text
     t = text.strip().rstrip(".!")
-    m = re.match(r"^([A-Za-z][\w'-]*ing\b[^,]*?),\s*(?:she|he|they|her|his|their)\b", t)
+    m = re.match(r"^((?:[A-Za-z]+ly\s+)?[A-Za-z][\w'-]*ing\b[^,]*?),\s*(?:she|he|they|her|his|their)\b", t)
     if m:
         t = m.group(1)
     if len(t) > 1 and t[0].isupper() and t[1].islower() and not t.startswith(("I ", "Japanese", "Korean")):

@@ -74,8 +74,8 @@ def _queue_state(q: vision.AnalysisQueue) -> Dict[str, Any]:
 
 def _start_worker(maker, q: vision.AnalysisQueue) -> None:
     t = _queue["thread"]
-    if t is not None and t.is_alive():
-        return  # the running loop picks up new items by itself
+    if t is not None and t.is_alive() and q.running:
+        return  # the running loop picks up new items by itself (checked under the queue lock)
 
     def work() -> None:
         with _run_lock:
@@ -184,6 +184,8 @@ def handle(maker, method: str, path: str, payload: Dict[str, Any]) -> Tuple[int,
         report = vision.ImageAnalyzer(maker).apply(items, payload.get("rating", "sfw"))
         return 200, report
     if method == "POST" and route == "unload":
-        vision.unload_backends()
-        return 200, {"ok": True}
+        with _run_lock:  # never in the middle of an analysis
+            return 200, {"ok": True, **vision.unload_backends()}
+    if method == "GET" and route == "loaded":
+        return 200, {"loaded": bool(vision._backend_cache)}
     return 404, {"error": "not found"}

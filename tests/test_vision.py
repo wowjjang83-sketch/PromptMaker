@@ -248,6 +248,73 @@ class QueueAndFullPromptTests(VisionTestCase):
         self.assertEqual([i.status for i in q2.items], ["cancelled", "cancelled"])
 
 
+class UnloadTests(VisionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.calls = []
+        self._old = vision.get_backend, vision.unload_backends
+        vision.get_backend = lambda cfg, progress=None: FakeBackend('{"mood": ["serene"]}')
+        vision.unload_backends = lambda: self.calls.append(1) or {"models": 1, "gpu_freed_mb": 0}
+
+    def tearDown(self):
+        vision.get_backend, vision.unload_backends = self._old
+        super().tearDown()
+
+    def analyzer(self, **cfg):
+        maker = PromptMaker(data_dir=self.data, translator=NoTranslator())
+        return vision.ImageAnalyzer(maker, vision.VisionConfig(**cfg))
+
+    def test_single_analysis_unloads_by_default(self):
+        res = self.analyzer().analyze(_png_bytes())
+        self.assertEqual(self.calls, [1])
+        self.assertEqual(res["unloaded"]["models"], 1)
+        self.analyzer().analyze(_png_bytes(), unload=False)
+        self.analyzer(unload_after=False).analyze(_png_bytes())
+        self.assertEqual(self.calls, [1])
+
+    def test_unload_even_on_error(self):
+        vision.get_backend = lambda cfg, progress=None: FakeBackend("no json")
+        with self.assertRaises(ValueError):
+            self.analyzer().analyze(_png_bytes())
+        self.assertEqual(self.calls, [1])
+
+    def test_queue_unloads_once_at_the_end(self):
+        q = vision.AnalysisQueue(self.analyzer())
+        q.add_many([_png_bytes()] * 3)
+        q.run()
+        self.assertEqual(self.calls, [1])
+        self.assertEqual(q.summary()["last_unload"]["models"], 1)
+        q2 = vision.AnalysisQueue(self.analyzer(), unload_when_done=False)
+        q2.add(_png_bytes())
+        q2.run()
+        self.assertEqual(self.calls, [1])
+
+    def test_queue_picks_up_images_added_while_unloading(self):
+        q = vision.AnalysisQueue(self.analyzer())
+        q.add(_png_bytes())
+        added = []
+
+        def unload_and_add():
+            self.calls.append(1)
+            if not added:  # someone drops another image just as the queue empties
+                added.append(q.add(_png_bytes()))
+            return {"models": 1, "gpu_freed_mb": 0}
+
+        vision.unload_backends = unload_and_add
+        q.run()
+        self.assertEqual([i.status for i in q.items], ["done", "done"])
+        self.assertEqual(len(self.calls), 2)
+
+    def test_real_unload_clears_cache(self):
+        vision.unload_backends = self._old[1]
+        dummy = type("B", (), {"model": object(), "processor": object()})()
+        vision._backend_cache[("x",)] = dummy
+        info = vision.unload_backends()
+        self.assertEqual(info["models"], 1)
+        self.assertEqual(vision._backend_cache, {})
+        self.assertIsNone(dummy.model)
+
+
 class VisionServerTests(VisionTestCase):
     def test_api(self):
         from http.server import ThreadingHTTPServer

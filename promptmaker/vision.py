@@ -71,6 +71,7 @@ class VisionConfig:
     skip_keys: List[str] = field(default_factory=lambda: list(DEFAULT_SKIP_KEYS))
     full_prompt: bool = False              # also ask for one full English image prompt per image
     full_prompt_file: str = ""             # where saved full prompts go; empty -> output/full_prompts.txt
+    unload_after: bool = True              # unload the model + empty the GPU cache when an analysis / queue ends
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "VisionConfig":
@@ -553,9 +554,27 @@ def get_backend(cfg: VisionConfig, progress: Optional[ProgressReporter] = None):
         return _backend_cache[key]
 
 
-def unload_backends() -> None:
+def unload_backends() -> Dict[str, Any]:
+    """Drop every loaded model and give the memory back (GPU cache included).
+
+    Returns what was freed, e.g. ``{"models": 1, "gpu_freed_mb": 8650}``.
+    """
     with _backend_lock:
+        count = len(_backend_cache)
+        for backend in _backend_cache.values():  # break references held by the backend objects
+            for attr in ("model", "processor"):
+                if hasattr(backend, attr):
+                    setattr(backend, attr, None)
         _backend_cache.clear()
+    info: Dict[str, Any] = {"models": count, "gpu_freed_mb": 0}
+    gc.collect()
+    torch = sys.modules.get("torch")  # only if it was ever imported
+    if torch is not None and torch.cuda.is_available():
+        before = torch.cuda.memory_reserved()
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+        info["gpu_freed_mb"] = int((before - torch.cuda.memory_reserved()) / 2**20)
+    return info
 
 
 # ------------------------------------------------------------------ prompt
@@ -802,13 +821,29 @@ class ImageAnalyzer:
         return self._backend or get_backend(self.config)
 
     def analyze(self, image: Any, progress: Optional[Callable[[Progress], None]] = None,
-                cancel=None) -> Dict[str, Any]:
+                cancel=None, unload: Optional[bool] = None) -> Dict[str, Any]:
         """Analyse one image.
 
         ``progress(Progress)`` receives stage, token counts, speed, elapsed time and the
         estimated time left; ``cancel`` (e.g. ``threading.Event``) stops the analysis with
-        :class:`AnalysisCancelled` when set.
+        :class:`AnalysisCancelled` when set. ``unload`` (default: the config's
+        ``unload_after``) frees the model and the GPU cache afterwards, even on errors;
+        :class:`AnalysisQueue` passes ``False`` and unloads once at the end instead.
         """
+        unload = self.config.unload_after if unload is None else unload
+        try:
+            result = self._analyze(image, progress, cancel)
+        finally:
+            freed = self.unload() if unload else None
+        if freed is not None:
+            result["unloaded"] = freed
+        return result
+
+    def unload(self) -> Optional[Dict[str, Any]]:
+        """Free the shared model (not a backend passed in by the caller)."""
+        return unload_backends() if self._backend is None else None
+
+    def _analyze(self, image: Any, progress, cancel) -> Dict[str, Any]:
         rep = ProgressReporter(progress, cancel, max_new_tokens=int(self.config.max_new_tokens))
         rep.update("prepare", "이미지와 지시문 준비 중", 0.0)
         img = load_image(image, self.config.max_image_side)
@@ -931,16 +966,28 @@ class AnalysisQueue:
     """
 
     def __init__(self, analyzer: ImageAnalyzer, auto_apply: bool = False, rating: str = "sfw",
-                 auto_save_full_prompt: bool = False):
+                 auto_save_full_prompt: bool = False, unload_when_done: Optional[bool] = None):
         self.analyzer = analyzer
         self.auto_apply = auto_apply
         self.rating = rating
         self.auto_save_full_prompt = auto_save_full_prompt
+        self._unload_when_done = unload_when_done
+        self.last_unload: Optional[Dict[str, Any]] = None
         self.items: List[QueueItem] = []
         self.cancel = threading.Event()
         self._lock = threading.Lock()
         self._counter = 0
         self.running = False
+
+    @property
+    def unload_when_done(self) -> bool:
+        if self._unload_when_done is None:
+            return bool(self.analyzer.config.unload_after)
+        return self._unload_when_done
+
+    @unload_when_done.setter
+    def unload_when_done(self, value: Optional[bool]) -> None:
+        self._unload_when_done = value
 
     def add(self, image: Any, name: Optional[str] = None) -> QueueItem:
         with self._lock:
@@ -989,18 +1036,29 @@ class AnalysisQueue:
         finished = sum(counts.get(s, 0) for s in ("done", "error", "cancelled"))
         running = next((i for i in self.items if i.status == "running"), None)
         frac = (running.progress or {}).get("percent", 0) / 100 if running else 0
-        return {"total": total, "counts": counts, "running": self.running,
+        return {"total": total, "counts": counts, "running": self.running, "last_unload": self.last_unload,
                 "percent": round(100 * (finished + frac) / total, 1) if total else 0.0}
 
     def run(self, progress: Optional[Callable[[QueueItem, Progress], None]] = None) -> List[QueueItem]:
-        """Process pending items in order. ``progress(item, Progress)`` is called for each update."""
+        """Process pending items in order. ``progress(item, Progress)`` is called for each update.
+
+        When the queue runs empty the model is unloaded and the GPU cache emptied
+        (``unload_when_done``, default: the analyzer config's ``unload_after``); the result
+        is kept in ``self.last_unload``.
+        """
         self.running = True
         self.cancel.clear()
         try:
             while True:
                 item = self._next()
                 if item is None:
-                    break
+                    if self.unload_when_done:
+                        self.last_unload = self.analyzer.unload()
+                    with self._lock:  # images added while unloading are still picked up
+                        if not any(i.status == "pending" for i in self.items):
+                            self.running = False
+                            break
+                    continue
                 if self.cancel.is_set():
                     for i in self.items:
                         if i.status == "pending":
@@ -1014,7 +1072,7 @@ class AnalysisQueue:
                         progress(item, p)
 
                 try:
-                    result = self.analyzer.analyze(item.image, progress=on_progress, cancel=self.cancel)
+                    result = self.analyzer.analyze(item.image, progress=on_progress, cancel=self.cancel, unload=False)
                     item.result = result
                     if self.auto_apply and result["new"]:
                         item.report = self.analyzer.apply(result["new"], self.rating)
@@ -1027,7 +1085,10 @@ class AnalysisQueue:
                     item.error, item.status = f"{type(exc).__name__}: {exc}", "error"
                 item.image = None  # free memory (data URLs can be large)
         finally:
-            self.running = False
+            if self.running:  # left by an exception or a stop
+                self.running = False
+                if self.unload_when_done:
+                    self.last_unload = self.analyzer.unload()
         return self.items
 
 

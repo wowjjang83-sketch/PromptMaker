@@ -169,12 +169,14 @@ class PromptMakerImageAnalyze:
                 "api_base": ("STRING", {"default": cfg.api_base}),
                 "max_items_per_key": ("INT", {"default": cfg.max_items_per_key, "min": 1, "max": 10}),
                 "save_as_default": ("BOOLEAN", {"default": False}),
+                "unload_when_done": ("BOOLEAN", {"default": cfg.unload_after,
+                                                 "tooltip": "분석이 모두 끝나면 모델을 내리고 GPU 캐시를 비움"}),
             },
         }
 
     def analyze(self, write_to_txt, content_rating, backend, model_path, model_id, image=None, image_folder="",
                 full_prompt=False, save_full_prompt=False, full_prompt_file="", api_base="",
-                max_items_per_key=3, save_as_default=False):
+                max_items_per_key=3, save_as_default=False, unload_when_done=True):
         import numpy as np
         from PIL import Image
 
@@ -189,7 +191,8 @@ class PromptMakerImageAnalyze:
         if save_as_default:
             vision.save_config(cfg)
         queue = vision.AnalysisQueue(vision.ImageAnalyzer(_MAKER, cfg), auto_apply=write_to_txt,
-                                     rating=content_rating, auto_save_full_prompt=save_full_prompt)
+                                     rating=content_rating, auto_save_full_prompt=save_full_prompt,
+                                     unload_when_done=bool(unload_when_done))
         if image is not None:
             for i in range(image.shape[0]):  # ComfyUI IMAGE: [B, H, W, C] float 0..1
                 arr = (image[i].cpu().numpy() * 255).clip(0, 255).astype(np.uint8)
@@ -227,6 +230,8 @@ class PromptMakerImageAnalyze:
             if item.full_prompt_report and item.full_prompt_report["saved_count"]:
                 lines.append(f"-> 풀 프롬프트 저장: {item.full_prompt_report['path']}")
         lines.append(f"추가된 항목: {added}개" if write_to_txt else "미리보기 모드 (txt 에 추가하지 않음)")
+        if queue.last_unload:
+            lines.append(f"모델 언로드, GPU {queue.last_unload['gpu_freed_mb']} MB 비움")
         return ("\n".join(lines), json.dumps(merged, ensure_ascii=False, indent=2), added, "\n\n".join(prompts))
 
 

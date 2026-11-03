@@ -413,6 +413,7 @@ pm.generate("카페", use_llm=True)
 | `device`, `dtype` | `auto` / `cuda` / `cpu`, `auto` / `bfloat16` / `float16` / `float32` |
 | `max_items_per_key` | 요소당 최대 문구 수 (기본 3) |
 | `skip_keys` | 분석하지 않을 요소 (기본: casting, age, outfit_type, nationality, camera_movement, pacing) |
+| `unload_after` | 분석이 끝나면 모델을 내리고 GPU 캐시를 비움 (기본 켬). 한 장 분석은 끝날 때마다, 대기열은 모두 끝났을 때 한 번 내립니다. 끄면 다음 분석이 빨라지는 대신 메모리를 계속 차지합니다 |
 
 **중복 확인**: 해당 요소의 모든 수위 파일(`<요소>.txt`, `.suggestive.txt`, `.explicit.txt`)과 사용자 데이터 폴더의 줄을 읽어, 가중치(`3::`), 줄 끝 태그(`#tag +tag !tag`), `{ }`, 앞의 a/an/the, 대소문자, 공백, 문장부호를 무시하고 비교합니다. 미성년자 연상 표현은 추가하지 않고, txt 파일이 없는 요소(JSON 전용 등)도 건너뜁니다. 기존 줄은 수정하지 않고 `# 이미지 분석 자동 추가 (날짜)` 주석 아래에 덧붙이기만 합니다.
 
@@ -455,6 +456,8 @@ an.save_full_prompts([result["full_prompt"]])   # 중복·미성년 표현 제�
 ```
 
 **풀 프롬프트**: 설정에서 "풀 프롬프트도 생성" (`full_prompt`) 을 켜면 같은 분석 한 번에 요소 목록과 함께 이미지를 묘사하는 영문 프롬프트 한 문단을 받습니다. 저장 버튼(또는 자동 저장)을 누르면 `output/full_prompts.txt` (설정 `full_prompt_file` 로 변경) 에 한 줄씩, 이미 있는 프롬프트와 미성년자 연상 표현은 빼고 덧붙입니다. 출력이 길어지므로 분석 시간이 조금 늘어납니다.
+
+**모델 언로드**: 기본으로 분석(한 장)이나 대기열이 끝나면 모델을 내리고 GPU 캐시를 비웁니다. HTML 페이지의 "분석이 끝나면 모델 언로드" 체크, ComfyUI 노드의 `unload_when_done`, 파이썬의 `analyze(..., unload=False)` / `AnalysisQueue(..., unload_when_done=False)` 로 끌 수 있고, `vision.unload_backends()` 로 언제든 직접 내릴 수 있습니다. 다시 분석하면 모델을 새로 불러오므로 첫 장이 느려집니다.
 
 **진행 상황**: 분석 중에 단계(모델 로딩 → 준비 → 생성 → 해석·중복 확인), 입력/출력 토큰 수, 생성 속도(tok/s), 경과 시간, 남은 예상 시간을 보여 줍니다. 예상 시간은 첫 분석에서는 요소 수로 어림하고, 이후에는 앞선 분석의 출력 길이로 계산합니다. HTML 페이지에는 진행 막대와 "분석 취소" 버튼이, ComfyUI 노드에는 노드 진행 막대와 콘솔 표시가 나오고 ComfyUI 의 중단 버튼으로 멈출 수 있습니다. 파이썬에서는:
 

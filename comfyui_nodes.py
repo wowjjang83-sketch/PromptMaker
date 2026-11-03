@@ -168,6 +168,10 @@ class PromptMakerImageAnalyze:
                 "full_prompt_file": ("STRING", {"default": cfg.full_prompt_file, "tooltip": "비우면 output/full_prompts.txt"}),
                 "api_base": ("STRING", {"default": cfg.api_base}),
                 "max_items_per_key": ("INT", {"default": cfg.max_items_per_key, "min": 1, "max": 10}),
+                "quantization": (["auto", "fp8", "none"], {"default": cfg.quantization,
+                                 "tooltip": "auto: GPU 여유가 있으면 bf16(빠름), 없으면 FP8(약 5GB)"}),
+                "prefilter": ("BOOLEAN", {"default": cfg.prefilter,
+                                          "tooltip": "사람·남자·커플 여부를 먼저 확인해 필요한 요소만 물음 (빠름)"}),
                 "save_as_default": ("BOOLEAN", {"default": False}),
                 "unload_when_done": ("BOOLEAN", {"default": cfg.unload_after,
                                                  "tooltip": "분석이 모두 끝나면 모델을 내리고 GPU 캐시를 비움"}),
@@ -176,7 +180,8 @@ class PromptMakerImageAnalyze:
 
     def analyze(self, write_to_txt, content_rating, backend, model_path, model_id, image=None, image_folder="",
                 full_prompt=False, save_full_prompt=False, full_prompt_file="", api_base="",
-                max_items_per_key=3, save_as_default=False, unload_when_done=True):
+                max_items_per_key=3, save_as_default=False, unload_when_done=True, quantization="auto",
+                prefilter=True):
         import numpy as np
         from PIL import Image
 
@@ -186,6 +191,7 @@ class PromptMakerImageAnalyze:
         cfg.backend, cfg.model_path, cfg.model_id = backend, model_path.strip(), model_id.strip() or cfg.model_id
         cfg.api_base = api_base.strip() or cfg.api_base
         cfg.max_items_per_key = int(max_items_per_key)
+        cfg.quantization, cfg.prefilter = quantization, bool(prefilter)
         cfg.full_prompt = bool(full_prompt or save_full_prompt)
         cfg.full_prompt_file = full_prompt_file.strip()
         if save_as_default:

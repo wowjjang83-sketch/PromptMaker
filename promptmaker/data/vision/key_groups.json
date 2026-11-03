@@ -1,0 +1,9 @@
+{
+  "_comment": "이미지 분석 1단계(사람/남자/커플 여부)에서 없다고 나오면 해당 그룹의 요소는 묻지 않습니다. 목록에 없는 요소는 항상 묻습니다.",
+  "person": ["hair", "expression", "makeup", "skin", "beauty", "pose", "action", "motion", "lighting_effect",
+             "attire", "attire_state", "outfit_type", "top", "bottom", "dress", "swimwear", "sleepwear", "lingerie",
+             "outerwear", "traditional", "sportswear", "footwear", "legwear", "accessory", "fabric", "color", "pattern",
+             "camera_movement"],
+  "man": ["male_attire", "male_look"],
+  "couple": ["interaction"]
+}

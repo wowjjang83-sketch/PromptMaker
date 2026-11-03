@@ -111,7 +111,7 @@ class AnalyzerTests(VisionTestCase):
         backend = FakeBackend(reply)
         an = vision.ImageAnalyzer(maker, vision.VisionConfig(), backend=backend)
         res = an.analyze(_png_bytes())
-        prompt = backend.prompts[0]
+        prompt = backend.prompts[-1]
         self.assertIn("- hair:", prompt)
         self.assertNotIn("- age:", prompt)
         self.assertNotIn("- casting:", prompt)
@@ -126,6 +126,8 @@ class AnalyzerTests(VisionTestCase):
             usage = {}
 
             def chat(self, image, prompt, progress=None, expected_tokens=0):
+                if progress is None:  # presence pre-check
+                    return '{"person": false, "man": false, "couple": false}'
                 progress.generation_started(321, expected_tokens)
                 for _ in range(5):
                     progress.token(1)
@@ -148,6 +150,32 @@ class AnalyzerTests(VisionTestCase):
         cancel.set()
         with self.assertRaises(vision.AnalysisCancelled):
             an.analyze(_png_bytes(), cancel=cancel)
+
+    def test_presence_precheck_skips_person_keys(self):
+        class TwoStep(FakeBackend):
+            def chat(self, image, prompt):
+                self.prompts.append(prompt)
+                if '"person"' in prompt and "- hair:" not in prompt:
+                    return '{"person": false, "man": false, "couple": false}'
+                return '{"location": ["on a windswept cliff above the sea"], "hair": ["red hair"]}'
+
+        maker = PromptMaker(data_dir=self.data, translator=NoTranslator())
+        backend = TwoStep("")
+        res = vision.ImageAnalyzer(maker, vision.VisionConfig(), backend=backend).analyze(_png_bytes())
+        self.assertEqual(len(backend.prompts), 2)
+        main_prompt = backend.prompts[-1]
+        self.assertIn("- location:", main_prompt)
+        for k in ("- hair:", "- pose:", "- male_look:", "- interaction:"):
+            self.assertNotIn(k, main_prompt)
+        self.assertEqual(res["presence"], {"person": False, "man": False, "couple": False})
+        self.assertEqual(res["elements"]["hair"][0]["status"], "unknown_key")  # answered anyway: not added
+        # a woman alone: person keys asked, man/couple keys not
+        self.assertEqual(vision.excluded_keys({"person": True, "man": False, "couple": False}, [self.data]),
+                         ["male_attire", "male_look", "interaction"])
+        self.assertEqual(vision.excluded_keys(None), [])
+        off = TwoStep("")
+        vision.ImageAnalyzer(maker, vision.VisionConfig(prefilter=False), backend=off).analyze(_png_bytes())
+        self.assertEqual(len(off.prompts), 1)
 
     def test_config_roundtrip(self):
         path = os.path.join(self.tmp, "cfg", "vision.json")
@@ -196,12 +224,12 @@ class QueueAndFullPromptTests(VisionTestCase):
     def test_full_prompt_requested_and_split(self):
         an = self.analyzer()
         res = an.analyze(_png_bytes())
-        self.assertIn('"full_prompt"', an._backend.prompts[0])
+        self.assertIn('"full_prompt"', an._backend.prompts[-1])
         self.assertEqual(res["full_prompt"], "A woman in her late twenties stands in a glass conservatory. Soft light.")
         self.assertNotIn("full_prompt", res["elements"])
         off = self.analyzer(full=False)
         self.assertEqual(off.analyze(_png_bytes())["full_prompt"], "")
-        self.assertNotIn('"full_prompt"', off._backend.prompts[0])
+        self.assertNotIn('"full_prompt"', off._backend.prompts[-1])
 
     def test_save_full_prompts_dedup_and_safety(self):
         path = os.path.join(self.tmp, "out", "fp.txt")

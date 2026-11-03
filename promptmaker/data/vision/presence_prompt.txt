@@ -1,0 +1,5 @@
+Look at the image and answer with ONE JSON object only, no explanation:
+{"person": true or false, "man": true or false, "couple": true or false}
+- person: at least one person (woman or man) is clearly visible
+- man: an adult man is clearly visible
+- couple: two or more people are together or interacting

@@ -35,7 +35,7 @@ import urllib.request
 from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from .data_loader import PACKAGE_DATA_DIR, RATINGS, load_elements
+from .data_loader import PACKAGE_DATA_DIR, RATINGS, load_elements, load_json
 from .data_loader import is_usable_item
 from .safety import is_safe_item
 
@@ -72,6 +72,9 @@ class VisionConfig:
     full_prompt: bool = False              # also ask for one full English image prompt per image
     full_prompt_file: str = ""             # where saved full prompts go; empty -> output/full_prompts.txt
     unload_after: bool = True              # unload the model + empty the GPU cache when an analysis / queue ends
+    quantization: str = "auto"             # "auto": bf16 if the GPU has room, else fp8 / "fp8" / "none" (bf16)
+    prefilter: bool = True                 # ask first whether a person / man / couple is in the picture,
+                                           # then only ask for the elements that can apply (much shorter answers)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "VisionConfig":
@@ -135,16 +138,19 @@ def is_single_file(path: str) -> bool:
     return path.lower().endswith(".safetensors") and os.path.isfile(path)
 
 
-def load_single_file(path: str, dtype, on_tensor: Optional[Callable[[int, int], None]] = None) -> Dict[str, Any]:
+def load_single_file(path: str, dtype, on_tensor: Optional[Callable[[int, int], None]] = None,
+                     device: str = "cpu", keep_fp8: bool = False) -> Dict[str, Any]:
     """Read a single .safetensors file into a transformers state dict.
 
     ComfyUI style fp8 checkpoints (``<name>.weight`` in float8 + ``weight_scale`` +
-    ``comfy_quant``) are dequantised to ``dtype``. ``on_tensor(done, total)`` reports progress.
+    ``comfy_quant``) are dequantised to ``dtype``, or with ``keep_fp8`` kept as float8 with
+    their ``<name>.weight_scale`` (for :func:`_install_fp8_linears`). Tensors are read
+    directly onto ``device``. ``on_tensor(done, total)`` reports progress.
     """
     from safetensors import safe_open
 
     sd: Dict[str, Any] = {}
-    with safe_open(path, framework="pt") as f:
+    with safe_open(path, framework="pt", device=device if device != "cuda" else "cuda:0") as f:
         keys = list(f.keys())
         skip = {k for k in keys if k.endswith((".comfy_quant", ".weight_scale", ".input_scale"))}
         for i, key in enumerate(keys, 1):
@@ -155,13 +161,135 @@ def load_single_file(path: str, dtype, on_tensor: Optional[Callable[[int, int], 
             t = f.get_tensor(key)
             if t.dtype.is_floating_point and t.element_size() == 1:  # float8
                 scale_key = key[:-len("weight")] + "weight_scale" if key.endswith("weight") else None
-                t = t.to(dtype)
-                if scale_key in skip:
-                    t = t * f.get_tensor(scale_key).to(dtype)
+                if keep_fp8 and scale_key in skip and t.dtype == _float8():
+                    sd[scale_key] = f.get_tensor(scale_key).float()
+                else:
+                    t = t.to(dtype)
+                    if scale_key in skip:
+                        t = t * f.get_tensor(scale_key).to(dtype)
             elif t.dtype.is_floating_point:
                 t = t.to(dtype)
             sd[key] = t
     return sd
+
+
+# ------------------------------------------------------------------ fp8
+def _float8():
+    import torch
+
+    return torch.float8_e4m3fn
+
+
+def fp8_matmul_supported(device: str = "cuda") -> bool:
+    """Hardware FP8 matmul (torch._scaled_mm): NVIDIA Ada / Hopper or newer (compute 8.9+)."""
+    import torch
+
+    return (device == "cuda" and torch.cuda.is_available() and hasattr(torch, "_scaled_mm")
+            and torch.cuda.get_device_capability(0) >= (8, 9))
+
+
+# bf16 needs ~8.5 GB for a 4B VL model plus room for a large photo; below this FP8 (~5 GB) is used.
+BF16_MIN_FREE_GB = 10.5
+
+
+def use_fp8(cfg: "VisionConfig", device: str) -> bool:
+    """bf16 decodes faster (fewer kernels per token); FP8 halves the VRAM. "auto" picks by free VRAM."""
+    if cfg.quantization == "none" or device != "cuda":
+        return False
+    if cfg.quantization == "fp8":
+        return True
+    import torch
+
+    free, _ = torch.cuda.mem_get_info()
+    return free / 2**30 < BF16_MIN_FREE_GB
+
+
+_FP8_CLS = None
+
+
+def _fp8_linear_cls():
+    """nn.Linear replacement holding float8 weights + a per-tensor scale (half the memory of bf16).
+
+    On GPUs with FP8 tensor cores the activations are quantized per tensor and multiplied with
+    ``torch._scaled_mm``; otherwise the weight is expanded to the activation dtype per call.
+    """
+    global _FP8_CLS
+    if _FP8_CLS is not None:
+        return _FP8_CLS
+    import torch
+    import torch.nn.functional as F
+
+    fp8 = torch.float8_e4m3fn
+    fp8_max = torch.finfo(fp8).max
+
+    class FP8Linear(torch.nn.Module):
+        def __init__(self, weight, scale, bias=None, scaled_mm: bool = True):
+            super().__init__()
+            self.in_features, self.out_features = weight.shape[1], weight.shape[0]
+            self.weight = torch.nn.Parameter(weight, requires_grad=False)
+            self.register_buffer("weight_scale", scale.float().reshape(()), persistent=False)
+            self.bias = None if bias is None else torch.nn.Parameter(bias, requires_grad=False)
+            self.scaled_mm = scaled_mm
+
+        def forward(self, x):
+            shape = x.shape
+            x2 = x.reshape(-1, shape[-1])
+            if self.scaled_mm:
+                # per-tensor scale: |x| / scale <= fp8_max, so no clamp is needed (fewer kernels per call)
+                x_scale = (x2.abs().amax().float() / fp8_max).clamp_(min=1e-12)
+                xq = (x2 * (1.0 / x_scale)).to(fp8)
+                out = torch._scaled_mm(xq, self.weight.t(), scale_a=x_scale, scale_b=self.weight_scale,
+                                       bias=None if self.bias is None else self.bias.to(x.dtype), out_dtype=x.dtype)
+            else:
+                w = self.weight.to(x.dtype) * self.weight_scale.to(x.dtype)
+                out = F.linear(x2, w, None if self.bias is None else self.bias.to(x.dtype))
+            return out.reshape(*shape[:-1], self.out_features)
+
+        def extra_repr(self) -> str:
+            return f"in={self.in_features}, out={self.out_features}, fp8, scaled_mm={self.scaled_mm}"
+
+    _FP8_CLS = FP8Linear
+    return FP8Linear
+
+
+def _set_module(model, name: str, module) -> None:
+    parent_name, _, child = name.rpartition(".")
+    setattr(model.get_submodule(parent_name) if parent_name else model, child, module)
+
+
+def _install_fp8_linears(model, state: Dict[str, Any], dtype) -> Dict[str, Any]:
+    """Swap Linear layers whose weights come as fp8 (+ scale) in ``state`` for FP8Linear; returns the rest."""
+    cls = _fp8_linear_cls()
+    mm = None
+    rest = dict(state)
+    for key in [k for k in state if k.endswith(".weight_scale")]:
+        name = key[:-len(".weight_scale")]
+        weight = rest.pop(name + ".weight")
+        scale = rest.pop(key)
+        bias = rest.pop(name + ".bias", None)
+        if mm is None:
+            mm = fp8_matmul_supported("cuda" if weight.is_cuda else "cpu")
+        _set_module(model, name, cls(weight, scale, None if bias is None else bias.to(dtype), scaled_mm=mm))
+    return rest
+
+
+def quantize_fp8(model, device: str = "cuda", prefix: str = "model.language_model.") -> int:
+    """Convert the text model's Linear layers to FP8 (per-tensor scale) one by one on ``device``."""
+    import torch
+
+    cls = _fp8_linear_cls()
+    mm = fp8_matmul_supported(device)
+    fp8_max = torch.finfo(torch.float8_e4m3fn).max
+    names = [n for n, m in model.named_modules() if isinstance(m, torch.nn.Linear) and n.startswith(prefix)]
+    for name in names:
+        lin = model.get_submodule(name)
+        w = lin.weight.data.to(device)
+        scale = (w.abs().amax().float() / fp8_max).clamp(min=1e-12)
+        wq = (w.float() / scale).clamp(-fp8_max, fp8_max).to(torch.float8_e4m3fn)
+        bias = None if lin.bias is None else lin.bias.data.to(device)
+        _set_module(model, name, cls(wq, scale, bias, scaled_mm=mm))
+        del w, lin
+    return len(names)
 
 
 def check_model_path(path: str) -> Dict[str, Any]:
@@ -392,6 +520,9 @@ class TransformersBackend:
                 "장치를 '자동' 또는 'CPU'로 바꾸거나, CUDA 용 torch 가 설치된 파이썬으로 서버를 실행하세요 "
                 "(예: set PROMPTMAKER_PYTHON=ComfyUI\\python_embeded\\python.exe 후 run_server.bat).")
         dtype = "auto" if cfg.dtype == "auto" else getattr(torch, cfg.dtype)
+        device = cfg.device if cfg.device in ("cpu", "cuda") else ("cuda" if torch.cuda.is_available() else "cpu")
+        self.fp8 = use_fp8(cfg, device)
+        load_dtype = torch.bfloat16 if dtype == "auto" else dtype
         if is_single_file(cfg.model_ref):
             # One .safetensors file (e.g. a fine-tune saved for ComfyUI): weights from the file,
             # config / tokenizer / image processor from the base model (model_id).
@@ -399,7 +530,6 @@ class TransformersBackend:
 
             base = cfg.model_id
             config = AutoConfig.from_pretrained(base, **_hf_kwargs(base))
-            load_dtype = torch.bfloat16 if dtype == "auto" else dtype
             try:  # skip random init (minutes on CPU); every weight comes from the file
                 from transformers.initialization import no_init_weights
             except ImportError:
@@ -412,36 +542,43 @@ class TransformersBackend:
                     progress.update("load_model", f"가중치 파일 읽는 중 ({done}/{total})", 0.1 + 0.8 * done / total,
                                     force=done == total)
 
-            state = load_single_file(cfg.model_ref, load_dtype, on_tensor)
-            missing, unexpected = self.model.load_state_dict(state, strict=False)
+            # Tensors are read straight onto the target device; fp8 weights stay fp8 when FP8 is on.
+            state = load_single_file(cfg.model_ref, load_dtype, on_tensor, device=device, keep_fp8=self.fp8)
+            if self.fp8:
+                state = _install_fp8_linears(self.model, state, load_dtype)
+            missing, unexpected = self.model.load_state_dict(state, strict=False, assign=True)
             del state
-            missing = [k for k in missing if k != "lm_head.weight"]  # tied to embed_tokens
+            fp8_cls = _fp8_linear_cls() if self.fp8 else None
+            missing = [k for k in missing if k != "lm_head.weight"  # tied to embed_tokens
+                       and not (fp8_cls and isinstance(self.model.get_submodule(k.rpartition(".")[0]), fp8_cls))]
             if missing or unexpected:
                 raise ValueError(f"가중치 파일이 기본 모델({base})과 맞지 않습니다. "
                                  f"누락 {len(missing)}개 (예: {missing[:2]}), 불필요 {len(unexpected)}개 (예: {unexpected[:2]})")
             self.model.tie_weights()
             self.model.eval()
-            device = cfg.device if cfg.device in ("cpu", "cuda") else ("cuda" if torch.cuda.is_available() else "cpu")
             if progress:
                 progress.update("load_model", f"모델을 {device.upper()} 로 옮기는 중", 0.95)
-            self.model.to(device)
+            self.model.to(device)  # only what is still on the CPU (buffers) moves
         else:
             base = cfg.model_ref
             if progress:
                 progress.update("load_model", f"모델 불러오는 중: {base}", 0.1)
-            kwargs: Dict[str, Any] = {"dtype": dtype}
-            if cfg.device == "auto":
-                kwargs["device_map"] = "auto" if torch.cuda.is_available() else None
-            self.model = AutoModelForImageTextToText.from_pretrained(base, **kwargs, **_hf_kwargs(base))
-            if cfg.device in ("cpu", "cuda"):
-                self.model.to(cfg.device)
+            # Load on the CPU, quantize layer by layer (low peak VRAM), then move.
+            self.model = AutoModelForImageTextToText.from_pretrained(base, dtype=load_dtype, **_hf_kwargs(base))
+            if self.fp8:
+                if progress:
+                    progress.update("load_model", "FP8 로 변환 중", 0.8)
+                quantize_fp8(self.model, device)
+            self.model.eval()
+            self.model.to(device)
+        self.device = device
         self.processor = AutoProcessor.from_pretrained(base, **_hf_kwargs(base))
         self.max_new_tokens = cfg.max_new_tokens
         self.history: List[int] = []  # output lengths of earlier runs, for the time estimate
         self.usage: Dict[str, int] = {}
 
     def chat(self, image, prompt: str, progress: Optional[ProgressReporter] = None,
-             expected_tokens: int = 0) -> str:
+             expected_tokens: int = 0, max_new_tokens: Optional[int] = None) -> str:
         import torch
 
         messages = [{"role": "user", "content": [{"type": "image", "image": image},
@@ -450,16 +587,18 @@ class TransformersBackend:
                                                     return_dict=True, return_tensors="pt")
         inputs = inputs.to(self.model.device)
         n_in = int(inputs["input_ids"].shape[1])
+        limit = max_new_tokens or self.max_new_tokens
         kwargs: Dict[str, Any] = {}
         if progress:
             if self.history:
                 expected_tokens = int(sum(self.history[-5:]) / len(self.history[-5:]) * 1.1)
-            progress.generation_started(n_in, min(expected_tokens or self.max_new_tokens, self.max_new_tokens))
+            progress.generation_started(n_in, min(expected_tokens or limit, limit))
             kwargs["streamer"] = _TokenStreamer(progress)
         with torch.inference_mode():
-            out = self.model.generate(**inputs, max_new_tokens=self.max_new_tokens, do_sample=False, **kwargs)
+            out = self.model.generate(**inputs, max_new_tokens=limit, do_sample=False, **kwargs)
         out = out[:, n_in:]
-        self.history.append(int(out.shape[1]))
+        if progress:  # only the main answer feeds the time estimate
+            self.history.append(int(out.shape[1]))
         self.usage = {"input_tokens": n_in, "output_tokens": int(out.shape[1])}
         return self.processor.batch_decode(out, skip_special_tokens=True)[0]
 
@@ -471,11 +610,11 @@ class OpenAIBackend:
         self.usage: Dict[str, int] = {}
 
     def chat(self, image, prompt: str, progress: Optional[ProgressReporter] = None,
-             expected_tokens: int = 0) -> str:
+             expected_tokens: int = 0, max_new_tokens: Optional[int] = None) -> str:
         body = {
             "model": self.cfg.model_id,
             "temperature": 0,
-            "max_tokens": self.cfg.max_new_tokens,
+            "max_tokens": max_new_tokens or self.cfg.max_new_tokens,
             "stream": True,
             "stream_options": {"include_usage": True},
             "messages": [{"role": "user", "content": [
@@ -513,7 +652,8 @@ class OpenAIBackend:
                                 progress.token(1)  # one streamed chunk is usually one token
         self.usage = {"input_tokens": int(usage.get("prompt_tokens", 0)),
                       "output_tokens": int(usage.get("completion_tokens", chunks))}
-        self.history.append(self.usage["output_tokens"])
+        if progress:
+            self.history.append(self.usage["output_tokens"])
         if progress and self.usage["input_tokens"]:
             progress.update(None, None, 1.0, input_tokens=self.usage["input_tokens"],
                             output_tokens=self.usage["output_tokens"])
@@ -530,7 +670,8 @@ _backend_lock = threading.Lock()
 
 
 def _backend_key(cfg: VisionConfig) -> Tuple:
-    return (cfg.backend, cfg.model_ref, cfg.model_id, cfg.api_base, cfg.device, cfg.dtype, cfg.max_new_tokens)
+    return (cfg.backend, cfg.model_ref, cfg.model_id, cfg.api_base, cfg.device, cfg.dtype, cfg.max_new_tokens,
+            cfg.quantization)
 
 
 def is_loaded(cfg: VisionConfig) -> bool:
@@ -605,8 +746,8 @@ def _file_title(path: str) -> str:
     return ""
 
 
-def build_prompt(data_dirs: List[str], cfg: VisionConfig) -> Tuple[str, List[str]]:
-    """Prompt listing every analysable element with a few existing examples."""
+def build_prompt(data_dirs: List[str], cfg: VisionConfig, exclude=()) -> Tuple[str, List[str]]:
+    """Prompt listing every analysable element (minus ``exclude``) with a few existing examples."""
     elements = load_elements(data_dirs)
     files: Dict[str, str] = {}
     for d in data_dirs:
@@ -615,7 +756,7 @@ def build_prompt(data_dirs: List[str], cfg: VisionConfig) -> Tuple[str, List[str
                 files.setdefault(key, by_rating["sfw"])
     lines, keys = [], []
     for key, el in elements.items():
-        if key in cfg.skip_keys:
+        if key in cfg.skip_keys or key in exclude:
             continue
         path = files.get(key)
         if not path:  # json-only elements (e.g. casting) are not written to
@@ -802,6 +943,47 @@ def append_items(data_dir: str, items: Dict[str, List[str]], rating: str = "sfw"
             "added_count": sum(len(v) for v in added.values())}
 
 
+# ------------------------------------------------------------------ presence pre-check
+PRESENCE_PROMPT_PATH = os.path.join(PACKAGE_DATA_DIR, "vision", "presence_prompt.txt")
+KEY_GROUPS_PATH = os.path.join(PACKAGE_DATA_DIR, "vision", "key_groups.json")
+
+
+def detect_presence(backend, image) -> Optional[Dict[str, bool]]:
+    """Short first question: is there a person / man / couple? ``None`` when the answer is unusable."""
+    with open(PRESENCE_PROMPT_PATH, encoding="utf-8") as f:
+        prompt = f.read()
+    try:
+        if _accepts(backend.chat, "max_new_tokens"):
+            raw = backend.chat(image, prompt, max_new_tokens=40)
+        else:
+            raw = backend.chat(image, prompt)
+        data = extract_json(raw)
+    except (ValueError, json.JSONDecodeError):
+        return None
+    out = {}
+    for key in ("person", "man", "couple"):
+        v = data.get(key)
+        if isinstance(v, str):
+            v = v.strip().lower() in ("true", "yes", "1")
+        if isinstance(v, bool):
+            out[key] = v
+    if out.get("man") or out.get("couple"):
+        out["person"] = True  # keep the answer consistent
+    return out or None
+
+
+def excluded_keys(presence: Optional[Dict[str, bool]], data_dirs: Optional[List[str]] = None) -> List[str]:
+    """Element keys not worth asking for, given the presence answer (unknown -> ask everything)."""
+    if not presence:
+        return []
+    groups = load_json(data_dirs or [PACKAGE_DATA_DIR], "vision/key_groups.json")
+    out: List[str] = []
+    for group, keys in groups.items():
+        if isinstance(keys, list) and presence.get(group) is False:
+            out += keys
+    return out
+
+
 # ------------------------------------------------------------------ high level
 class ImageAnalyzer:
     """``ImageAnalyzer(maker).analyze(img)`` then ``.apply(result["new"])``."""
@@ -847,13 +1029,18 @@ class ImageAnalyzer:
         rep = ProgressReporter(progress, cancel, max_new_tokens=int(self.config.max_new_tokens))
         rep.update("prepare", "이미지와 지시문 준비 중", 0.0)
         img = load_image(image, self.config.max_image_side)
-        prompt, keys = build_prompt(self.data_dirs, self.config)
         if self._backend is not None:
             backend = self._backend
         else:
             if not is_loaded(self.config):
-                rep.update("load_model", "모델 불러오는 중 (처음 한 번만)", 0.0)
+                rep.update("load_model", "모델 불러오는 중", 0.0)
             backend = get_backend(self.config, rep)
+        exclude, presence = [], None
+        if self.config.prefilter:
+            rep.update("prepare", "사람·남자·커플이 있는지 먼저 확인 중", 0.3)
+            presence = detect_presence(backend, img)
+            exclude = excluded_keys(presence, self.data_dirs)
+        prompt, keys = build_prompt(self.data_dirs, self.config, exclude=exclude)
         rep.update("prepare", f"요소 {len(keys)}개로 지시문 구성 완료", 1.0)
         # First-run estimate: roughly a short phrase for half of the keys (+ the paragraph).
         expected = min(int(self.config.max_new_tokens),
@@ -875,6 +1062,7 @@ class ImageAnalyzer:
                                                                        if k in ("input_tokens", "output_tokens")})
         stats = rep.state.to_dict()
         return {"elements": rows, "new": {k: v for k, v in new.items() if v}, "raw": raw, "stats": stats,
+                "presence": presence, "asked_keys": keys,
                 "full_prompt": full_prompt if self.config.full_prompt else ""}
 
     def apply(self, items: Dict[str, List[str]], rating: str = "sfw") -> Dict[str, Any]:

@@ -422,13 +422,14 @@ def append_items(data_dir: str, items: Dict[str, List[str]], rating: str = "sfw"
             os.makedirs(os.path.dirname(path), exist_ok=True)
             content = ""
             if os.path.isfile(path):
-                with open(path, encoding="utf-8") as f:
+                with open(path, encoding="utf-8", newline="") as f:
                     content = f.read()
-            chunk = "" if content.endswith("\n") or not content else "\n"
+            eol = "\r\n" if "\r\n" in content else "\n"  # keep the file's line endings
+            chunk = "" if content.endswith("\n") or not content else eol
             if header not in content:
-                chunk += header + "\n"
-            chunk += "\n".join(new) + "\n"
-            with open(path, "a", encoding="utf-8", newline="\n") as f:
+                chunk += header + eol
+            chunk += eol.join(new) + eol
+            with open(path, "a", encoding="utf-8", newline="") as f:
                 f.write(chunk)
             added[key] = new
     return {"added": added, "skipped": skipped,

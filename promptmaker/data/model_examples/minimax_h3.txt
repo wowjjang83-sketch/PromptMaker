@@ -1,0 +1,3 @@
+integrated_multimodal_description: A 25-year-old Japanese woman in a white string bikini walks slowly along the shoreline of a white sand beach at golden hour. Her honey-blonde hair moves in the sea breeze as she turns her head toward the camera and smiles. The camera tracks alongside her at walking pace, then pushes in slowly to a medium close-up. Warm low sunlight from behind outlines her silhouette, and small waves wash over her feet.
+overall_soundscape: Waves wash gently onto the shore while a light sea breeze blows. Distant gulls call faintly.
+non_diegetic_music: N/A

@@ -97,20 +97,26 @@ python -m promptmaker.server            # 또는 promptmaker-server
 | `seed` | 정수 / `None` | 같은 시드 + 같은 옵션 = 같은 결과 |
 | `translate` | bool | 영어가 아니면 번역 |
 | `use_related_words` | bool | 확률 기반 관련 단어 사용 |
-| `model_profile` | `flux` / `sdxl` / `wan_video` … | 결과에 모델 예시를 첨부 (추후 LLM 옵션용) |
+| `model_profile` | `krea2` / `qwen2.1` / `moss` / `minimax_h3` / `none` | 대상 모델 형식으로 출력. 비우면 이미지는 `krea2`, 영상은 `minimax_h3` (아래 "대상 모델" 참고) |
 
 ### 모드
 
 | 모드 | 한글 이름 | 동작 |
 |---|---|---|
 | `random_by_type` (기본) | 타입별 랜덤 | 선택한 종류(이미지/영상) 안에서 템플릿과 모든 요소를 랜덤 |
-| `random` | 전체 랜덤 | 종류, 템플릿, 요소 모두 랜덤 |
+| `random` | 전체 랜덤 | 요소 모두 랜덤. 종류는 요청에 "영상/video" 같은 말이 있으면 그 종류, 없으면 선택한 종류 |
 | `random_by_element` | 요소별 랜덤 | 지정한 템플릿 사용, `random_elements` 의 요소만 랜덤, 나머지는 기본값 |
 | `manual` | 직접 선택 | 지정한 템플릿 + `selections` 값, 나머지는 기본값 (항상 같은 결과) |
+
+템플릿을 직접 고르면(랜덤이 아니면) **모든 모드에서** 그 템플릿을 씁니다.
 
 **기본값 우선순위:** `selections` > 사용자 요청에서 뽑은 값 > 템플릿 `defaults` > 요소 파일의 `default` > 목록의 첫 번째 항목
 
 ### 사용자 요청이 결과를 결정합니다 (요청 우선 규칙)
+
+- "하얀 미니스커트", "밝은 피부"처럼 **꾸밈말 + 의상/피부** 로 쓴 말은 그 의상/피부에만 적용됩니다
+  ("하얀"이 배경의 흰 스튜디오로 새지 않음). 목록에 같은 항목이 없으면 요청한 말 그대로("a white mini skirt") 씁니다.
+- 인물 수를 말하지 않고 한 사람의 외모(의상, 피부)를 적으면 여성 1명으로 생성합니다.
 
 요청 문장에서 다음을 먼저 뽑아 **고정**하고, 랜덤은 요청에 없는 부분만 채웁니다.
 
@@ -165,6 +171,12 @@ giving {her} skin a warm, glowing tone ← 다른 슬롯 사용 가능
 | `ambient_motion` | `while ...` 절 | `..., {ambient_motion}` |
 
 항목 안에서 she/her 대신 `{she}` `{her}` `{her_obj}` 를 쓰면 인물이 여러 명일 때 they/their/them 으로 자동 변환됩니다.
+
+**수정한 TXT 를 적용하려면:** 테스트 페이지의 "데이터 다시 읽기" 버튼(또는 `/api/reload`)을 누르면 됩니다. 서버 재시작은 필요 없습니다.
+서버 재시작은 파이썬 코드를 업데이트했을 때(`git pull` 후)만 필요합니다.
+포즈·동작 등에 완성 문장("Standing at the edge of a rooftop, she gazes at ...")을 넣으면 앞부분("standing at the edge of a rooftop")만 씁니다.
+그 안에 장소(rooftop, field, beach ...)가 있으면 그 장소일 때만 선택됩니다. 의상 상태에 옷 이름(blouse, skirt ...)이 있으면 그 옷을 입었을 때만 선택됩니다.
+불러올 때 자동으로 빠지는 줄: 미성년자 관련 단어, 20 미만 나이, 쉼표로 단어만 나열한 태그 줄(예: "Short, Firm, Square Face, Fair Skin, ...").
 
 ### 5-1-1. 의상 요소와 `{attire}` 자동 조합
 
@@ -344,7 +356,29 @@ class MyTranslator:
 pm = PromptMaker(translator=MyTranslator())
 ```
 
-## 7. 고정 입력 (시스템 프롬프트, 모델 예시) 과 추후 LLM 옵션
+## 7. 대상 모델 형식 (모델별 프롬프트 예시)
+
+생성된 프롬프트를 사용할 모델의 권장 형식으로 바꿔서 출력합니다. 라이브러리, 테스트 페이지("대상 모델"), ComfyUI 노드(`model_profile` 입력, `negative_prompt` 출력), 명령줄(`--model`) 모두 같습니다.
+
+| id | 모델 | 종류 | 형식 |
+|---|---|---|---|
+| `krea2` | Krea 2 | 이미지 (**기본**) | 자연스러운 문단 1~2개 |
+| `qwen2.1` | Qwen-Image 2.1 | 이미지 | 완전한 문장. 네거티브 칸이 없어 "No text, no watermark, no logos." 를 끝에 붙임 |
+| `moss` | MOSS-Image | 이미지 | 품질 → 인물 → 일반 태그 순서의 쉼표 나열 + 별도 네거티브 프롬프트 |
+| `minimax_h3` | MiniMax H3 (Hailuo 3) | 영상 (**기본**) | `integrated_multimodal_description:` / `overall_soundscape:` / `non_diegetic_music:` 세 부분 |
+
+- 비워 두면 이미지는 `krea2`, 영상은 `minimax_h3` 형식이 됩니다. `none` 이면 변환하지 않습니다.
+- 결과의 `prompt` 는 변환된 프롬프트, `base_prompt` 는 변환 전 문장, `negative_prompt` 는 네거티브 프롬프트(MOSS 등)입니다.
+- 형식은 `data/model_profiles/<id>.json` 에서 고칩니다. 주요 항목: `format`(prose / tags / h3), `default_for`(image / video), `max_chars`, `prefix`, `suffix`, `negative`, `inline_exclusions`, `tag_order`, `quality_tags`, `replace`, `music`, `sounds`.
+- 새 모델은 JSON 파일을 하나 추가하면 됩니다. 예시 프롬프트는 `data/model_examples/<id>.txt` 에 두면 결과의 `model_example` 로 함께 전달됩니다.
+
+```python
+r = pm.generate("해변 비키니 화보", model_profile="moss")
+print(r.prompt)           # masterpiece, best quality, ...
+print(r.negative_prompt)  # nsfw, worst quality, ...
+```
+
+## 7-0. 고정 입력 (시스템 프롬프트, 모델 예시) 과 추후 LLM 옵션
 
 - `data/system/system_prompt.txt`, `data/model_examples/*.txt` 는 결과의 `system_prompt`, `model_example` 로 함께 전달됩니다.
 - 현재 생성 과정은 LLM 을 쓰지 않습니다. 추후 최소한의 LLM 보정을 붙이려면:

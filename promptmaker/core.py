@@ -15,10 +15,11 @@ from typing import Any, Dict, List, Optional, Protocol
 
 from . import grammar, safety
 from .data_loader import (PACKAGE_DATA_DIR, RATINGS, Element, Item, Template, load_elements,
-                          load_json, load_templates, load_text_files)
+                          load_json, load_model_profiles, load_templates, load_text_files)
 from .intent import Intent, extract
 from .lexicon import LexiconResult, analyze
-from .relations import Relations, SceneContext
+from .model_profiles import ModelProfile, format_prompt
+from .relations import PLACE_TAGS, Relations, SceneContext
 from .translator import DictionaryTranslator, GoogleTranslator, NoTranslator, Translator, is_english
 
 MODES = ("manual", "random", "random_by_type", "random_by_element")
@@ -45,7 +46,7 @@ class GenerateOptions:
     seed: Optional[int] = None
     translate: bool = True
     use_related_words: bool = True
-    model_profile: Optional[str] = None        # name of a file in data/model_examples
+    model_profile: Optional[str] = None        # target model: data/model_profiles/<id>.json (krea2, qwen2.1, moss, minimax_h3 ...)
     use_llm: bool = False                      # only used when an LLMRefiner is set
 
     @classmethod
@@ -73,6 +74,9 @@ class PromptResult:
     warnings: List[str] = field(default_factory=list)
     system_prompt: str = ""
     model_example: str = ""
+    model_profile: str = ""
+    negative_prompt: str = ""      # for models that take a separate negative prompt
+    base_prompt: str = ""          # the prompt before the target-model formatting
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -105,6 +109,7 @@ class PromptMaker:
         self.ko_en: Dict[str, str] = load_json(self.data_dirs, "lexicon/ko_en.json")
         self.system_prompts: Dict[str, str] = load_text_files(self.data_dirs, "system")
         self.model_examples: Dict[str, str] = load_text_files(self.data_dirs, "model_examples")
+        self.model_profiles: Dict[str, ModelProfile] = load_model_profiles(self.data_dirs)
         self.relations = Relations.load(load_json(self.data_dirs, "lexicon/relations.json"),
                                         load_json(self.data_dirs, "lexicon/tag_keywords.json"))
         self.relations.auto_tag(self.elements)
@@ -132,7 +137,8 @@ class PromptMaker:
                     "items": [{"text": i.text, "rating": i.rating} for i in e.items]}
                 for k, e in sorted(self.elements.items())
             },
-            "model_profiles": sorted(self.model_examples),
+            "model_profiles": sorted(set(self.model_examples) | set(self.model_profiles)),
+            "model_profile_info": [p.to_info() for p in sorted(self.model_profiles.values(), key=lambda p: p.id)],
         }
 
     # -------------------------------------------------------------- pipeline
@@ -189,6 +195,15 @@ class PromptMaker:
 
         system_prompt = self.system_prompts.get("system_prompt", "")
         profile = options.model_profile or ""
+        if not profile:  # default target model for the prompt type (krea2 / minimax_h3)
+            profile = next((p.id for p in self.model_profiles.values() if p.default_for == template.type), "")
+        if profile in ("none", "off"):
+            profile = ""
+        mprofile = self.model_profiles.get(profile) if profile else None
+        if profile and mprofile is None and profile not in self.model_examples:
+            warnings.append(f"모델 프로필 '{profile}' 을(를) 찾을 수 없어 기본 형식으로 출력합니다.")
+        if mprofile and mprofile.type not in ("any", template.type):
+            warnings.append(f"'{mprofile.label or mprofile.id}' 은(는) {mprofile.type} 모델인데 {template.type} 프롬프트에 적용했습니다.")
         model_example = self.model_examples.get(profile, "") if profile else ""
         if options.use_llm and self.llm is not None:
             try:
@@ -196,13 +211,19 @@ class PromptMaker:
             except Exception as exc:
                 warnings.append(f"LLM 보정 실패: {exc}")
 
+        base_prompt = prompt
+        formatted = format_prompt(prompt, filler.picks, filler.ctx.tags, mprofile,
+                                  options.content_rating, template.type)
+        prompt = formatted.prompt
+
         return PromptResult(
             prompt=prompt, prompt_type=template.type, template_id=template.id,
             template_name=template.name, seed=seed, original_input=user_input,
             english_input=english, translated=translated, picks=filler.picks,
             lexicon={**lex.to_dict(), "intent": intent.to_dict(), "trace": filler.ctx.trace,
                      "scene_tags": sorted(filler.ctx.tags)}, warnings=warnings, system_prompt=system_prompt,
-            model_example=model_example,
+            model_example=model_example, model_profile=profile if (mprofile or profile in self.model_examples) else "",
+            negative_prompt=formatted.negative, base_prompt=base_prompt,
         )
 
     def generate_batch(self, user_input: str = "", count: int = 4,
@@ -229,15 +250,13 @@ class PromptMaker:
         intent = intent or Intent()
         limit = RATINGS.index(options.content_rating)
         tid = options.template
-        if options.mode in ("manual", "random_by_element") and tid and tid != "random":
+        if tid and tid != "random":  # a template the user picked is used in every mode
             if tid not in self.templates:
                 raise ValueError(f"템플릿 '{tid}' 을(를) 찾을 수 없습니다.")
             return self.templates[tid]
-        if options.mode == "random":
-            ptype = intent.prompt_type
-            pool = self.list_templates(ptype) if ptype else list(self.templates.values())
-        else:
-            pool = self.list_templates(options.prompt_type)
+        # type: what the request says ("영상", "video" ...) wins, otherwise the selected type
+        ptype = intent.prompt_type if options.mode == "random" and intent.prompt_type else options.prompt_type
+        pool = self.list_templates(ptype)
         pool = [t for t in pool if RATINGS.index(t.rating if t.rating in RATINGS else "sfw") <= limit]
         if not pool:
             raise ValueError("선택 가능한 템플릿이 없습니다. prompt_type / content_rating 을 확인하세요.")
@@ -255,12 +274,41 @@ class PromptMaker:
         def score(t: Template) -> int:
             tk = {k.lower() for k in t.raw.get("keywords", [])}
             keys = set(t.element_keys())
-            return 3 * len(kws & tk) + len([k for k in intent.pools if k in keys])
+            if "attire" in keys:  # {attire} is composed from the garment elements
+                keys |= set(self.relations.garments)
+            wanted = set(intent.pools) | (set(intent.locks) - {"age", "nationality"})
+            return 3 * len(kws & tk) + 2 * len(wanted & keys)
 
+        # a requested garment must be visible: keep templates that have an {attire} slot
+        if (set(intent.pools) | set(intent.locks)) & set(self.relations.garments):
+            pool = [t for t in pool if "attire" in t.element_keys()] or pool
         best = max(score(t) for t in pool)
         if best > 0:
             pool = [t for t in pool if score(t) >= max(1, best - 1)]
         return rng.choice(pool)
+
+
+STYLE_FIT = 6.0  # weight for photo/video styles that match the template's keywords
+GARMENT_MENTION_KEYS = ("attire_state", "pose", "action", "motion")
+# garment words an attire_state / pose line may mention -> words that must be in the outfit
+_GARMENT_WORDS = {
+    "blouse": ("blouse",), "shirt": ("shirt", "blouse"), "skirt": ("skirt",), "dress": ("dress", "gown"),
+    "jacket": ("jacket", "blazer", "coat"), "coat": ("coat", "trench"), "bikini": ("bikini",),
+    "swimsuit": ("swimsuit", "monokini", "one-piece"), "lacing": ("corset", "bodice", "lace-up"),
+    "corset": ("corset",), "stockings": ("stockings", "thigh-high"), "jeans": ("jeans",),
+    "sweater": ("sweater", "knit", "cardigan"), "hoodie": ("hoodie",), "robe": ("robe",),
+    "kimono": ("kimono", "yukata"), "hanbok": ("hanbok",), "bra": ("bra", "bralette", "bikini"),
+    "shorts": ("shorts",), "tied at the neck": ("halter",), "halter": ("halter",),
+    "one strap": ("strap", "cami", "slip", "bikini", "tank", "sundress", "bra"), "zipper": ("zip", "jacket", "hoodie", "dress"), "buttons": ("button", "shirt", "blouse", "cardigan"),
+}
+
+
+def _garments_fit(text: str, outfit: str) -> bool:
+    low = text.lower()
+    for word, needs in _GARMENT_WORDS.items():
+        if re.search(r"\b" + word + r"s?\b", low) and not any(n in outfit for n in needs):
+            return False
+    return True
 
 
 SCENE_TAGS = {"beach", "pool", "bedroom", "bathroom", "cafe", "bar", "street", "studio", "nature",
@@ -334,6 +382,14 @@ class _Filler:
         """Pick n items using base weight x request boost x scene-context relations."""
         boosts = self._boosts(key)
         scored = self.ctx.weigh(items, boosts)
+        if key in ("photo_style", "video_style"):  # styles that fit the chosen template
+            words = [k.lower() for k in self.t.raw.get("keywords", []) if len(k) > 3]
+            scored = [(it, w * (STYLE_FIT if any(re.search(r"\b" + re.escape(k), it.text, re.I) for k in words) else 1.0),
+                       why) for it, w, why in scored]
+        if key in GARMENT_MENTION_KEYS and "attire" in self.cache:
+            outfit = self.cache["attire"][0].lower()
+            scored = [(it, w if _garments_fit(it.text, outfit) else 0.0, why if _garments_fit(it.text, outfit)
+                       else "의상과 안 맞음") for it, w, why in scored]
         valid = [(it, w, why) for it, w, why in scored if w > 0]
         if not valid:
             # nothing satisfies the relation rules: fall back to plain weights, but say so
@@ -371,7 +427,8 @@ class _Filler:
     def _commit(self, key: str, items: List[Item]) -> List[str]:
         provider = key in self.maker.relations.providers
         for it in items:
-            self.ctx.add(it.tags, provider=provider)
+            # only the scene elements may set the place; flip-flops do not make a beach
+            self.ctx.add(it.tags if provider else it.tags - PLACE_TAGS, provider=provider)
         texts = [it.text for it in items]
         self.cache[key] = texts
         return texts
@@ -449,7 +506,7 @@ class _Filler:
                 barefoot = True
             elif shoe:
                 extras.append(shoe[0])
-        if "accessory" in self.maker.elements and self.rng.random() < 0.4:
+        if "accessory" in self.maker.elements and self.rng.random() < (0.15 if " under " in main else 0.4):
             acc = self.pick("accessory")
             if acc:
                 extras.append(acc[0])

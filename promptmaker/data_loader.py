@@ -22,7 +22,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional
 
-from .safety import is_safe_item
+from .safety import MIN_AGE, is_safe_item
 
 RATINGS = ["sfw", "suggestive", "explicit"]
 PACKAGE_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
@@ -161,18 +161,64 @@ def load_elements(dirs: Iterable[str]) -> Dict[str, Element]:
                                   explicit_tags=bool(tags or req or exc))
                         _parse_tag_tokens(it)
                         el.items.append(it)
-    # Drop duplicates and anything that refers to minors.
+    # Drop duplicates, anything that refers to minors, ages under 20 and tag dumps.
     for el in elements.values():
         seen = set()
         clean = []
         for item in el.items:
+            item.text = normalize_phrase(el.key, item.text)
             k = item.text.lower()
-            if k in seen or not is_safe_item(item.text):
+            if k in seen or not is_safe_item(item.text) or not is_usable_item(el.key, item.text):
                 continue
             seen.add(k)
             clean.append(item)
         el.items = clean
     return elements
+
+
+def looks_like_tag_list(text: str) -> bool:
+    """True for comma-separated keyword dumps ("Short, Firm, Square Face, Fair Skin, ...").
+
+    Such lines are tags, not sentence fragments, and would break the grammar of a
+    template sentence. Normal items have at most a couple of commas inside a phrase.
+    """
+    parts = [p.strip() for p in text.split(",") if p.strip()]
+    if len(parts) < 4 or any(p.lower().startswith(("and ", "or ")) for p in parts):
+        return False  # a normal English list ("red, gold, and black")
+    short = sum(1 for p in parts if len(p.split()) <= 3)
+    titled = sum(1 for p in parts if p[:1].isupper())
+    return short >= len(parts) * 0.75 and (titled >= len(parts) * 0.5 or len(parts) >= 6)
+
+
+PHRASE_KEYS = ("pose", "action", "motion", "interaction", "expression", "attire_state")
+
+
+def normalize_phrase(key: str, text: str) -> str:
+    """Turn a full sentence into the fragment a template expects.
+
+    "Standing at the edge of a rooftop, she gazes at the city below." ->
+    "standing at the edge of a rooftop"
+    """
+    if key not in PHRASE_KEYS:
+        return text
+    t = text.strip().rstrip(".!")
+    m = re.match(r"^((?:[A-Za-z]+ly\s+)?[A-Za-z][\w'-]*ing\b[^,]*?),\s*(?:she|he|they|her|his|their)\b", t)
+    if m:
+        t = m.group(1)
+    if len(t) > 1 and t[0].isupper() and t[1].islower() and not t.startswith(("I ", "Japanese", "Korean")):
+        t = t[0].lower() + t[1:]
+    return t
+
+
+def is_usable_item(key: str, text: str) -> bool:
+    """Element-level sanity checks used when loading (and when appending new lines)."""
+    if looks_like_tag_list(text):
+        return False
+    if key == "age":
+        m = re.match(r"\s*(\d+)", text)
+        if m and int(m.group(1)) < MIN_AGE:
+            return False
+    return True
 
 
 def load_templates(dirs: Iterable[str]) -> Dict[str, Template]:
@@ -222,4 +268,22 @@ def load_text_files(dirs: Iterable[str], subdir: str) -> Dict[str, str]:
             if fname.endswith((".txt", ".md")):
                 with open(os.path.join(d, fname), encoding="utf-8") as f:
                     out[os.path.splitext(fname)[0]] = f.read().strip()
+    return out
+
+
+def load_model_profiles(dirs: Iterable[str]):
+    """``model_profiles/<id>.json`` from every data dir (later dirs override)."""
+    from .model_profiles import ModelProfile
+
+    out = {}
+    for base in dirs:
+        d = os.path.join(base, "model_profiles")
+        if not os.path.isdir(d):
+            continue
+        for fname in sorted(os.listdir(d)):
+            if fname.endswith(".json"):
+                with open(os.path.join(d, fname), encoding="utf-8") as f:
+                    data = json.load(f)
+                pid = fname[:-5]
+                out[data.get("id", pid)] = ModelProfile.from_dict(pid, data)
     return out

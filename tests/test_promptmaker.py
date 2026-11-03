@@ -56,8 +56,8 @@ class EngineTests(unittest.TestCase):
                                          random_elements=["*"], seed=seed, content_rating=rating)
                     self.assertNotIn("{", r.prompt, (tid, r.prompt))
                     self.assertNotIn("}", r.prompt, (tid, r.prompt))
-                    self.assertTrue(r.prompt[0].isupper())
-                    self.assertTrue(r.prompt.endswith("."))
+                    self.assertTrue(r.base_prompt[0].isupper())
+                    self.assertTrue(r.base_prompt.endswith("."))
                     self.assertGreaterEqual(int(r.picks["age"]), 20)
 
     def test_seed_is_reproducible(self):
@@ -256,3 +256,79 @@ class CoherenceTests(unittest.TestCase):
     def test_trace_is_reported(self):
         r = self.pm.generate("gravure photoshoot on the beach", GenerateOptions(mode="random", seed=3))
         self.assertTrue(any(line.startswith("location:") for line in r.lexicon.get("trace", [])))
+
+
+class RequestPhraseTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.pm = PromptMaker(translator=NoTranslator())
+
+    def test_selected_template_and_type_kept_in_full_random(self):
+        for seed in range(20):
+            r = self.pm.generate("fair skin, white miniskirt", mode="random", prompt_type="image",
+                                 template="fashion_editorial", seed=seed)
+            self.assertEqual(r.template_id, "fashion_editorial")
+        for seed in range(20):
+            r = self.pm.generate("fair skin", mode="random", prompt_type="image", seed=seed)
+            self.assertEqual(r.prompt_type, "image")
+
+    def test_colour_garment_and_skin_tone_are_used(self):
+        for seed in range(30):
+            r = self.pm.generate("bright skin, white miniskirt", mode="random", seed=seed)
+            p = r.prompt.lower()
+            self.assertIn("white mini skirt", p)
+            self.assertIn("fair", r.picks.get("skin", "") + p)
+            self.assertNotIn("also features", p)
+            self.assertNotIn(" women", p)
+
+    def test_tag_dumps_and_minor_ages_are_not_loaded(self):
+        from promptmaker.data_loader import is_usable_item, looks_like_tag_list
+        self.assertTrue(looks_like_tag_list("Seductress, Short, Firm, Square Face, Fair Skin, Light Brown Hair"))
+        self.assertFalse(looks_like_tag_list("with red, gold, and black accents"))
+        self.assertFalse(is_usable_item("age", "19"))
+        self.assertTrue(is_usable_item("age", "21"))
+
+
+class ModelProfileTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.pm = PromptMaker(translator=NoTranslator())
+
+    def test_defaults_are_krea2_and_minimax_h3(self):
+        img = self.pm.generate("portrait", prompt_type="image", seed=1)
+        vid = self.pm.generate("walking on the beach", prompt_type="video", seed=1)
+        self.assertEqual(img.model_profile, "krea2")
+        self.assertEqual(vid.model_profile, "minimax_h3")
+        self.assertTrue(vid.prompt.startswith("integrated_multimodal_description: "))
+        self.assertIn("\noverall_soundscape: ", vid.prompt)
+        self.assertIn("\nnon_diegetic_music: ", vid.prompt)
+        self.assertNotIn("cinematic", vid.prompt.lower())
+
+    def test_moss_tags_and_negative(self):
+        r = self.pm.generate("white miniskirt", model_profile="moss", seed=2)
+        self.assertTrue(r.prompt.startswith("masterpiece, best quality"))
+        self.assertNotIn("{", r.prompt)
+        self.assertIn("worst quality", r.negative_prompt)
+        self.assertIn("nsfw", r.negative_prompt)
+
+    def test_qwen_inline_exclusions_and_none(self):
+        r = self.pm.generate("portrait", model_profile="qwen2.1", seed=3)
+        self.assertTrue(r.prompt.endswith("No text, no watermark, no logos."))
+        r2 = self.pm.generate("portrait", model_profile="none", seed=3)
+        self.assertEqual(r2.prompt, r2.base_prompt)
+        self.assertEqual(r2.model_profile, "")
+
+    def test_old_profiles_removed(self):
+        for old in ("flux", "sdxl", "wan_video"):
+            self.assertNotIn(old, self.pm.info()["model_profiles"])
+
+
+class TimeOfDayTests(unittest.TestCase):
+    def test_dusk_never_gets_midday_sun(self):
+        pm = PromptMaker(translator=NoTranslator())
+        for seed in range(60):
+            r = pm.generate("beach at dusk", prompt_type="video", seed=seed, model_profile="none")
+            low = r.prompt.lower()
+            if "dusk" in low or "sunset" in low or "golden hour" in low:
+                self.assertNotIn("midday", low, r.prompt)
+                self.assertNotIn("noon", low, r.prompt)

@@ -19,7 +19,9 @@ from .data_loader import Element, Item
 
 # Elements whose items describe the scene itself: props they mention are *provided*.
 DEFAULT_PROVIDERS = ("location", "time_weather")
-MAX_BOOST = 20.0  # cap on the combined affinity multiplier
+MAX_BOOST = 20.0
+# place tags: a non-scene item naming one of these needs it in the scene
+PLACE_TAGS = {"beach", "pool", "bedroom", "bathroom", "cafe", "bar", "street", "studio", "nature", "urban"}  # cap on the combined affinity multiplier
 # Elements never auto-tagged (their words say little about the scene).
 DEFAULT_SKIP = ("hair", "makeup", "skin", "beauty", "nationality", "age", "male_look",
                 "expression", "casting", "mood")
@@ -99,8 +101,9 @@ class Relations:
                 if provider:
                     item.tags |= props
                 elif not item.explicit_tags:
-                    # props a pose/action mentions must exist in the scene
-                    item.requires |= props
+                    # props and places a pose/action mentions must exist in the scene
+                    # ("standing at the edge of a rooftop" needs an urban place)
+                    item.requires |= props | (item.tags & PLACE_TAGS)
                 item.meta["auto_tagged"] = True
 
     def tags_for_request(self, text: str) -> Set[str]:

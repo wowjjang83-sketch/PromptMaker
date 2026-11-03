@@ -24,12 +24,17 @@ def _template_choices():
     return ["random"] + sorted(_MAKER.templates)
 
 
+def _model_choices():
+    # "default" = krea2 for image, minimax_h3 for video (see data/model_profiles/*.json)
+    return ["default"] + sorted(_MAKER.model_profiles) + ["none"]
+
+
 class PromptMakerGenerate:
     """사용자 요청 + 옵션 -> 영문 자연어 프롬프트."""
 
     CATEGORY = "PromptMaker"
-    RETURN_TYPES = ("STRING", "STRING", "INT")
-    RETURN_NAMES = ("prompt", "info_json", "seed")
+    RETURN_TYPES = ("STRING", "STRING", "INT", "STRING")
+    RETURN_NAMES = ("prompt", "info_json", "seed", "negative_prompt")
     FUNCTION = "generate"
 
     @classmethod
@@ -44,6 +49,7 @@ class PromptMakerGenerate:
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0x7FFFFFFF}),
                 "translate": ("BOOLEAN", {"default": True}),
                 "use_related_words": ("BOOLEAN", {"default": True}),
+                "model_profile": (_model_choices(), {"default": "default"}),
             },
             "optional": {
                 "selections_json": ("STRING", {"multiline": True, "default": "{}"}),
@@ -54,7 +60,7 @@ class PromptMakerGenerate:
         }
 
     def generate(self, user_input, prompt_type, mode, template, content_rating, seed,
-                 translate, use_related_words, selections_json="{}", random_elements="",
+                 translate, use_related_words, model_profile="default", selections_json="{}", random_elements="",
                  prefix="", suffix=""):
         try:
             selections = json.loads(selections_json or "{}")
@@ -65,11 +71,12 @@ class PromptMakerGenerate:
             "content_rating": content_rating, "seed": int(seed), "translate": translate,
             "use_related_words": use_related_words, "selections": selections,
             "random_elements": random_elements,
+            "model_profile": None if model_profile == "default" else model_profile,
         })
         result = _MAKER.generate(user_input, opts)
         prompt = " ".join(p for p in (prefix.strip(), result.prompt, suffix.strip()) if p)
         info = {k: v for k, v in result.to_dict().items() if k not in ("system_prompt", "model_example")}
-        return (prompt, json.dumps(info, ensure_ascii=False, indent=2), result.seed)
+        return (prompt, json.dumps(info, ensure_ascii=False, indent=2), result.seed, result.negative_prompt)
 
 
 class PromptMakerReload:

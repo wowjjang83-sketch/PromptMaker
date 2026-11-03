@@ -493,9 +493,36 @@ python tools/github_auto.py pr --title "제목" --body "설명" --base main
 python tools/github_auto.py prs                        # 열린 PR 목록
 python tools/github_auto.py issue --title "버그" --body "내용"
 python tools/github_auto.py issues
+python tools/github_auto.py release check|prepare|publish   # 버전 관리 (9-1)
 ```
 
 `auto` 는 main 에서 실행하면 직접 푸시하지 않고 `--branch` 로 새 브랜치를 만들도록 요구합니다.
+
+### 9-1. 버전 관리 (규칙)
+
+다른 프로젝트에서 GitHub 버전으로 이 라이브러리를 가져다 쓰므로, **main 에 병합할 때마다 버전을 올리고 태그 + GitHub Release 를 만듭니다.**
+
+1. 작업 브랜치(PR)에서 버전 올리기: `python tools/github_auto.py release prepare` (기본 minor, `--bump patch|major` 또는 `--version 0.3.0`). `pyproject.toml` 과 `promptmaker/__init__.py` 의 버전을 함께 바꾸고 커밋합니다.
+2. PR 을 main 에 병합합니다.
+3. main 에서 `git pull` 후 `python tools/github_auto.py release publish` → `v<버전>` 태그를 푸시하고, 지난 태그 이후 병합된 PR 제목으로 GitHub Release 를 만듭니다.
+4. 확인: `python tools/github_auto.py release check`
+
+버전 규칙: 기능 추가는 minor (0.3.0 → 0.4.0), 버그 수정만이면 patch (0.3.0 → 0.3.1).
+
+**다른 곳에서 버전 확인 / 설치**
+
+```bash
+pip install git+https://github.com/wowjjang83-sketch/PromptMaker.git@v0.3.0   # 특정 버전
+python -m promptmaker --version
+python -m promptmaker --check-update      # GitHub 최신 릴리스와 비교
+```
+
+```python
+import promptmaker
+from promptmaker.version import check_for_update, latest_release
+print(promptmaker.__version__)
+print(check_for_update())   # {"current", "latest", "update_available", "url", "install"}
+```
 
 ## 10. 문제 해결
 

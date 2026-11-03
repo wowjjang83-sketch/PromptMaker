@@ -33,7 +33,19 @@ def main(argv=None) -> int:
     p.add_argument("--json", action="store_true", help="상세 결과를 JSON 으로 출력")
     p.add_argument("--list", action="store_true", help="템플릿/요소 목록 출력")
     p.add_argument("--check", action="store_true", help="요소 태그/관계 규칙 점검 (내가 추가한 줄 확인용)")
+    p.add_argument("--version", action="store_true", help="설치된 버전 출력")
+    p.add_argument("--check-update", action="store_true", help="GitHub 최신 릴리스와 버전 비교")
     args = p.parse_args(argv)
+
+    if args.version or args.check_update:
+        from .version import check_for_update, current_version
+
+        print(f"PromptMaker {current_version()}")
+        if args.check_update:
+            info = check_for_update()
+            print(f"최신 릴리스: {info['latest']} ({info['url']})")
+            print(f"업데이트: {info['install']}" if info["update_available"] else "최신 버전입니다.")
+        return 0
 
     maker = PromptMaker(user_data_dir=args.user_data)
     if args.list:

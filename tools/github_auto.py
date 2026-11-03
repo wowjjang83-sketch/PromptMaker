@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import stat
 import subprocess
 import sys
@@ -81,7 +82,8 @@ def git(*args: str, token: str | None = None, check: bool = True) -> str:
         os.chmod(askpass, stat.S_IRWXU)
         env["GIT_ASKPASS"] = askpass
     try:
-        proc = subprocess.run(["git", *args], cwd=REPO_ROOT, env=env, capture_output=True, text=True)
+        proc = subprocess.run(["git", *args], cwd=REPO_ROOT, env=env, capture_output=True, text=True,
+                              encoding="utf-8", errors="replace")
     finally:
         if askpass and os.path.exists(askpass):
             os.remove(askpass)
@@ -176,6 +178,107 @@ def cmd_auto(a, token):
         print(f"PR 생성: #{pr['number']} {pr['html_url']}")
 
 
+# ------------------------------------------------------------- release
+VERSION_FILES = {
+    "pyproject.toml": re.compile(r'^(version\s*=\s*")([^"]+)(")', re.M),
+    os.path.join("promptmaker", "__init__.py"): re.compile(r'^(__version__\s*=\s*")([^"]+)(")', re.M),
+}
+
+
+def read_version() -> str:
+    versions = set()
+    for rel, rx in VERSION_FILES.items():
+        with open(os.path.join(REPO_ROOT, rel), encoding="utf-8") as f:
+            m = rx.search(f.read())
+        if not m:
+            raise RuntimeError(f"{rel} 에서 버전을 찾지 못했습니다.")
+        versions.add(m.group(2))
+    if len(versions) != 1:
+        raise RuntimeError(f"버전 파일들이 서로 다릅니다: {sorted(versions)}")
+    return versions.pop()
+
+
+def bump_version(version: str, part: str) -> str:
+    major, minor, patch = (list(map(int, version.split(".")[:3])) + [0, 0, 0])[:3]
+    if part == "major":
+        return f"{major + 1}.0.0"
+    if part == "minor":
+        return f"{major}.{minor + 1}.0"
+    return f"{major}.{minor}.{patch + 1}"
+
+
+def write_version(version: str) -> None:
+    for rel, rx in VERSION_FILES.items():
+        path = os.path.join(REPO_ROOT, rel)
+        with open(path, encoding="utf-8", newline="") as f:
+            text = f.read()
+        with open(path, "w", encoding="utf-8", newline="") as f:
+            f.write(rx.sub(lambda m: m.group(1) + version + m.group(3), text, count=1))
+
+
+def last_tag() -> str | None:
+    tags = [t for t in git("tag", "--list", "v*", "--sort=-v:refname").split() if t]
+    return tags[0] if tags else None
+
+
+def release_notes(since: str | None) -> str:
+    """Merged PR titles since the previous tag (GitHub merge commits: subject + PR title as body)."""
+    rng = f"{since}..HEAD" if since else "HEAD"
+    log = git("log", rng, "--first-parent", "--merges", "--format=%s%x1f%b%x1e")
+    lines = []
+    for entry in log.split("\x1e"):
+        if not entry.strip():
+            continue
+        subject, _, body = entry.strip().partition("\x1f")
+        m = re.match(r"Merge pull request #(\d+)", subject)
+        title = body.strip().splitlines()[0] if body.strip() else subject
+        lines.append(f"- {title} (#{m.group(1)})" if m else f"- {title}")
+    if not lines:  # no PR merges: plain commits
+        lines = [f"- {s}" for s in git("log", rng, "--first-parent", "--format=%s").splitlines() if s]
+    return "\n".join(reversed(lines))
+
+
+def cmd_release(a, token):
+    """Versioning rule: every PR to main bumps the version ("release prepare"),
+    and after the merge "release publish" tags main and creates the GitHub Release."""
+    if a.action == "check":
+        print(f"버전 파일: {read_version()}  /  마지막 태그: {last_tag() or '(없음)'}")
+        try:
+            r = api("GET", f"/repos/{a.repo}/releases/latest", token)
+            print(f"최신 GitHub Release: {r['tag_name']} {r['html_url']}")
+        except RuntimeError:
+            print("최신 GitHub Release: (없음)")
+        return
+    if a.action == "prepare":
+        if current_branch() in ("main", "master"):
+            raise SystemExit("main 에서는 하지 않습니다. 작업 브랜치(PR)에서 버전을 올리세요.")
+        old = read_version()
+        new = a.version or bump_version(old, a.bump)
+        write_version(new)
+        git("add", *VERSION_FILES)
+        print(git("commit", "-m", f"버전 {new}"))
+        print(f"버전 {old} -> {new}. 푸시 후 PR 을 병합하고 'release publish' 를 실행하세요.")
+        return
+    # publish: tag the current main and create the GitHub Release
+    if current_branch() not in ("main", "master"):
+        raise SystemExit("main 에서 실행하세요 (병합 후).")
+    git("fetch", "origin", token=token)
+    if git("rev-parse", "HEAD") != git("rev-parse", "origin/" + current_branch()):
+        raise SystemExit("로컬 main 이 origin 과 다릅니다. 먼저 pull 하세요.")
+    version = read_version()
+    tag = f"v{version}"
+    prev = last_tag()
+    if tag in git("tag", "--list", tag).split():
+        raise SystemExit(f"{tag} 태그가 이미 있습니다. PR 에서 'release prepare' 로 버전을 올리세요.")
+    notes = a.notes or release_notes(prev)
+    git("tag", "-a", tag, "-m", f"PromptMaker {version}\n\n{notes}")
+    print(git("push", "origin", tag, token=token))
+    r = api("POST", f"/repos/{a.repo}/releases", token,
+            {"tag_name": tag, "name": f"PromptMaker {version}",
+             "body": notes + (f"\n\n변경 비교: https://github.com/{a.repo}/compare/{prev}...{tag}" if prev else "")})
+    print(f"릴리스 생성: {r['html_url']}")
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(description="PromptMaker GitHub 자동 관리")
     p.add_argument("--token-file", default=None)
@@ -202,6 +305,11 @@ def main(argv=None) -> int:
     s.add_argument("--base", default="main")
     s.add_argument("--body", default="")
     s.add_argument("--pr", action="store_true")
+    s = sub.add_parser("release", help="버전 관리: check / prepare (PR 에서 버전 올리기) / publish (병합 후 태그+Release)")
+    s.add_argument("action", choices=["check", "prepare", "publish"])
+    s.add_argument("--bump", choices=["major", "minor", "patch"], default="minor")
+    s.add_argument("--version", default=None, help="올릴 버전을 직접 지정 (예: 0.3.0)")
+    s.add_argument("--notes", default=None, help="릴리스 설명 (생략 시 병합된 PR 제목으로 자동 작성)")
     a = p.parse_args(argv)
 
     try:

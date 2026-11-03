@@ -3,7 +3,7 @@ from .core import MODES, PROMPT_TYPES, GenerateOptions, LLMRefiner, PromptMaker,
 from .safety import MIN_AGE, SafetyError
 from .translator import DictionaryTranslator, GoogleTranslator, NoTranslator, is_english
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "PromptMaker", "GenerateOptions", "PromptResult", "LLMRefiner", "MODES", "PROMPT_TYPES",

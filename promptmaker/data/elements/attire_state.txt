@@ -1,4 +1,4 @@
-# 의상 상태 (sfw). 문장: "{She} {wears} {attire}, {attire_state}"
+# 의상 상태. 문장: "{She} {wears} {attire}, {attire_state}"
 neatly pressed and perfectly fitted !swim !sleep
 slightly wrinkled from the day !swim
 with the sleeves rolled up to the elbows
@@ -11,3 +11,17 @@ with a thin belt cinching the waist !swim !sleep !sport
 draped elegantly over {her} figure
 with one strap slipping off {her} shoulder
 softly clinging to {her} silhouette
+# 수위 통합: attire_state.explicit.txt 에서 옮김
+white blouse partially unbuttoned
+blue plaid skirt lifted
+# 수위 통합: attire_state.suggestive.txt 에서 옮김
+unbuttoned low enough to show a hint of cleavage
+slipping off both shoulders to reveal {her} collarbones
+hiked up to show {her} bare thighs
+revealing {her} toned midriff
+with a deep plunging neckline
+with a high slit revealing one leg
+wet and slightly see-through, clinging to {her} curves
+loosened and falling open at the back
+showing {her} bare back
+with the top half unbuttoned over a lace bralette

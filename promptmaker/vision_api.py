@@ -41,7 +41,7 @@ def _start_job(maker, payload: Dict[str, Any]) -> Dict[str, Any]:
                 analyzer = vision.ImageAnalyzer(maker)
                 result = analyzer.analyze(payload["image"], progress=on_progress, cancel=cancel)
                 if payload.get("apply"):
-                    result["report"] = analyzer.apply(result["new"], payload.get("rating", "sfw"))
+                    result["report"] = analyzer.apply(result["new"])
                 job["result"], job["status"] = result, "done"
             except vision.AnalysisCancelled:
                 job["status"] = "cancelled"
@@ -68,8 +68,7 @@ def _get_queue(maker) -> vision.AnalysisQueue:
 
 def _queue_state(q: vision.AnalysisQueue) -> Dict[str, Any]:
     return {"summary": q.summary(), "items": [i.to_dict(with_result=False) for i in q.items],
-            "options": {"auto_apply": q.auto_apply, "rating": q.rating,
-                        "auto_save_full_prompt": q.auto_save_full_prompt}}
+            "options": {"auto_apply": q.auto_apply, "auto_save_full_prompt": q.auto_save_full_prompt}}
 
 
 def _start_worker(maker, q: vision.AnalysisQueue) -> None:
@@ -91,8 +90,6 @@ def _handle_queue(maker, method: str, parts, payload: Dict[str, Any]) -> Tuple[i
     for opt in ("auto_apply", "auto_save_full_prompt"):
         if opt in payload:
             setattr(q, opt, bool(payload[opt]))
-    if payload.get("rating"):
-        q.rating = payload["rating"]
     if method == "GET" and not parts:
         return 200, _queue_state(q)
     if method == "POST" and not parts:
@@ -177,11 +174,11 @@ def handle(maker, method: str, path: str, payload: Dict[str, Any]) -> Tuple[int,
         analyzer = vision.ImageAnalyzer(maker)
         result = analyzer.analyze(payload["image"])
         if payload.get("apply"):
-            result["report"] = analyzer.apply(result["new"], payload.get("rating", "sfw"))
+            result["report"] = analyzer.apply(result["new"])
         return 200, result
     if method == "POST" and route == "apply":
         items = {k: [str(v) for v in vals] for k, vals in (payload.get("items") or {}).items() if vals}
-        report = vision.ImageAnalyzer(maker).apply(items, payload.get("rating", "sfw"))
+        report = vision.ImageAnalyzer(maker).apply(items)
         return 200, report
     if method == "POST" and route == "unload":
         with _run_lock:  # never in the middle of an analysis

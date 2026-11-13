@@ -9,7 +9,6 @@ import json
 import sys
 
 from .core import MODES, GenerateOptions, PromptMaker
-from .data_loader import RATINGS
 from .safety import SafetyError
 
 
@@ -19,7 +18,6 @@ def main(argv=None) -> int:
     p.add_argument("--type", dest="prompt_type", default="image", choices=["image", "video"])
     p.add_argument("--template", default=None, help="템플릿 id (또는 random)")
     p.add_argument("--mode", default="random_by_type", choices=MODES)
-    p.add_argument("--rating", dest="content_rating", default="sfw", choices=RATINGS)
     p.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
                    help="요소 고정값 (여러 번 사용 가능) 예: --set nationality=Korean")
     p.add_argument("--random", dest="random_elements", default="",
@@ -65,7 +63,7 @@ def main(argv=None) -> int:
     selections = dict(s.split("=", 1) for s in args.set if "=" in s)
     opts = GenerateOptions(
         prompt_type=args.prompt_type, template=args.template, mode=args.mode,
-        content_rating=args.content_rating, selections=selections,
+        selections=selections,
         random_elements=[s.strip() for s in args.random_elements.split(",") if s.strip()],
         seed=args.seed, translate=not args.no_translate, model_profile=args.model_profile,
     )

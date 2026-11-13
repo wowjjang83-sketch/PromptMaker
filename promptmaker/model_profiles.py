@@ -46,7 +46,6 @@ class ModelProfile:
     prefix: str = ""
     suffix: str = ""
     negative: str = ""                # separate negative prompt (models that use one)
-    negative_sfw_extra: str = ""      # appended to the negative prompt when rating is sfw
     inline_exclusions: str = ""       # models without a negative field: "no text, no watermark"
     drop_phrases: List[str] = field(default_factory=list)
     replace: Dict[str, str] = field(default_factory=dict)
@@ -111,12 +110,10 @@ def _subject(picks: Dict[str, str], prompt_type: str) -> str:
 
 
 def format_prompt(prompt: str, picks: Dict[str, str], scene_tags: Iterable[str], p: Optional[ModelProfile],
-                  rating: str = "sfw", prompt_type: str = "image") -> Formatted:
+                  prompt_type: str = "image") -> Formatted:
     if p is None:
         return Formatted(prompt)
     negative = p.negative
-    if rating == "sfw" and p.negative_sfw_extra:
-        negative = ", ".join(x for x in (p.negative_sfw_extra, negative) if x)
     if p.format == "tags":
         out: List[str] = [p.quality_tags] if p.quality_tags else []
         for key in p.tag_order:

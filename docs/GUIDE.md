@@ -30,7 +30,6 @@ opts = GenerateOptions(
     template="video_cinematic",
     selections={"nationality": "Korean", "location": "on a sunny tropical beach"},
     random_elements=["attire", "lighting", "camera_movement"],  # attire = 의상 요소 전체
-    content_rating="sfw",                # sfw | suggestive | explicit
     seed=1234,                           # 같은 시드 = 같은 결과
 )
 r = pm.generate("노을 지는 해변", opts)
@@ -65,7 +64,7 @@ python -m promptmaker "카페" --json      # 상세 결과
 python -m promptmaker.server            # 또는 promptmaker-server
 ```
 
-브라우저에서 `http://127.0.0.1:8765` 를 엽니다. 옵션, 템플릿, 요소 고정값, 요소별 랜덤 체크, 수위, 시드, 생성 개수를 고를 수 있고, 결과 복사와 상세 정보(번역문, 키워드, 관련 단어, 선택된 요소)를 볼 수 있습니다.
+브라우저에서 `http://127.0.0.1:8765` 를 엽니다. 옵션, 템플릿, 요소 고정값, 요소별 랜덤 체크, 시드, 생성 개수를 고를 수 있고, 결과 복사와 상세 정보(번역문, 키워드, 관련 단어, 선택된 요소)를 볼 수 있습니다.
 데이터 파일을 수정한 뒤에는 **"데이터 다시 읽기"** 버튼을 누르세요.
 
 ## 3. ComfyUI 커스텀 노드
@@ -75,7 +74,7 @@ python -m promptmaker.server            # 또는 promptmaker-server
 
 | 노드 | 설명 |
 |---|---|
-| **PromptMaker 프롬프트 생성** | 입력: user_input, prompt_type, mode, template, content_rating, seed, translate, use_related_words, (선택) selections_json, random_elements, prefix, suffix / 출력: prompt, info_json, seed |
+| **PromptMaker 프롬프트 생성** | 입력: user_input, prompt_type, mode, template, seed, translate, use_related_words, (선택) selections_json, random_elements, prefix, suffix / 출력: prompt, info_json, seed |
 | **PromptMaker 데이터 다시 읽기** | JSON/TXT 수정 후 재시작 없이 다시 읽기 |
 
 - `prompt` 출력을 CLIP Text Encode 의 text 입력에 연결합니다.
@@ -93,7 +92,6 @@ python -m promptmaker.server            # 또는 promptmaker-server
 | `template` | 템플릿 id / `random` | 사용할 템플릿 |
 | `selections` | `{요소: 값}` | 요소 고정값. **모든 모드에서 최우선** 적용. `"a\|b"` 로 여러 값 지정 가능(`{요소:2}` 슬롯용) |
 | `random_elements` | 요소 이름 목록, `*` = 전부 | 요소별 랜덤 모드에서 랜덤으로 뽑을 요소 |
-| `content_rating` | `sfw` / `suggestive` / `explicit` | 수위. 해당 수위 이하의 항목/템플릿만 사용 |
 | `seed` | 정수 / `None` | 같은 시드 + 같은 옵션 = 같은 결과 |
 | `translate` | bool | 영어가 아니면 번역 |
 | `use_related_words` | bool | 확률 기반 관련 단어 사용 |
@@ -149,9 +147,10 @@ giving {her} skin a warm, glowing tone ← 다른 슬롯 사용 가능
 {red|crimson|scarlet} satin dress      ← 인라인 랜덤 변형
 ```
 
-- 파일 이름의 두 번째 부분은 **수위**입니다: `attire_state.txt`(sfw), `attire_state.suggestive.txt`, `attire_state.explicit.txt`.
-  `content_rating` 이 그 수위 이상일 때만 해당 파일의 항목이 사용됩니다.
-- `*.explicit.txt` 파일은 비워 두었습니다. 필요하면 사용자가 직접 작성하세요.
+- **수위 구분은 없습니다 (0.4.0).** 요소마다 `<요소>.txt` 하나에 모든 항목을 적습니다.
+  예전 수위 파일(`attire_state.suggestive.txt`, `attire_state.explicit.txt` 등)이 사용자 데이터 폴더에 남아 있으면
+  `PromptMaker(user_data_dir=...)` 를 만들 때 자동으로 `<요소>.txt` 끝에 합쳐지고(중복 제외, `# 수위 통합: ... 에서 옮김` 주석) 원래 파일은 지워집니다.
+  직접 합치려면 `from promptmaker.data_loader import merge_legacy_rating_files; merge_legacy_rating_files("폴더")`.
 - 새 파일을 만들면 그 이름이 곧 새 요소가 되며, 템플릿에서 `{파일이름}` 으로 사용합니다.
 - 미성년자를 연상시키는 항목은 불러올 때 자동으로 제외됩니다.
 
@@ -257,7 +256,6 @@ lying on a beach towel #summer +beach !night
   "id": "portrait_default",
   "name": "기본 인물 사진",
   "type": "image",
-  "rating": "sfw",
   "description": "설명",
   "casting_filter": {"male_min": 0, "male_max": 1, "female_max": 2},
   "defaults": {"photo_style": "cinematic film still"},
@@ -276,12 +274,10 @@ lying on a beach towel #summer +beach !night
 |---|---|
 | `sentences[].text` | 문장. `{요소}` 슬롯을 채웁니다 |
 | `sentences[].options` | 여러 문장 중 하나를 랜덤 선택 |
-| `sentences[].when` | 조건. 사용 가능 변수: `female`, `male`, `video`, `image`, `rating`(0~2), `has_input` |
+| `sentences[].when` | 조건. 사용 가능 변수: `female`, `male`, `video`, `image`, `has_input` |
 | `sentences[].probability` | 0~1. 이 확률로만 문장 포함 |
-| `sentences[].rating` | 이 수위 이상일 때만 문장 포함 |
 | `casting_filter` | 인물 구성 제한 (`female_min/max`, `male_min/max`) |
 | `defaults` | 이 템플릿에서의 요소 기본값 |
-| `rating` | 템플릿 자체의 최소 수위 (낮은 수위에서는 랜덤 선택 대상에서 제외) |
 
 **슬롯 문법**
 
@@ -375,7 +371,7 @@ pm = PromptMaker(translator=MyTranslator())
 ```python
 r = pm.generate("해변 비키니 화보", model_profile="moss")
 print(r.prompt)           # masterpiece, best quality, ...
-print(r.negative_prompt)  # nsfw, worst quality, ...
+print(r.negative_prompt)  # worst quality, bad anatomy, ...
 ```
 
 ## 7-0. 고정 입력 (시스템 프롬프트, 모델 예시) 과 추후 LLM 옵션
@@ -417,7 +413,7 @@ pm.generate("카페", use_llm=True)
 | `quantization` | `auto`(기본): GPU 여유 메모리가 10.5GB 이상이면 bf16(약 9GB, 생성이 더 빠름), 아니면 FP8(약 5GB). `fp8` / `none`(bf16) 로 고정 가능. FP8 은 RTX 40 시리즈 이상에서 하드웨어 FP8 연산을 씁니다 |
 | `prefilter` | 먼저 사람·남자·커플이 있는지 짧게 묻고, 없는 쪽의 요소(머리·의상·포즈 등)는 아예 묻지 않음 (기본 켬). 사람이 없는 사진에서 답이 1/3 로 줄어 빨라집니다. 묶음은 `data/vision/key_groups.json` |
 
-**중복 확인**: 해당 요소의 모든 수위 파일(`<요소>.txt`, `.suggestive.txt`, `.explicit.txt`)과 사용자 데이터 폴더의 줄을 읽어, 가중치(`3::`), 줄 끝 태그(`#tag +tag !tag`), `{ }`, 앞의 a/an/the, 대소문자, 공백, 문장부호를 무시하고 비교합니다. 미성년자 연상 표현은 추가하지 않고, txt 파일이 없는 요소(JSON 전용 등)도 건너뜁니다. 기존 줄은 수정하지 않고 `# 이미지 분석 자동 추가 (날짜)` 주석 아래에 덧붙이기만 합니다.
+**중복 확인**: 해당 요소의 `<요소>.txt`(기본 데이터 + 사용자 데이터 폴더)의 줄을 읽어, 가중치(`3::`), 줄 끝 태그(`#tag +tag !tag`), `{ }`, 앞의 a/an/the, 대소문자, 공백, 문장부호를 무시하고 비교합니다. 미성년자 연상 표현은 추가하지 않고, txt 파일이 없는 요소(JSON 전용 등)도 건너뜁니다. 기존 줄은 수정하지 않고 `# 이미지 분석 자동 추가 (날짜)` 주석 아래에 덧붙이기만 합니다.
 
 **사용 방법**
 
@@ -535,5 +531,5 @@ print(check_for_update())   # {"current", "latest", "update_available", "url", "
 | 경고 "구글 번역 실패" | 네트워크/요청 제한. `pip install deep-translator` 또는 영어로 입력. 오프라인 사전으로 키워드는 계속 동작합니다 |
 | 수정한 데이터가 반영 안 됨 | `pm.reload()`, HTML "데이터 다시 읽기", ComfyUI "데이터 다시 읽기" 노드 |
 | 결과에 `{...}` 가 남음 | 슬롯 이름 오타. 해당 이름의 요소 파일이 있는지 확인 |
-| 특정 문장이 빠짐 | 슬롯 요소가 비어 있거나(수위 필터 포함) `when` 조건이 거짓 |
+| 특정 문장이 빠짐 | 슬롯 요소가 비어 있거나 `when` 조건이 거짓 |
 | 문법이 어색함 | 항목의 문법 형태(5-1 표)를 맞추고, she/her 대신 `{she}` `{her}` 사용 |

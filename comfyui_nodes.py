@@ -14,7 +14,6 @@ if _HERE not in sys.path:
 
 from promptmaker import GenerateOptions, PromptMaker  # noqa: E402
 from promptmaker.core import MODES  # noqa: E402
-from promptmaker.data_loader import RATINGS  # noqa: E402
 
 _USER_DATA = os.path.join(_HERE, "user_data")
 _MAKER = PromptMaker(user_data_dir=_USER_DATA if os.path.isdir(_USER_DATA) else None)
@@ -45,7 +44,6 @@ class PromptMakerGenerate:
                 "prompt_type": (["image", "video"],),
                 "mode": (list(MODES), {"default": "random_by_type"}),
                 "template": (_template_choices(),),
-                "content_rating": (RATINGS,),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0x7FFFFFFF}),
                 "translate": ("BOOLEAN", {"default": True}),
                 "use_related_words": ("BOOLEAN", {"default": True}),
@@ -59,7 +57,7 @@ class PromptMakerGenerate:
             },
         }
 
-    def generate(self, user_input, prompt_type, mode, template, content_rating, seed,
+    def generate(self, user_input, prompt_type, mode, template, seed,
                  translate, use_related_words, model_profile="default", selections_json="{}", random_elements="",
                  prefix="", suffix=""):
         try:
@@ -68,7 +66,7 @@ class PromptMakerGenerate:
             raise ValueError(f"selections_json 형식 오류: {exc}")
         opts = GenerateOptions.from_dict({
             "prompt_type": prompt_type, "mode": mode, "template": template,
-            "content_rating": content_rating, "seed": int(seed), "translate": translate,
+            "seed": int(seed), "translate": translate,
             "use_related_words": use_related_words, "selections": selections,
             "random_elements": random_elements,
             "model_profile": None if model_profile == "default" else model_profile,
@@ -154,7 +152,6 @@ class PromptMakerImageAnalyze:
         return {
             "required": {
                 "write_to_txt": ("BOOLEAN", {"default": True}),
-                "content_rating": (RATINGS,),
                 "backend": (list(vision.BACKENDS), {"default": cfg.backend}),
                 "model_path": ("STRING", {"default": cfg.model_path,
                                           "tooltip": "모델 폴더 위치 (비우면 model_id 를 자동 다운로드)"}),
@@ -178,7 +175,7 @@ class PromptMakerImageAnalyze:
             },
         }
 
-    def analyze(self, write_to_txt, content_rating, backend, model_path, model_id, image=None, image_folder="",
+    def analyze(self, write_to_txt, backend, model_path, model_id, image=None, image_folder="",
                 full_prompt=False, save_full_prompt=False, full_prompt_file="", api_base="",
                 max_items_per_key=3, save_as_default=False, unload_when_done=True, quantization="auto",
                 prefilter=True):
@@ -197,7 +194,7 @@ class PromptMakerImageAnalyze:
         if save_as_default:
             vision.save_config(cfg)
         queue = vision.AnalysisQueue(vision.ImageAnalyzer(_MAKER, cfg), auto_apply=write_to_txt,
-                                     rating=content_rating, auto_save_full_prompt=save_full_prompt,
+                                     auto_save_full_prompt=save_full_prompt,
                                      unload_when_done=bool(unload_when_done))
         if image is not None:
             for i in range(image.shape[0]):  # ComfyUI IMAGE: [B, H, W, C] float 0..1

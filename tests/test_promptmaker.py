@@ -50,15 +50,14 @@ class EngineTests(unittest.TestCase):
 
     def test_every_template_renders_cleanly(self):
         for tid in self.pm.templates:
-            for seed in range(15):
-                for rating in ("sfw", "suggestive"):
-                    r = self.pm.generate("", mode="random_by_element", template=tid,
-                                         random_elements=["*"], seed=seed, content_rating=rating)
-                    self.assertNotIn("{", r.prompt, (tid, r.prompt))
-                    self.assertNotIn("}", r.prompt, (tid, r.prompt))
-                    self.assertTrue(r.base_prompt[0].isupper())
-                    self.assertTrue(r.base_prompt.endswith("."))
-                    self.assertGreaterEqual(int(r.picks["age"]), 20)
+            for seed in range(30):
+                r = self.pm.generate("", mode="random_by_element", template=tid,
+                                     random_elements=["*"], seed=seed)
+                self.assertNotIn("{", r.prompt, (tid, r.prompt))
+                self.assertNotIn("}", r.prompt, (tid, r.prompt))
+                self.assertTrue(r.base_prompt[0].isupper())
+                self.assertTrue(r.base_prompt.endswith("."))
+                self.assertGreaterEqual(int(r.picks["age"]), 20)
 
     def test_seed_is_reproducible(self):
         a = self.pm.generate("beach", seed=42)
@@ -107,11 +106,33 @@ class EngineTests(unittest.TestCase):
         with self.assertRaises(SafetyError):
             self.pm.generate("a cute teenager at school")
 
-    def test_rating_filters_items(self):
-        suggestive = {i.text for i in self.pm.elements["attire_state"].items if i.rating != "sfw"}
-        for seed in range(30):
-            r = self.pm.generate("", seed=seed, content_rating="sfw")
-            self.assertNotIn(r.picks.get("attire_state"), suggestive)
+    def test_single_rating_all_items_available(self):
+        # 수위 구분 없음: 예전 suggestive 항목도 같은 요소 파일에 있고, 옛 옵션은 무시된다
+        texts = {i.text for i in self.pm.elements["attire_state"].items}
+        self.assertIn("with a deep plunging neckline", texts)
+        self.assertIn("a lace bodysuit", {i.text for i in self.pm.elements["lingerie"].items})
+        self.assertNotIn("ratings", self.pm.info())
+        r = self.pm.generate("", seed=1, content_rating="explicit")  # 알 수 없는 키는 무시
+        self.assertTrue(r.prompt)
+
+    def test_legacy_rating_files_merged(self):
+        from promptmaker.data_loader import merge_legacy_rating_files
+        with tempfile.TemporaryDirectory() as d:
+            edir = os.path.join(d, "elements")
+            os.makedirs(edir)
+            with open(os.path.join(edir, "pose.txt"), "w", encoding="utf-8") as f:
+                f.write("# 포즈\nleaning on a railing")  # 끝 줄바꿈 없음
+            with open(os.path.join(edir, "pose.suggestive.txt"), "w", encoding="utf-8") as f:
+                f.write("# 예전 수위 파일\nleaning on a railing\nlying on a silk sheet\n")
+            with open(os.path.join(edir, "mood.explicit.txt"), "w", encoding="utf-8") as f:
+                f.write("a quiet late-night mood\n")
+            PromptMaker(user_data_dir=d, translator=NoTranslator())  # 만들 때 자동으로 합침
+            self.assertEqual(sorted(os.listdir(edir)), ["mood.txt", "pose.txt"])
+            with open(os.path.join(edir, "pose.txt"), encoding="utf-8") as f:
+                pose = f.read()
+            self.assertEqual(pose.count("leaning on a railing"), 1)
+            self.assertIn("leaning on a railing\n# 수위 통합: pose.suggestive.txt 에서 옮김\nlying on a silk sheet\n", pose)
+            self.assertEqual(merge_legacy_rating_files(d)["added"], 0)  # 다시 실행해도 안전
 
     def test_user_data_dir_extends(self):
         with tempfile.TemporaryDirectory() as d:
@@ -309,7 +330,7 @@ class ModelProfileTests(unittest.TestCase):
         self.assertTrue(r.prompt.startswith("masterpiece, best quality"))
         self.assertNotIn("{", r.prompt)
         self.assertIn("worst quality", r.negative_prompt)
-        self.assertIn("nsfw", r.negative_prompt)
+        self.assertNotIn("nsfw", r.negative_prompt)
 
     def test_qwen_inline_exclusions_and_none(self):
         r = self.pm.generate("portrait", model_profile="qwen2.1", seed=3)

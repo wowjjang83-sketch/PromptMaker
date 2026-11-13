@@ -1,4 +1,0 @@
-# 남녀 상호작용 (explicit) - 사용자 직접 작성용 빈 파일입니다.
-# content_rating 을 "explicit" 으로 선택했을 때만 사용됩니다.
-# {partner} (the man / the men), {him}, {her} 등의 슬롯을 사용할 수 있습니다.
-# 모든 인물은 20세 이상 성인이며 합의된 상황이어야 합니다.

@@ -4,9 +4,9 @@ Element files
 -------------
 ``elements/<key>.txt``            one item per line, ``#`` starts a comment,
                                    ``3::text`` gives the item weight 3.
-``elements/<key>.<rating>.txt``   same, but only used when the content rating
-                                   option is at least ``<rating>``
-                                   (``sfw`` < ``suggestive`` < ``explicit``).
+``elements/<key>.<suffix>.txt``   (예전 수위 파일: ``.suggestive`` / ``.explicit``) 수위 구분은
+                                   0.4.0 에서 없어졌습니다. 남아 있으면 ``<key>`` 요소에 그대로 합쳐
+                                   읽고, ``merge_legacy_rating_files()`` 로 ``<key>.txt`` 에 합칠 수 있습니다.
 ``elements/<key>.json``           ``{"label": "...", "items": ["text", {"text": "...", "weight": 2}, ...]}``
                                    items may also carry extra fields (e.g. casting counts).
 
@@ -24,7 +24,8 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from .safety import MIN_AGE, is_safe_item
 
-RATINGS = ["sfw", "suggestive", "explicit"]
+# 0.4.0 부터 수위(content rating) 구분이 없습니다. 아래 접미사는 예전 파일 이름을 읽기 위해서만 씁니다.
+LEGACY_RATING_SUFFIXES = ("sfw", "suggestive", "explicit")
 PACKAGE_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
@@ -32,7 +33,6 @@ PACKAGE_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dat
 class Item:
     text: str
     weight: float = 1.0
-    rating: str = "sfw"
     meta: Dict[str, Any] = field(default_factory=dict)
     tags: set = field(default_factory=set)       # "#tag": added to the scene context
     requires: set = field(default_factory=set)   # "+tag": needs one of these in the context
@@ -48,10 +48,6 @@ class Element:
     items: List[Item] = field(default_factory=list)
     default: Optional[str] = None
 
-    def items_for(self, rating: str) -> List[Item]:
-        limit = RATINGS.index(rating) if rating in RATINGS else 0
-        return [i for i in self.items if RATINGS.index(i.rating) <= limit]
-
 
 @dataclass
 class Template:
@@ -62,7 +58,6 @@ class Template:
     sentences: List[Dict[str, Any]] = field(default_factory=list)
     casting_filter: Dict[str, int] = field(default_factory=dict)
     defaults: Dict[str, str] = field(default_factory=dict)
-    rating: str = "sfw"
     raw: Dict[str, Any] = field(default_factory=dict)
 
     def element_keys(self) -> List[str]:
@@ -113,9 +108,7 @@ def _parse_tag_tokens(item: Item) -> None:
 def _split_name(filename: str):
     stem, ext = os.path.splitext(filename)
     parts = stem.split(".")
-    key = parts[0]
-    rating = parts[1] if len(parts) > 1 and parts[1] in RATINGS else "sfw"
-    return key, rating, ext.lower()
+    return parts[0], ext.lower()
 
 
 def load_elements(dirs: Iterable[str]) -> Dict[str, Element]:
@@ -125,7 +118,7 @@ def load_elements(dirs: Iterable[str]) -> Dict[str, Element]:
         if not os.path.isdir(edir):
             continue
         for fname in sorted(os.listdir(edir)):
-            key, rating, ext = _split_name(fname)
+            key, ext = _split_name(fname)
             if ext not in (".txt", ".json"):
                 continue
             path = os.path.join(edir, fname)
@@ -135,7 +128,6 @@ def load_elements(dirs: Iterable[str]) -> Dict[str, Element]:
                     for line in f:
                         item = _parse_txt_line(line)
                         if item:
-                            item.rating = rating
                             el.items.append(item)
             else:
                 with open(path, encoding="utf-8") as f:
@@ -147,16 +139,16 @@ def load_elements(dirs: Iterable[str]) -> Dict[str, Element]:
                 el.default = data.get("default", el.default)
                 for raw in data.get("items", []):
                     if isinstance(raw, str):
-                        el.items.append(Item(text=raw, rating=rating))
+                        el.items.append(Item(text=raw))
                     else:
                         raw = dict(raw)
                         text = raw.pop("text")
                         weight = float(raw.pop("weight", 1.0))
-                        r = raw.pop("rating", rating)
+                        raw.pop("rating", None)  # 예전 데이터 호환 (무시)
                         tags = set(raw.pop("tags", []))
                         req = set(raw.pop("requires", []))
                         exc = set(raw.pop("excludes", []))
-                        it = Item(text=text, weight=weight, rating=r, meta=raw,
+                        it = Item(text=text, weight=weight, meta=raw,
                                   tags=tags, requires=req, excludes=exc,
                                   explicit_tags=bool(tags or req or exc))
                         _parse_tag_tokens(it)
@@ -174,6 +166,65 @@ def load_elements(dirs: Iterable[str]) -> Dict[str, Element]:
             clean.append(item)
         el.items = clean
     return elements
+
+
+def legacy_rating_files(data_dir: str) -> List[str]:
+    """``<data_dir>/elements`` 안의 예전 수위 파일(``<key>.suggestive.txt`` 등) 경로 목록."""
+    edir = os.path.join(data_dir, "elements")
+    if not os.path.isdir(edir):
+        return []
+    out = []
+    for fname in sorted(os.listdir(edir)):
+        stem, ext = os.path.splitext(fname)
+        parts = stem.split(".")
+        if ext.lower() == ".txt" and len(parts) == 2 and parts[1] in LEGACY_RATING_SUFFIXES:
+            out.append(os.path.join(edir, fname))
+    return out
+
+
+def merge_legacy_rating_files(data_dir: str, delete: bool = True) -> Dict[str, Any]:
+    """예전 수위 파일을 ``<key>.txt`` 하나로 합칩니다 (수위 구분 통합, 0.4.0).
+
+    ``<key>.suggestive.txt`` / ``<key>.explicit.txt`` / ``<key>.sfw.txt`` 의 항목 줄을
+    ``<key>.txt`` 끝에 ``# 수위 통합: <파일> 에서 옮김`` 주석과 함께 덧붙이고 (이미 있는 줄은
+    건너뜀), 원래 파일은 지웁니다 (``delete=False`` 면 남겨 둠). 여러 번 실행해도 안전합니다.
+
+    반환: ``{"merged": {"attire_state.suggestive.txt": 3, ...}, "files": [...], "added": 5}``
+    """
+    report: Dict[str, Any] = {"merged": {}, "files": [], "added": 0}
+    for path in legacy_rating_files(data_dir):
+        fname = os.path.basename(path)
+        key = fname.split(".")[0]
+        target = os.path.join(os.path.dirname(path), f"{key}.txt")
+        existing = set()
+        if os.path.exists(target):
+            with open(target, encoding="utf-8") as f:
+                existing = {ln.strip().lower() for ln in f if ln.strip() and not ln.strip().startswith("#")}
+        with open(path, encoding="utf-8") as f:
+            lines = [ln.strip() for ln in f]
+        new = []
+        for ln in lines:
+            if not ln or ln.startswith("#") or ln.lower() in existing:
+                continue
+            existing.add(ln.lower())
+            new.append(ln)
+        if new:
+            prefix = ""
+            if os.path.exists(target):
+                with open(target, "rb") as f:
+                    f.seek(0, os.SEEK_END)
+                    if f.tell():
+                        f.seek(-1, os.SEEK_END)
+                        prefix = "" if f.read(1) == b"\n" else "\n"
+            with open(target, "a", encoding="utf-8", newline="\n") as f:
+                f.write(prefix + f"# 수위 통합: {fname} 에서 옮김\n" + "\n".join(new) + "\n")
+        if delete:
+            os.remove(path)
+        report["merged"][fname] = len(new)
+        report["files"].append(target)
+        report["added"] += len(new)
+    report["files"] = sorted(set(report["files"]))
+    return report
 
 
 def looks_like_tag_list(text: str) -> bool:
@@ -240,7 +291,6 @@ def load_templates(dirs: Iterable[str]) -> Dict[str, Template]:
                 sentences=data.get("sentences", []),
                 casting_filter=data.get("casting_filter", {}),
                 defaults=data.get("defaults", {}),
-                rating=data.get("rating", "sfw"),
                 raw=data,
             )
             templates[tpl.id] = tpl

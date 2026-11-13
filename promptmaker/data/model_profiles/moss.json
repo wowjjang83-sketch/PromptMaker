@@ -5,7 +5,6 @@
   "description": "MOSS-Image 태그 모드. 품질 → 메타 → 인물 → 일반 태그 순서의 쉼표 나열. 영어 권장. 네거티브 프롬프트를 따로 출력합니다.",
   "quality_tags": "masterpiece, best quality, photorealistic, highly detailed",
   "negative": "worst quality, bad anatomy, watermark, jpeg artifact",
-  "negative_sfw_extra": "nsfw",
   "tag_order": ["photo_style", "subject", "hair", "makeup", "skin", "attire", "attire_state", "pose", "action", "expression", "interaction", "location", "time_weather", "lighting", "camera", "color_grade", "mood"],
   "notes": "출처: OpenMOSS MOSS-Image USERGUIDE. 권장 설정: CFG 3.0~6.0, 50 스텝 이상, shift 5.0, Euler, 1~2M 픽셀(16의 배수). 자연어 문장도 지원하므로 문장형이 필요하면 format 을 prose 로 바꾸세요."
 }

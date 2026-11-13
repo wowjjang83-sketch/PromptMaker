@@ -1,4 +1,4 @@
-# 남녀 상호작용 (sfw). 문장: "{She} {is} {interaction}"  ({partner}, {him} 사용 가능)
+# 남녀 상호작용. 문장: "{She} {is} {interaction}"  ({partner}, {him} 사용 가능)
 holding hands with {partner}
 sharing a slow dance with {partner}
 leaning {her} head on {partner}'s shoulder
@@ -11,3 +11,11 @@ whispering something into {partner}'s ear
 gazing into {partner}'s eyes
 resting {her} forehead against {partner}'s forehead
 pulling {partner} closer by {his} tie
+# 수위 통합: interaction.suggestive.txt 에서 옮김
+kissing {partner} passionately
+sitting on {partner}'s lap with {her} arms around {his} neck
+lying entwined with {partner} under white sheets
+being kissed on the neck by {partner}
+straddling {partner} on the sofa in a heated embrace
+running {her} fingers through {partner}'s hair as they kiss
+pressed against the wall by {partner} in an intimate moment

@@ -35,7 +35,7 @@ import urllib.request
 from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from .data_loader import PACKAGE_DATA_DIR, RATINGS, load_elements, load_json
+from .data_loader import PACKAGE_DATA_DIR, load_elements, load_json, merge_legacy_rating_files
 from .data_loader import is_usable_item
 from .safety import is_safe_item
 
@@ -719,9 +719,13 @@ def unload_backends() -> Dict[str, Any]:
 
 
 # ------------------------------------------------------------------ prompt
-def element_files(data_dir: str) -> Dict[str, Dict[str, str]]:
-    """``{key: {rating: path}}`` for every txt element file in ``data_dir``."""
-    out: Dict[str, Dict[str, str]] = {}
+def element_files(data_dir: str) -> Dict[str, List[str]]:
+    """``{key: [path, ...]}`` for every txt element file in ``data_dir``.
+
+    보통 요소마다 ``<key>.txt`` 하나이고, 합치지 않은 예전 수위 파일(``<key>.suggestive.txt``)이
+    남아 있으면 같은 요소의 목록에 함께 들어갑니다 (``<key>.txt`` 가 맨 앞).
+    """
+    out: Dict[str, List[str]] = {}
     edir = os.path.join(data_dir, "elements")
     if not os.path.isdir(edir):
         return out
@@ -729,9 +733,10 @@ def element_files(data_dir: str) -> Dict[str, Dict[str, str]]:
         stem, ext = os.path.splitext(fname)
         if ext.lower() != ".txt":
             continue
-        parts = stem.split(".")
-        rating = parts[1] if len(parts) > 1 and parts[1] in RATINGS else "sfw"
-        out.setdefault(parts[0], {})[rating] = os.path.join(edir, fname)
+        key = stem.split(".")[0]
+        paths = out.setdefault(key, [])
+        path = os.path.join(edir, fname)
+        paths.insert(0, path) if stem == key else paths.append(path)
     return out
 
 
@@ -751,9 +756,8 @@ def build_prompt(data_dirs: List[str], cfg: VisionConfig, exclude=()) -> Tuple[s
     elements = load_elements(data_dirs)
     files: Dict[str, str] = {}
     for d in data_dirs:
-        for key, by_rating in element_files(d).items():
-            if "sfw" in by_rating:
-                files.setdefault(key, by_rating["sfw"])
+        for key, paths in element_files(d).items():
+            files.setdefault(key, paths[0])
     lines, keys = [], []
     for key, el in elements.items():
         if key in cfg.skip_keys or key in exclude:
@@ -761,9 +765,8 @@ def build_prompt(data_dirs: List[str], cfg: VisionConfig, exclude=()) -> Tuple[s
         path = files.get(key)
         if not path:  # json-only elements (e.g. casting) are not written to
             continue
-        sfw = [i.text for i in el.items if i.rating == "sfw"][:3]
         title = (_file_title(path) or el.description or key).rstrip(". ")
-        examples = "; ".join(f'"{t}"' for t in sfw)
+        examples = "; ".join(f'"{i.text}"' for i in el.items[:3])
         lines.append(f"- {key}: {title}. e.g. {examples}")
         keys.append(key)
     with open(PROMPT_PATH, encoding="utf-8") as f:
@@ -846,7 +849,7 @@ def normalize(text: str) -> str:
 def existing_keys(data_dirs: List[str], key: str) -> set:
     seen = set()
     for d in data_dirs:
-        for path in element_files(d).get(key, {}).values():
+        for path in element_files(d).get(key, []):
             with open(path, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
@@ -881,15 +884,17 @@ def classify(data_dirs: List[str], found: Dict[str, List[str]], allowed_keys: Li
 _write_lock = threading.Lock()
 
 
-def append_items(data_dir: str, items: Dict[str, List[str]], rating: str = "sfw",
+def append_items(data_dir: str, items: Dict[str, List[str]], rating: Optional[str] = None,
                  search_dirs: Optional[List[str]] = None) -> Dict[str, Any]:
-    """Append new lines to ``<data_dir>/elements/<key>[.<rating>].txt``.
+    """Append new lines to ``<data_dir>/elements/<key>.txt``.
 
-    Duplicates (checked across ``search_dirs`` and every rating file of the key),
-    unsafe items and keys without a txt file are skipped. Files are only appended to.
+    Duplicates (checked across ``search_dirs``), unsafe items and keys without a txt file
+    are skipped. Files are only appended to. 수위 구분은 0.4.0 에서 없어졌으므로 ``rating`` 은
+    예전 호출과의 호환용이며 무시합니다. ``data_dir`` 에 남은 예전 수위 파일은 먼저 ``<key>.txt``
+    로 합칩니다.
     """
-    if rating not in RATINGS:
-        raise ValueError(f"rating 은 {RATINGS} 중 하나여야 합니다.")
+    if os.path.isdir(os.path.join(data_dir, "elements")):
+        merge_legacy_rating_files(data_dir)
     search_dirs = search_dirs or [data_dir]
     if data_dir not in search_dirs:
         search_dirs = search_dirs + [data_dir]
@@ -924,8 +929,7 @@ def append_items(data_dir: str, items: Dict[str, List[str]], rating: str = "sfw"
                 new.append(v)
             if not new:
                 continue
-            fname = f"{key}.txt" if rating == "sfw" else f"{key}.{rating}.txt"
-            path = os.path.join(data_dir, "elements", fname)
+            path = os.path.join(data_dir, "elements", f"{key}.txt")
             os.makedirs(os.path.dirname(path), exist_ok=True)
             content = ""
             if os.path.isfile(path):
@@ -1065,8 +1069,9 @@ class ImageAnalyzer:
                 "presence": presence, "asked_keys": keys,
                 "full_prompt": full_prompt if self.config.full_prompt else ""}
 
-    def apply(self, items: Dict[str, List[str]], rating: str = "sfw") -> Dict[str, Any]:
-        report = append_items(self.write_dir, items, rating=rating, search_dirs=self.data_dirs)
+    def apply(self, items: Dict[str, List[str]], rating: Optional[str] = None) -> Dict[str, Any]:
+        """새 항목을 ``<write_dir>/elements/<key>.txt`` 에 추가합니다 (``rating`` 은 무시, 예전 호환용)."""
+        report = append_items(self.write_dir, items, search_dirs=self.data_dirs)
         if self.maker is not None and report["added_count"]:
             self.maker.reload()
         return report
@@ -1075,11 +1080,11 @@ class ImageAnalyzer:
         """Append full prompts to ``path`` (default: the config's ``full_prompt_path``)."""
         return save_full_prompts(prompts, path or self.config.full_prompt_path)
 
-    def analyze_and_apply(self, image: Any, rating: str = "sfw",
+    def analyze_and_apply(self, image: Any, rating: Optional[str] = None,
                           progress: Optional[Callable[[Progress], None]] = None, cancel=None,
                           save_full_prompt: bool = False) -> Dict[str, Any]:
         result = self.analyze(image, progress, cancel)
-        result["report"] = self.apply(result["new"], rating)
+        result["report"] = self.apply(result["new"])
         if save_full_prompt and result["full_prompt"]:
             result["full_prompt_report"] = self.save_full_prompts([result["full_prompt"]])
         return result
@@ -1153,11 +1158,10 @@ class AnalysisQueue:
         q.run(progress=lambda item, p: print(item.name, p))
     """
 
-    def __init__(self, analyzer: ImageAnalyzer, auto_apply: bool = False, rating: str = "sfw",
+    def __init__(self, analyzer: ImageAnalyzer, auto_apply: bool = False, rating: Optional[str] = None,
                  auto_save_full_prompt: bool = False, unload_when_done: Optional[bool] = None):
         self.analyzer = analyzer
         self.auto_apply = auto_apply
-        self.rating = rating
         self.auto_save_full_prompt = auto_save_full_prompt
         self._unload_when_done = unload_when_done
         self.last_unload: Optional[Dict[str, Any]] = None
@@ -1263,7 +1267,7 @@ class AnalysisQueue:
                     result = self.analyzer.analyze(item.image, progress=on_progress, cancel=self.cancel, unload=False)
                     item.result = result
                     if self.auto_apply and result["new"]:
-                        item.report = self.analyzer.apply(result["new"], self.rating)
+                        item.report = self.analyzer.apply(result["new"])
                     if self.auto_save_full_prompt and result.get("full_prompt"):
                         item.full_prompt_report = self.analyzer.save_full_prompts([result["full_prompt"]])
                     item.status = "done"
@@ -1287,7 +1291,6 @@ def main(argv=None) -> None:
     parser.add_argument("--full-prompt", action="store_true", help="이미지마다 풀 프롬프트도 생성")
     parser.add_argument("--save-full-prompt", nargs="?", const="", default=None, metavar="FILE",
                         help="풀 프롬프트를 파일에 저장 (경로 생략 시 설정의 기본 파일)")
-    parser.add_argument("--rating", default="sfw", choices=RATINGS)
     parser.add_argument("--backend", choices=list(BACKENDS))
     parser.add_argument("--model-path", help="모델 폴더 (설정 파일 값 대신 사용)")
     parser.add_argument("--model-id")
@@ -1309,7 +1312,7 @@ def main(argv=None) -> None:
     if args.save_config:
         print("설정 저장:", save_config(cfg))
     analyzer = ImageAnalyzer(PromptMaker(user_data_dir=args.user_data), cfg)
-    queue = AnalysisQueue(analyzer, auto_apply=args.apply, rating=args.rating,
+    queue = AnalysisQueue(analyzer, auto_apply=args.apply,
                           auto_save_full_prompt=args.save_full_prompt is not None)
     for path in args.images:
         queue.add_folder(path) if os.path.isdir(path) else queue.add(path)

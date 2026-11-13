@@ -112,8 +112,6 @@
     <p class="hint" id="model_hint"></p>
 
     <div class="row">
-      <div><label for="content_rating">수위</label>
-        <select id="content_rating"><option value="sfw">일반 (sfw)</option><option value="suggestive">약간 선정적 (suggestive)</option><option value="explicit">성인 (explicit, 사용자 데이터)</option></select></div>
       <div><label for="count">생성 개수</label><input id="count" type="number" min="1" max="20" value="3"></div>
       <div><label for="seed">시드 (-1=랜덤)</label><input id="seed" type="number" value="-1"></div>
     </div>
@@ -181,8 +179,6 @@
           <p class="hint" id="v_cfg_path"></p>
         </details>
 
-        <label for="v_rating">추가할 파일 수위</label>
-        <select id="v_rating"><option value="sfw">일반 (&lt;요소&gt;.txt)</option><option value="suggestive">suggestive (&lt;요소&gt;.suggestive.txt)</option><option value="explicit">explicit (&lt;요소&gt;.explicit.txt)</option></select>
         <label class="check"><input type="checkbox" id="v_full_prompt"> 풀 프롬프트도 생성 (이미지를 묘사하는 영문 프롬프트 한 문단)</label>
         <label class="check"><input type="checkbox" id="v_auto_save_fp"> 풀 프롬프트 자동 저장</label>
         <label class="check"><input type="checkbox" id="v_auto_apply"> 새 요소 항목을 검토 없이 바로 txt 에 추가</label>
@@ -276,13 +272,10 @@ function showModelHint() {
 }
 
 function fillElements() {
-  const rating = $("content_rating").value;
-  const order = ["sfw","suggestive","explicit"];
   const box = $("elements");
   const saved = currentSelections();
   box.innerHTML = Object.entries(INFO.elements).map(([key, el]) => {
-    const items = el.items.filter(i => order.indexOf(i.rating) <= order.indexOf(rating));
-    const opts = items.map(i => `<option value="${esc(i.text)}">${esc(i.text)}</option>`).join("");
+    const opts = el.items.map(i => `<option value="${esc(i.text)}">${esc(i.text)}</option>`).join("");
     return `<div class="el-row"><span title="${esc(el.description || "")}">${esc(key)}</span>
       <select data-key="${esc(key)}"><option value="">(기본/랜덤)</option>${opts}</select>
       <span class="rnd"><input type="checkbox" data-rnd="${esc(key)}">랜덤</span></div>`;
@@ -314,7 +307,6 @@ async function generate() {
     prompt_type: $("prompt_type").value,
     mode: $("mode").value,
     template: $("template").value,
-    content_rating: $("content_rating").value,
     model_profile: $("model_profile").value || null,
     count: parseInt($("count").value, 10) || 1,
     seed: isNaN(seed) || seed < 0 ? null : seed,
@@ -348,7 +340,6 @@ async function generate() {
 
 $("prompt_type").onchange = () => { fillTemplates(); fillModels(); };
 $("model_profile").onchange = showModelHint;
-$("content_rating").onchange = fillElements;
 $("mode").onchange = () => $("mode_hint").textContent = MODE_HINT[$("mode").value];
 $("go").onclick = generate;
 $("reset").onclick = () => { document.querySelectorAll("#elements select").forEach(s => s.value = ""); document.querySelectorAll("#elements input").forEach(c => c.checked = false); };
@@ -467,7 +458,7 @@ function readAsDataURL(file) {
 }
 
 function queueOptions() {
-  return { auto_apply: $("v_auto_apply").checked, rating: $("v_rating").value, auto_save_full_prompt: $("v_auto_save_fp").checked };
+  return { auto_apply: $("v_auto_apply").checked, auto_save_full_prompt: $("v_auto_save_fp").checked };
 }
 
 async function vAddFiles(files) {
@@ -580,7 +571,7 @@ async function vApply() {
   const items = {};
   const checked = [...document.querySelectorAll("#v_result input[data-vkey]:checked")];
   checked.forEach(c => { const t = c.nextElementSibling.value.trim(); if (t) (items[c.dataset.vkey] ||= []).push(t); });
-  const res = await postJSON("/api/vision/apply", { items, rating: $("v_rating").value });
+  const res = await postJSON("/api/vision/apply", { items });
   const d = await res.json();
   if (!res.ok) { $("v_report").innerHTML = `<p class="error">${esc(d.error)}</p>`; return; }
   vShowApplyReport(d);
@@ -604,7 +595,7 @@ document.addEventListener("paste", e => { const fs = [...(e.clipboardData?.files
 $("v_qstop").onclick = async () => { const r = await postJSON("/api/vision/queue/stop", {}); vRenderQueue(await r.json()); };
 $("v_qclear").onclick = async () => { const r = await postJSON("/api/vision/queue/clear", {}); vRenderQueue(await r.json()); };
 // 옵션은 바로 서버 대기열에 반영 (분석 중인 대기열의 다음 이미지부터 적용)
-["v_auto_apply", "v_auto_save_fp", "v_rating"].forEach(id => $(id).addEventListener("change", () => postJSON("/api/vision/queue", { ...queueOptions(), images: [] }).catch(() => {})));
+["v_auto_apply", "v_auto_save_fp"].forEach(id => $(id).addEventListener("change", () => postJSON("/api/vision/queue", { ...queueOptions(), images: [] }).catch(() => {})));
 $("v_unload").onchange = () => postJSON("/api/vision/config", { config: { unload_after: $("v_unload").checked } });
 $("v_full_prompt").onchange = async () => {
   await postJSON("/api/vision/config", { config: { full_prompt: $("v_full_prompt").checked } });
@@ -623,7 +614,7 @@ vLoadConfig().then(async () => {
   const r = await fetch("/api/vision/queue");
   if (!r.ok) return;
   const d = await r.json();
-  $("v_auto_apply").checked = d.options.auto_apply; $("v_rating").value = d.options.rating;
+  $("v_auto_apply").checked = d.options.auto_apply;
   $("v_auto_save_fp").checked = d.options.auto_save_full_prompt && $("v_full_prompt").checked;
   vRenderQueue(d);
   if (d.summary.running) vStartPolling();

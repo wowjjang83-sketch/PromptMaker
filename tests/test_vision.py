@@ -89,11 +89,12 @@ class AppendTests(VisionTestCase):
         self.assertEqual(rep2["added_count"], 0)
         self.assertEqual(self.read("hair.txt").count("이미지 분석 자동 추가"), 1)
 
-    def test_rating_file_and_cross_rating_duplicates(self):
+    def test_single_file_and_legacy_rating_ignored(self):
         rep = vision.append_items(self.data, {"attire_state": ["with a deep plunging neckline", "with a low open back"]},
-                                  rating="suggestive")
+                                  rating="suggestive")  # 예전 인자는 무시, 항상 <요소>.txt
         self.assertEqual(rep["added"], {"attire_state": ["with a low open back"]})
-        self.assertIn("with a low open back", self.read("attire_state.suggestive.txt"))
+        self.assertIn("with a low open back", self.read("attire_state.txt"))
+        self.assertFalse(os.path.exists(os.path.join(self.data, "elements", "attire_state.suggestive.txt")))
 
     def test_appended_items_load(self):
         vision.append_items(self.data, {"location": ["inside a sunlit greenhouse full of ferns"]})

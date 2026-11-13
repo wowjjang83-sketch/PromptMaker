@@ -14,8 +14,9 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Protocol
 
 from . import grammar, safety
-from .data_loader import (PACKAGE_DATA_DIR, RATINGS, Element, Item, Template, load_elements,
-                          load_json, load_model_profiles, load_templates, load_text_files)
+from .data_loader import (PACKAGE_DATA_DIR, Element, Item, Template, load_elements,
+                          load_json, load_model_profiles, load_templates, load_text_files,
+                          merge_legacy_rating_files)
 from .intent import Intent, extract
 from .lexicon import LexiconResult, analyze
 from .model_profiles import ModelProfile, format_prompt
@@ -42,7 +43,6 @@ class GenerateOptions:
     mode: str = "random_by_type"               # see MODES
     selections: Dict[str, str] = field(default_factory=dict)  # element key -> fixed value
     random_elements: List[str] = field(default_factory=list)  # for mode "random_by_element"
-    content_rating: str = "sfw"                # "sfw" | "suggestive" | "explicit"
     seed: Optional[int] = None
     translate: bool = True
     use_related_words: bool = True
@@ -94,6 +94,10 @@ class PromptMaker:
         user_dir = user_data_dir or os.environ.get("PROMPTMAKER_USER_DATA")
         if user_dir and os.path.isdir(user_dir):
             self.data_dirs.append(user_dir)
+            try:  # 예전 수위 파일(<key>.suggestive.txt 등)을 <key>.txt 로 합침 (0.4.0 수위 통합)
+                merge_legacy_rating_files(user_dir)
+            except OSError:
+                pass  # 읽기 전용 폴더 등: 합치지 않아도 같은 요소로 읽힘
         self.llm = llm
         self.reload()
         if translator is None:
@@ -125,16 +129,14 @@ class PromptMaker:
         return {
             "prompt_types": list(PROMPT_TYPES),
             "modes": list(MODES),
-            "ratings": RATINGS,
             "templates": [
                 {"id": t.id, "name": t.name, "type": t.type, "description": t.description,
-                 "rating": t.rating,
                  "elements": [k for k in t.element_keys() if k in self.elements]}
                 for t in self.templates.values()
             ],
             "elements": {
                 k: {"label": e.label, "description": e.description,
-                    "items": [{"text": i.text, "rating": i.rating} for i in e.items]}
+                    "items": [{"text": i.text} for i in e.items]}
                 for k, e in sorted(self.elements.items())
             },
             "model_profiles": sorted(set(self.model_examples) | set(self.model_profiles)),
@@ -150,8 +152,6 @@ class PromptMaker:
             options = GenerateOptions.from_dict({**asdict(options), **kwargs})
         if options.mode not in MODES:
             raise ValueError(f"알 수 없는 mode: {options.mode} (사용 가능: {', '.join(MODES)})")
-        if options.content_rating not in RATINGS:
-            raise ValueError(f"알 수 없는 content_rating: {options.content_rating}")
 
         seed = options.seed if options.seed is not None and options.seed >= 0 \
             else random.randrange(0, 2**31 - 1)
@@ -212,8 +212,7 @@ class PromptMaker:
                 warnings.append(f"LLM 보정 실패: {exc}")
 
         base_prompt = prompt
-        formatted = format_prompt(prompt, filler.picks, filler.ctx.tags, mprofile,
-                                  options.content_rating, template.type)
+        formatted = format_prompt(prompt, filler.picks, filler.ctx.tags, mprofile, template.type)
         prompt = formatted.prompt
 
         return PromptResult(
@@ -234,9 +233,9 @@ class PromptMaker:
         return [self.generate(user_input, options, seed=base + i) for i in range(count)]
 
     # -------------------------------------------------------------- helpers
-    def _casting_items(self, rating: str) -> List[Item]:
+    def _casting_items(self) -> List[Item]:
         el = self.elements.get("casting")
-        return list(el.items_for(rating)) if el else []
+        return list(el.items) if el else []
 
     @staticmethod
     def _casting_allowed(t: Template, item: Item) -> bool:
@@ -248,7 +247,6 @@ class PromptMaker:
     def _choose_template(self, options: GenerateOptions, rng: random.Random,
                          lex: LexiconResult, intent: Optional[Intent] = None) -> Template:
         intent = intent or Intent()
-        limit = RATINGS.index(options.content_rating)
         tid = options.template
         if tid and tid != "random":  # a template the user picked is used in every mode
             if tid not in self.templates:
@@ -257,12 +255,11 @@ class PromptMaker:
         # type: what the request says ("영상", "video" ...) wins, otherwise the selected type
         ptype = intent.prompt_type if options.mode == "random" and intent.prompt_type else options.prompt_type
         pool = self.list_templates(ptype)
-        pool = [t for t in pool if RATINGS.index(t.rating if t.rating in RATINGS else "sfw") <= limit]
         if not pool:
-            raise ValueError("선택 가능한 템플릿이 없습니다. prompt_type / content_rating 을 확인하세요.")
+            raise ValueError("선택 가능한 템플릿이 없습니다. prompt_type 을 확인하세요.")
         # keep only templates that can show the people the request asked for
         if intent.female is not None or intent.male is not None:
-            wanted = [i for i in self._casting_items(options.content_rating)
+            wanted = [i for i in self._casting_items()
                       if intent.casting_ok(int(i.meta.get("female", 1)), int(i.meta.get("male", 0)))]
             fit = [t for t in pool if any(self._casting_allowed(t, i) for i in wanted)]
             pool = fit or pool
@@ -362,7 +359,7 @@ class _Filler:
 
     def _candidates(self, key: str) -> List[Item]:
         el = self.maker.elements.get(key)
-        items = list(el.items_for(self.o.content_rating)) if el else []
+        items = list(el.items) if el else []
         known = {i.text.lower() for i in items}
         for hint in self.lex.element_hints.get(key, []):
             if hint.lower() not in known and safety.is_safe_item(hint):
@@ -542,7 +539,7 @@ class _Filler:
         el = self.maker.elements.get("casting")
         f = self.t.casting_filter
         items = []
-        for i in (el.items_for(self.o.content_rating) if el else []):
+        for i in (el.items if el else []):
             fe, ma = int(i.meta.get("female", 1)), int(i.meta.get("male", 0))
             if fe < f.get("female_min", 0) or fe > f.get("female_max", 99):
                 continue
@@ -701,7 +698,6 @@ class _Filler:
             return True
         env = {"female": self.cast["female"], "male": self.cast["male"],
                "video": self.t.type == "video", "image": self.t.type == "image",
-               "rating": RATINGS.index(self.o.content_rating),
                "has_input": bool(self.english)}
         try:
             return bool(eval(cond, {"__builtins__": {}}, env))  # simple expressions only
@@ -748,9 +744,6 @@ class _Filler:
                 continue
             prob = s.get("probability")
             if prob is not None and self.rng.random() >= float(prob):
-                continue
-            min_rating = s.get("rating")
-            if min_rating and RATINGS.index(min_rating) > RATINGS.index(self.o.content_rating):
                 continue
             text = s.get("text") or ""
             if "options" in s:  # alternative phrasings

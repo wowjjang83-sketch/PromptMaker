@@ -504,6 +504,14 @@ llm.unload_llm()                           # VRAM 반환
 - 성인 콘텐츠는 일반 문구처럼 판단합니다(거절·검열 없음). 미성년 연상 문구는 그 전에 `safety` 규칙으로 제외됩니다.
 - 시험: `python -m promptmaker.llm "top=a red string bikini" --model D:\models\Qwen3-4B-Instruct-2507`
 
+### 7-2. 생성 충돌 규칙 (0.6.1 · LLM 없이 동작)
+
+- **누드 요청**(nude, naked, 누드, 알몸, 나체, 전라 …)이면 `attire` 는 `nothing at all` 류, `attire_state` 는 `fully nude` 로 채우고 의상·신발·액세서리를 고르지 않습니다. `nude lipstick`, `semi-nude` 같은 표현은 누드 요청으로 보지 않습니다.
+- 옷을 입은 장면에서는 `nude/naked/topless` 가 들어간 포즈·동작 항목을 고르지 않습니다.
+- 인물 요소가 아닌 파일에 들어간 주어 문장 조각(`the woman, with dark hair`, `she is ...`)은 불러올 때·학습 저장 때 제외됩니다.
+- 한 프롬프트에서 `bokeh`, `glow`, `golden hour` 같은 특징 단어가 이미 쓰였으면 다른 요소에서 그 단어가 든 항목의 확률을 1/10 로 낮춥니다.
+- LLM 범위 검사(`scope_check`)도 '누드 요청인데 옷' 과 '깨진 조각'을 함께 잡도록 지시가 보강됐습니다.
+
 ## 8. 안전 규칙 (성인 전용)
 
 - 모든 인물은 20세 이상: `age` 값이 20 미만이면 20으로 보정하고 경고를 남깁니다. 주어 문장에는 `adult man` 등 성인임이 명시됩니다.

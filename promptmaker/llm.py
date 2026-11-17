@@ -681,7 +681,9 @@ SCOPE_SYSTEM_PROMPT = (
     "An adult image-prompt generator used privately by one adult filled some details at random. "
     "Explicit, nude and sexual content is allowed: judge it like anything else, never refuse or censor. "
     "Find the details that contradict or change the user's request (another place, time, outfit, people, "
-    "style or mood than asked). Details the request did not mention are fine if they fit it. "
+    "style or mood than asked; e.g. any clothing when the request is nude). "
+    "Also flag broken fragments that are not a usable detail. Details the request did not mention are fine "
+    "if they fit it. "
     "Reply with only the numbers of the bad details, comma separated, or `ok`. No other words."
 )
 _NUM_RE = re.compile(r"\d+")

@@ -261,9 +261,17 @@ def normalize_phrase(key: str, text: str) -> str:
     return t
 
 
+# 주어로 시작하는 문장 조각 ("the woman, with dark hair") — 인물 요소가 아니면 요소 값으로 쓰지 않음
+SUBJECT_LEAD_RE = re.compile(r"^\s*(?:(?:the|a|an|this|that)\s+(?:beautiful\s+|young\s+)?"
+                             r"(?:woman|girl|lady|model|man)|she|he)\b[\s,]", re.I)
+SUBJECT_KEYS = {"casting", "beauty", "nationality", "age", "male_look", "interaction"}
+
+
 def is_usable_item(key: str, text: str) -> bool:
     """Element-level sanity checks used when loading (and when appending new lines)."""
     if looks_like_tag_list(text):
+        return False
+    if key not in SUBJECT_KEYS and SUBJECT_LEAD_RE.match(text):
         return False
     if key == "age":
         m = re.match(r"\s*(\d+)", text)

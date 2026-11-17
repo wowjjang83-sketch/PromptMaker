@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Protocol, Tuple
 from . import grammar, safety
 from .data_loader import (PACKAGE_DATA_DIR, Element, Item, Template, load_elements,
                           load_json, load_model_profiles, load_templates, load_text_files,
-                          merge_legacy_rating_files)
+                          merge_legacy_rating_files, SUBJECT_KEYS, SUBJECT_LEAD_RE)
 from .intent import Intent, extract
 from .lexicon import LexiconResult, analyze
 from .model_profiles import ModelProfile, format_prompt
@@ -266,6 +266,8 @@ class PromptMaker:
                 continue
             if key == "attire" and fixed & (set(self.relations.garments) | {"attire"}):
                 continue
+            if intent.nude and key in ("attire", "attire_state"):  # 규칙으로 이미 비움
+                continue
             out.append((key, str(text)))
         return out
 
@@ -378,6 +380,17 @@ _GARMENT_WORDS = {
 }
 
 
+NUDE_ATTIRE = ("nothing at all", "nothing but bare skin")
+NUDE_STATE = "fully nude"
+_NUDE_ITEM_RE = re.compile(r"\b(?:nude|naked|bare-chested|topless|undressed|unclothed)\b", re.I)
+_SUBJECT_LEAD_RE = SUBJECT_LEAD_RE  # 요소 txt 에 잘못 들어간 문장 조각 → 생성에 쓰지 않음
+# 한 프롬프트 안에서 반복되면 어색한 특징 단어 (예: 카메라 'soft bokeh' + 장소 '... bokeh background')
+SIGNATURE_WORDS = ("bokeh", "glow", "golden hour", "golden-hour", "haze", "hazy", "film grain", "grain", "backlit",
+                   "backlight", "rim light", "neon", "candlelight", "moonlight", "sunlight", "lens flare", "silhouette",
+                   "depth of field", "shallow focus", "soft focus", "desaturated", "sun-kissed", "dewy", "glossy")
+_SIGNATURE_RE = re.compile(r"\b(" + "|".join(re.escape(w) for w in SIGNATURE_WORDS) + r")\b", re.I)
+
+
 def _garments_fit(text: str, outfit: str) -> bool:
     low = text.lower()
     for word, needs in _GARMENT_WORDS.items():
@@ -444,6 +457,9 @@ class _Filler:
         for hint in self.lex.element_hints.get(key, []):
             if hint.lower() not in known and safety.is_safe_item(hint):
                 items.append(Item(text=hint, weight=1.0))
+        if key not in SUBJECT_KEYS:
+            kept = [i for i in items if not _SUBJECT_LEAD_RE.match(i.text)]
+            items = kept or items
         ban = self.banned.get(key)
         if ban:
             kept = [i for i in items if i.text.lower() not in ban]
@@ -471,6 +487,15 @@ class _Filler:
             outfit = self.cache["attire"][0].lower()
             scored = [(it, w if _garments_fit(it.text, outfit) else 0.0, why if _garments_fit(it.text, outfit)
                        else "의상과 안 맞음") for it, w, why in scored]
+        if not self.intent.nude and "attire" in self.cache and key != "attire_state":
+            # 옷을 입은 장면인데 '누드' 포즈/동작이 섞이지 않게
+            scored = [(it, 0.0, "의상과 모순(누드)") if _NUDE_ITEM_RE.search(it.text) else (it, w, why)
+                      for it, w, why in scored]
+        used_sig = self._used_signatures()
+        if used_sig:
+            scored = [(it, w * 0.1, (why + " " if why else "") + "특징 단어 반복")
+                      if {m.lower() for m in _SIGNATURE_RE.findall(it.text)} & used_sig else (it, w, why)
+                      for it, w, why in scored]
         valid = [(it, w, why) for it, w, why in scored if w > 0]
         if not valid:
             # nothing satisfies the relation rules: fall back to plain weights, but say so
@@ -487,6 +512,13 @@ class _Filler:
             chosen.append(it)
             self.ctx.trace.append(f"{key}: {it.text}" + (f"  [{why}]" if why else ""))
         return chosen
+
+    def _used_signatures(self) -> set:
+        out = set()
+        for texts in self.cache.values():
+            for t in texts:
+                out |= {m.lower() for m in _SIGNATURE_RE.findall(t)}
+        return out
 
     def _boosts(self, key: str) -> Dict[str, float]:
         """Request boosts, minus direct matches on words another element already used.
@@ -517,6 +549,8 @@ class _Filler:
     def pick(self, key: str, n: int = 1) -> List[str]:
         if key in self.cache and len(self.cache[key]) >= min(n, len(self.cache[key]) or n):
             return self.cache[key][:n]
+        if key == "attire_state" and self.intent.nude and key not in self.selections:
+            return self._commit(key, [Item(text=NUDE_STATE)])
         items = self._candidates(key)
         by_text = {i.text.lower(): i for i in items}
         if key in self.selections:
@@ -552,6 +586,14 @@ class _Filler:
         """Compose a coherent outfit: type -> garments -> layer -> shoes / accessories."""
         if "attire" in self.cache:
             return grammar.join_list(self.cache["attire"])
+        if self.intent.nude and "attire" not in self.selections:
+            # 누드 요청: 의상·신발·액세서리를 고르지 않음
+            text = self.rng.choice(NUDE_ATTIRE)
+            self.ctx.add({"nude"})
+            self.ctx.trace.append(f"attire: {text}  [누드 요청]")
+            self.cache["attire"] = [text]
+            self.picks["attire"] = text
+            return text
         if "attire" in self.selections or "outfit_type" not in self.maker.elements:
             vals = self.pick("attire")
             return vals[0] if vals else ""

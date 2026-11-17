@@ -493,7 +493,13 @@ llm.verify_items([{"key": "top", "text": "a red string bikini"}], cfg=cfg)   # �
 llm.unload_llm()                           # VRAM 반환
 ```
 
-- 백엔드: `transformers`(모델 폴더, Qwen3 / Qwen2.5 Instruct, Qwen3-VL 폴더도 텍스트로 사용) · `llama_cpp`(.gguf, llama-cpp-python 필요) · `openai`(Ollama/LM Studio 등 서버) · `auto`(경로 보고 선택)
+- 백엔드 (0.6.0)
+  - `vision`: **이미지 분석(VL) 모델을 함께 씀** (`config/vision.json` 그대로, 이미 올라가 있으면 재사용 · 추가 설치·VRAM 없음). `auto` 에서 모델 경로를 비우면 이것.
+  - `transformers`: 모델 폴더(Qwen3 / Qwen2.5 Instruct, Qwen3-VL 폴더도 텍스트로 사용)
+  - `llama_cpp`: .gguf (llama-cpp-python 필요 · Qwen3-VL 같은 새 구조는 최신 빌드 필요)
+  - `llama_server`: .gguf 를 llama.cpp 공식 `llama-server(.exe)` 로 자동 실행 (`server_path`, `server_port`) · 설치 없이 최신 모델 지원
+  - `openai`: Ollama/LM Studio 등 서버
+  - `auto`: 경로를 보고 선택. **GGUF 는 백엔드를 무엇으로 골랐든 transformers 로 열지 않고** llama-cpp-python(있으면) → llama-server 순서로 씀
 - 속도: 탐욕 디코딩, Qwen3 생각(thinking) 모드 끔, 출력 상한을 항목 수에 맞춰 작게
 - 성인 콘텐츠는 일반 문구처럼 판단합니다(거절·검열 없음). 미성년 연상 문구는 그 전에 `safety` 규칙으로 제외됩니다.
 - 시험: `python -m promptmaker.llm "top=a red string bikini" --model D:\models\Qwen3-4B-Instruct-2507`

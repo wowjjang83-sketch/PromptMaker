@@ -221,7 +221,9 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
         intent.consumed.append("age")
 
     # nationality: adjective in the list, or country name
+    from .restrictions import KNOWN_NATIONALITIES  # 요소 목록에 없는 국적도 알아봄 (규칙으로 바꾸기 위해)
     nat_items = [i.text for i in elements.get("nationality", Element("nationality")).items]
+    nat_items += [n for n in KNOWN_NATIONALITIES if n not in nat_items]
     for nat in nat_items:
         if _word_in(nat, text):
             intent.locks["nationality"] = nat

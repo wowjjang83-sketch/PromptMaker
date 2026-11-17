@@ -41,6 +41,10 @@ NOUN_OVERRIDES = {"model": ("model", "models"), "models": ("model", "models"),
 IMAGE_WORDS = {"photo", "photograph", "picture", "image", "pictorial", "photoshoot", "gravure",
                "portrait", "selfie", "snapshot", "editorial"}
 VIDEO_WORDS = {"video", "clip", "footage", "movie", "film", "animation", "motion"}
+NUDE_WORDS = {"nude", "naked", "undressed", "unclothed", "nudity", "disrobed"}
+_KO_NUDE = ("누드", "알몸", "나체", "전라", "벗은", "벗고", "맨몸", "올누드")
+_NOT_NUDE_RE = re.compile(r"\b(?:nude|naked)[- ](?:colou?r(?:ed)?|tone[sd]?|beige|lip(?:stick|s)?|makeup|heels|pumps|shade)\b"
+                          r"|\b(?:semi|partially|half)[- ]?(?:nude|naked)\b", re.I)
 _KO_IMAGE = ("사진", "화보", "그라비아", "이미지", "셀카", "포트레이트")
 _KO_VIDEO = ("영상", "동영상", "비디오", "클립", "뮤비")
 
@@ -68,11 +72,12 @@ class Intent:
     prompt_type: Optional[str] = None
     template_keywords: List[str] = field(default_factory=list)
     consumed: List[str] = field(default_factory=list)            # words used by the intent
+    nude: bool = False                                           # the request asks for no clothes at all
 
     def to_dict(self) -> Dict[str, Any]:
         return {"locks": self.locks, "pools": self.pools, "female": self.female, "male": self.male,
                 "female_noun": self.female_noun, "prompt_type": self.prompt_type,
-                "consumed": self.consumed}
+                "consumed": self.consumed, "nude": self.nude}
 
     def casting_ok(self, female: int, male: int) -> bool:
         if self.female is not None and female != self.female:
@@ -230,6 +235,11 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
                 break
 
     _casting(words, text, intent)
+
+    # 누드 요청: 의상 요소를 채우지 않음 (누드톤 립스틱 · 반누드 같은 표현은 제외)
+    plain = _NOT_NUDE_RE.sub(" ", text)
+    if any(w in NUDE_WORDS for w in tokenize(plain)) or any(k in original for k in _KO_NUDE):
+        intent.nude = True
 
     # direct item matches -> locked pools
     skip = GENERIC | STOPWORDS | set(NUM_WORDS) | FEMALE_SINGULAR | FEMALE_PLURAL | MALE_SINGULAR \

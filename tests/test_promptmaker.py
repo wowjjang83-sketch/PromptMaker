@@ -353,3 +353,44 @@ class TimeOfDayTests(unittest.TestCase):
             if "dusk" in low or "sunset" in low or "golden hour" in low:
                 self.assertNotIn("midday", low, r.prompt)
                 self.assertNotIn("noon", low, r.prompt)
+
+
+class NudeAndFragmentTestCase(unittest.TestCase):
+    def test_intent_nude(self):
+        from promptmaker import intent as it
+        self.assertTrue(it.extract("그라비아 누드 화보", "gravure nude pictorial", {}).nude)
+        self.assertTrue(it.extract("a naked woman", "a naked woman", {}).nude)
+        self.assertFalse(it.extract("a woman with nude lipstick", "a woman with nude lipstick", {}).nude)
+        self.assertFalse(it.extract("a woman in a dress", "a woman in a dress", {}).nude)
+
+    def test_nude_request_has_no_clothes(self):
+        from promptmaker import NoTranslator, PromptMaker
+        pm = PromptMaker(translator=NoTranslator())
+        clothes = ("swimsuit", "bikini", "dress", "shirt", "skirt", "jeans", "blouse", "lingerie", "sweater")
+        for seed in range(12):
+            res = pm.generate("a beautiful japanese woman, gravure nude photo", seed=seed)
+            attire = res.picks.get("attire", "")
+            self.assertIn(attire, ("", "nothing at all", "nothing but bare skin"))
+            self.assertFalse(any(c in res.prompt.lower() for c in clothes), res.prompt)
+            if "attire_state" in res.picks:
+                self.assertEqual(res.picks["attire_state"], "fully nude")
+
+    def test_fragment_and_signature_filters(self):
+        import re
+        from promptmaker import core
+        self.assertTrue(core._SUBJECT_LEAD_RE.match("the woman, with dark hair"))
+        self.assertTrue(core._SUBJECT_LEAD_RE.match("She is smiling"))
+        self.assertFalse(core._SUBJECT_LEAD_RE.match("theatrical stage lights"))
+        self.assertFalse(core._SUBJECT_LEAD_RE.match("shoulder-length dark hair"))
+        self.assertEqual({m.lower() for m in core._SIGNATURE_RE.findall("in a bedroom with soft Bokeh background")},
+                         {"bokeh"})
+
+    def test_bokeh_not_repeated_often(self):
+        from promptmaker import NoTranslator, PromptMaker
+        pm = PromptMaker(translator=NoTranslator())
+        repeated = 0
+        for seed in range(30):
+            res = pm.generate("a woman in a cafe", seed=seed)
+            hits = [k for k, t in res.picks.items() if "bokeh" in str(t).lower()]
+            repeated += len(hits) > 1
+        self.assertLessEqual(repeated, 2)

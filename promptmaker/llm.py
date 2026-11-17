@@ -171,12 +171,15 @@ def strip_thinking(text: str) -> str:
 
 class TransformersLLM:
     def __init__(self, cfg: LLMConfig):
-        import torch
-        from transformers import AutoTokenizer
-
         info = detect_model(cfg.model_path)
         if not info["ok"]:
             raise RuntimeError(f"LLM 모델 폴더 확인 실패: {info['message']}")
+        try:
+            import torch
+            from transformers import AutoTokenizer
+        except ImportError as err:
+            raise RuntimeError(f"이 파이썬({sys.executable})에 torch / transformers 가 없습니다. "
+                               "CUDA torch 가 설치된 파이썬(분석용 파이썬)에서 실행하세요.") from err
         if cfg.device == "cuda" and not torch.cuda.is_available():
             raise RuntimeError(f"이 파이썬({sys.executable}, torch {torch.__version__})은 GPU(CUDA)를 쓸 수 없습니다.")
         device = cfg.device if cfg.device in ("cpu", "cuda") else ("cuda" if torch.cuda.is_available() else "cpu")

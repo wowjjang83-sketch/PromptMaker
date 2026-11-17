@@ -11,13 +11,14 @@ import os
 import random
 import re
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Optional, Protocol, Tuple
+from typing import Any, Dict, List, Optional, Protocol, Tuple, Union
 
 from . import grammar, safety
 from .data_loader import (PACKAGE_DATA_DIR, Element, Item, Template, load_elements,
                           load_json, load_model_profiles, load_templates, load_text_files,
                           merge_legacy_rating_files, SUBJECT_KEYS, SUBJECT_LEAD_RE)
 from .intent import Intent, extract
+from .restrictions import Restrictions
 from .lexicon import LexiconResult, analyze
 from .model_profiles import ModelProfile, format_prompt
 from .relations import PLACE_TAGS, Relations, SceneContext
@@ -103,9 +104,18 @@ class PromptMaker:
 
     def __init__(self, data_dir: Optional[str] = None, user_data_dir: Optional[str] = None,
                  translator: Optional[Translator] = None, llm: Optional[LLMRefiner] = None,
-                 scope_checker: Optional[ScopeChecker] = None):
+                 scope_checker: Optional[ScopeChecker] = None,
+                 restrictions: Optional[Union[Restrictions, Dict[str, Any]]] = None):
         self.data_dirs = [data_dir or PACKAGE_DATA_DIR]
         user_dir = user_data_dir or os.environ.get("PROMPTMAKER_USER_DATA")
+        self.user_dir = user_dir if user_dir and os.path.isdir(user_dir) else None
+        # 국적 · 여성 나이 규칙 (기본 Korean/Japanese · 20~22). 사용자 폴더 restrictions.json 이 있으면 그것
+        if isinstance(restrictions, Restrictions):
+            self.restrictions = restrictions
+        elif isinstance(restrictions, dict):
+            self.restrictions = Restrictions.from_dict(restrictions)
+        else:
+            self.restrictions = Restrictions.load(self.user_dir)
         if user_dir and os.path.isdir(user_dir):
             self.data_dirs.append(user_dir)
             try:  # 예전 수위 파일(<key>.suggestive.txt 등)을 <key>.txt 로 합침 (0.4.0 수위 통합)
@@ -460,6 +470,16 @@ class _Filler:
         if key not in SUBJECT_KEYS:
             kept = [i for i in items if not _SUBJECT_LEAD_RE.match(i.text)]
             items = kept or items
+        rules = self.maker.restrictions
+        if key in ("nationality", "age") and rules.enabled:
+            kept = [i for i in items if rules.allows(key, i.text)]
+            if not kept and key == "nationality" and rules.nat_on:
+                kept = [Item(text=n) for n in rules.nationalities]
+            if not kept and key == "age" and rules.age_on:
+                lo = rules.female_age_min if rules.female_age_min is not None else safety.MIN_AGE
+                hi = rules.female_age_max if rules.female_age_max is not None else lo
+                kept = [Item(text=str(a)) for a in range(lo, hi + 1)]
+            items = kept or items
         ban = self.banned.get(key)
         if ban:
             kept = [i for i in items if i.text.lower() not in ban]
@@ -715,9 +735,20 @@ class _Filler:
         age = safety.clamp_age(age_raw)
         if str(age) != str(age_raw).strip():
             self.warnings.append(f"나이 '{age_raw}' → {age}세로 조정했습니다 (최소 {safety.MIN_AGE}세).")
+        rules = self.maker.restrictions
+        if fe and rules.age_on and not rules.age_in_range(age):
+            fixed = rules.clamp_age(age)
+            self.warnings.append(f"나이 {age}세 → {fixed}세 (여성 나이 규칙 {rules.female_age_min}~{rules.female_age_max}세)")
+            age = fixed
         self.picks["age"] = str(age)
         beauty = self._one("beauty")
         nationality = self._one("nationality")
+        if fe and rules.nat_on:
+            fixed = rules.nationality(nationality, self.rng)
+            if nationality and fixed != nationality:
+                self.warnings.append(f"국적 '{nationality}' → {fixed} (국적 규칙: {', '.join(rules.nationalities)})")
+            nationality = fixed
+            self.picks["nationality"] = nationality
         male_look = self._one("male_look") if ma else ""
 
         noun_s, noun_p = self.intent.female_noun or ("woman", "women")

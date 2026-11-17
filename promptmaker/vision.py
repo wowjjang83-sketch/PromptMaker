@@ -858,8 +858,17 @@ def existing_keys(data_dirs: List[str], key: str) -> set:
     return seen
 
 
-def classify(data_dirs: List[str], found: Dict[str, List[str]], allowed_keys: List[str]) -> Dict[str, List[Dict[str, str]]]:
-    """Mark every candidate as new / duplicate / unsafe / unknown_key."""
+def _rules(restrictions, data_dir: Optional[str]):
+    from .restrictions import Restrictions
+    if restrictions is not None:
+        return restrictions
+    return Restrictions.load(data_dir if data_dir and data_dir != PACKAGE_DATA_DIR else None)
+
+
+def classify(data_dirs: List[str], found: Dict[str, List[str]], allowed_keys: List[str],
+             restrictions=None) -> Dict[str, List[Dict[str, str]]]:
+    """Mark every candidate as new / duplicate / unsafe / unknown_key / restricted."""
+    rules = _rules(restrictions, data_dirs[-1] if len(data_dirs) > 1 else None)
     result: Dict[str, List[Dict[str, str]]] = {}
     for key, values in found.items():
         seen = existing_keys(data_dirs, key) if key in allowed_keys else set()
@@ -871,6 +880,8 @@ def classify(data_dirs: List[str], found: Dict[str, List[str]], allowed_keys: Li
                 status = "unsafe"
             elif not is_usable_item(key, v):
                 status = "not_a_phrase"
+            elif not rules.allows(key, v):
+                status = "restricted"
             elif normalize(v) in seen:
                 status = "duplicate"
             else:
@@ -885,7 +896,7 @@ _write_lock = threading.Lock()
 
 
 def append_items(data_dir: str, items: Dict[str, List[str]], rating: Optional[str] = None,
-                 search_dirs: Optional[List[str]] = None) -> Dict[str, Any]:
+                 search_dirs: Optional[List[str]] = None, restrictions=None) -> Dict[str, Any]:
     """Append new lines to ``<data_dir>/elements/<key>.txt``.
 
     Duplicates (checked across ``search_dirs``), unsafe items and keys without a txt file
@@ -895,6 +906,7 @@ def append_items(data_dir: str, items: Dict[str, List[str]], rating: Optional[st
     """
     if os.path.isdir(os.path.join(data_dir, "elements")):
         merge_legacy_rating_files(data_dir)
+    rules = _rules(restrictions, data_dir)  # 국적 · 여성 나이 규칙 밖 값은 저장하지 않음 (reason "restricted")
     search_dirs = search_dirs or [data_dir]
     if data_dir not in search_dirs:
         search_dirs = search_dirs + [data_dir]
@@ -920,6 +932,8 @@ def append_items(data_dir: str, items: Dict[str, List[str]], rating: Optional[st
                     reason = "unsafe"
                 elif not is_usable_item(key, v):
                     reason = "not_a_phrase"
+                elif not rules.allows(key, v):
+                    reason = "restricted"
                 elif normalize(v) in seen:
                     reason = "duplicate"
                 if reason:
@@ -1058,7 +1072,10 @@ class ImageAnalyzer:
         found = parse_response(data)
         limit = max(1, int(self.config.max_items_per_key))
         found = {k: v[:limit] for k, v in found.items() if k not in self.config.skip_keys}
-        rows = classify(self.data_dirs, found, keys)
+        rules = getattr(self.maker, "restrictions", None)
+        rows = classify(self.data_dirs, found, keys, restrictions=rules)
+        if rules is not None and full_prompt:
+            full_prompt = rules.apply_to_text(full_prompt)
         new = {k: [r["text"] for r in v if r["status"] == "new"] for k, v in rows.items()}
         usage = dict(getattr(backend, "usage", {}) or {})
         n_new = sum(len(v) for v in new.values())
@@ -1071,7 +1088,8 @@ class ImageAnalyzer:
 
     def apply(self, items: Dict[str, List[str]], rating: Optional[str] = None) -> Dict[str, Any]:
         """새 항목을 ``<write_dir>/elements/<key>.txt`` 에 추가합니다 (``rating`` 은 무시, 예전 호환용)."""
-        report = append_items(self.write_dir, items, search_dirs=self.data_dirs)
+        report = append_items(self.write_dir, items, search_dirs=self.data_dirs,
+                              restrictions=getattr(self.maker, "restrictions", None))
         if self.maker is not None and report["added_count"]:
             self.maker.reload()
         return report

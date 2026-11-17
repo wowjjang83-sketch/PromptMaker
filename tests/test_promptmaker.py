@@ -173,13 +173,17 @@ class IntentTests(unittest.TestCase):
             self.assertEqual(r.picks["casting"], "a woman and a man")
 
     def test_korean_age_and_video_type(self):
-        pm = PromptMaker(translator=DictionaryTranslator(self.pm.ko_en))
+        pm = PromptMaker(translator=DictionaryTranslator(self.pm.ko_en), restrictions={"enabled": False})
         r = pm.generate("25살 한국 여자 영상", seed=1, mode="random")
         self.assertEqual(r.picks["age"], "25")
+        # 기본 규칙(여성 20~22세)에서는 22 로 조정
+        r = PromptMaker(translator=DictionaryTranslator(self.pm.ko_en)).generate("25살 한국 여자 영상", seed=1, mode="random")
+        self.assertEqual(r.picks["age"], "22")
         self.assertEqual(r.prompt_type, "video")
 
     def test_user_selection_beats_request(self):
-        r = self.pm.generate("a Japanese woman", seed=1, selections={"nationality": "Thai"})
+        pm = PromptMaker(translator=NoTranslator(), restrictions={"nationalities": ["Japanese", "Thai"]})
+        r = pm.generate("a Japanese woman", seed=1, selections={"nationality": "Thai"})
         self.assertEqual(r.picks["nationality"], "Thai")
 
     def test_request_text_not_dumped(self):
@@ -394,3 +398,78 @@ class NudeAndFragmentTestCase(unittest.TestCase):
             hits = [k for k, t in res.picks.items() if "bokeh" in str(t).lower()]
             repeated += len(hits) > 1
         self.assertLessEqual(repeated, 2)
+
+
+class RestrictionTestCase(unittest.TestCase):
+    def test_defaults_and_generation(self):
+        from promptmaker import NoTranslator, PromptMaker
+        pm = PromptMaker(translator=NoTranslator())
+        self.assertEqual(pm.restrictions.nationalities, ["Korean", "Japanese"])
+        for seed in range(25):
+            for req in ("a woman in a cafe", "a 30-year-old Chinese woman on a beach", "an American model"):
+                r = pm.generate(req, seed=seed)
+                if "nationality" in r.picks and r.picks.get("casting", "").find("man") != 0:
+                    self.assertIn(r.picks["nationality"], ("Korean", "Japanese"), req)
+                self.assertIn(r.picks["age"], ("20", "21", "22"), req)
+                self.assertNotIn("Chinese", r.prompt)
+                self.assertNotIn("American", r.prompt)
+
+    def test_user_file_persists(self):
+        import tempfile
+        from promptmaker import NoTranslator, PromptMaker
+        from promptmaker.restrictions import Restrictions
+        d = tempfile.mkdtemp()
+        Restrictions.from_dict({"nationalities": ["Japanese"], "female_age_min": 21, "female_age_max": 21}).save(d)
+        pm = PromptMaker(user_data_dir=d, translator=NoTranslator())
+        for seed in range(8):
+            r = pm.generate("a woman", seed=seed)
+            self.assertEqual(r.picks["age"], "21")
+            self.assertEqual(r.picks["nationality"], "Japanese")
+
+    def test_min_age_safety_still_first(self):
+        from promptmaker.restrictions import Restrictions
+        r = Restrictions.from_dict({"female_age_min": 15, "female_age_max": 18})
+        self.assertEqual((r.female_age_min, r.female_age_max), (20, 20))
+
+    def test_apply_to_text_and_allows(self):
+        from promptmaker.restrictions import Restrictions
+        r = Restrictions()
+        out = r.apply_to_text("A photo of a beautiful 25-year-old Chinese woman with a 40-year-old American man.")
+        self.assertRegex(out, r"22-year-old (Korean|Japanese) woman")
+        self.assertIn("40-year-old American man", out)
+        self.assertIn("Korean, Asian woman", r.apply_to_text("a Korean, Asian woman"))
+        self.assertTrue(r.allows("nationality", "korean"))
+        self.assertFalse(r.allows("nationality", "Thai"))
+        self.assertFalse(r.allows("age", "25"))
+        self.assertTrue(r.allows("hair", "anything"))
+
+    def test_append_items_skips_restricted(self):
+        import os
+        import tempfile
+        from promptmaker import vision
+        d = tempfile.mkdtemp()
+        os.makedirs(os.path.join(d, "elements"))
+        for k in ("nationality", "age"):
+            open(os.path.join(d, "elements", k + ".txt"), "w").close()
+        rep = vision.append_items(d, {"nationality": ["Thai", "Japanese"], "age": ["25", "21"]})
+        self.assertEqual(rep["added"], {"nationality": ["Japanese"], "age": ["21"]})
+        self.assertEqual(rep["skipped"]["nationality"][0]["reason"], "restricted")
+
+
+class RestrictionCleanTestCase(unittest.TestCase):
+    def test_clean_with_backup(self):
+        import os
+        import tempfile
+        from promptmaker.restrictions import clean_element_files
+        d = tempfile.mkdtemp()
+        os.makedirs(os.path.join(d, "elements"))
+        with open(os.path.join(d, "elements", "nationality.txt"), "w", encoding="utf-8") as f:
+            f.write("# head\n3::Korean\nThai\nJapanese\n")
+        with open(os.path.join(d, "elements", "age.txt"), "w", encoding="utf-8") as f:
+            f.write("20\n2::25\n22\n")
+        res = clean_element_files(d)
+        self.assertEqual(res["removed"], {"nationality": ["Thai"], "age": ["25"]})
+        self.assertTrue(os.path.isfile(os.path.join(res["backup"], "nationality.txt")))
+        with open(os.path.join(d, "elements", "nationality.txt"), encoding="utf-8") as f:
+            self.assertEqual(f.read(), "# head\n3::Korean\nJapanese\n")
+        self.assertEqual(clean_element_files(d)["removed"], {})

@@ -512,6 +512,22 @@ llm.unload_llm()                           # VRAM 반환
 - 한 프롬프트에서 `bokeh`, `glow`, `golden hour` 같은 특징 단어가 이미 쓰였으면 다른 요소에서 그 단어가 든 항목의 확률을 1/10 로 낮춥니다.
 - LLM 범위 검사(`scope_check`)도 '누드 요청인데 옷' 과 '깨진 조각'을 함께 잡도록 지시가 보강됐습니다.
 
+### 7-3. 국적 · 여성 나이 규칙 (0.7.0)
+
+- 기본값: 국적 **Korean · Japanese**, 여성 나이 **20~22세**. 패키지의 `nationality.txt` · `age.txt` 도 이 값만 들어 있습니다.
+- 바꾸려면 **사용자 데이터 폴더**의 `restrictions.json` 에 저장하세요 (패키지 파일을 직접 고치면 업데이트 때 덮어써집니다).
+
+```python
+from promptmaker import PromptMaker, Restrictions
+Restrictions.from_dict({"nationalities": ["Korean", "Japanese"], "female_age_min": 20, "female_age_max": 22}).save(user_dir)
+pm = PromptMaker(user_data_dir=user_dir)            # 또는 PromptMaker(restrictions={...}), {"enabled": False} 로 끔
+```
+
+- 생성: 후보를 규칙 안 값으로만 고르고, 요청이 규칙 밖(예: 30살 중국 여성)이면 규칙 안으로 바꾸고 경고를 남깁니다. 남성은 그대로.
+- 이미지 분석 · 학습 저장(`append_items`, `classify`): 규칙 밖 국적/나이는 저장하지 않음 (`restricted`). 분석 풀프롬프트도 `apply_to_text` 로 바꿉니다.
+- 기존 파일 정리: `promptmaker.restrictions.clean_element_files(user_dir)` — 규칙 밖 줄을 지우기 전에 `backup/restrictions-<시각>/` 에 백업.
+- 20세 미만 금지 안전 규칙은 항상 먼저 적용됩니다 (규칙 최소값도 20 미만으로 내려가지 않음).
+
 ## 8. 안전 규칙 (성인 전용)
 
 - 모든 인물은 20세 이상: `age` 값이 20 미만이면 20으로 보정하고 경고를 남깁니다. 주어 문장에는 `adult man` 등 성인임이 명시됩니다.

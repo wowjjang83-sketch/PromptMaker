@@ -1,14 +1,15 @@
 """PromptMaker - LLM 없이 규칙/템플릿 기반으로 영문 자연어 프롬프트를 생성하는 라이브러리."""
 from .core import MODES, PROMPT_TYPES, GenerateOptions, LLMRefiner, PromptMaker, PromptResult
+from .restrictions import Restrictions
 from .safety import MIN_AGE, SafetyError
 from .translator import DictionaryTranslator, GoogleTranslator, NoTranslator, is_english
 
-__version__ = "0.6.1"
+__version__ = "0.7.0"
 
 __all__ = [
     "PromptMaker", "GenerateOptions", "PromptResult", "LLMRefiner", "MODES", "PROMPT_TYPES",
     "SafetyError", "MIN_AGE", "GoogleTranslator", "DictionaryTranslator", "NoTranslator",
-    "is_english", "generate",
+    "is_english", "generate", "Restrictions",
 ]
 
 _default_maker = None

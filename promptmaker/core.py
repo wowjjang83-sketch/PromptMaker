@@ -11,7 +11,7 @@ import os
 import random
 import re
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Optional, Protocol
+from typing import Any, Dict, List, Optional, Protocol, Tuple
 
 from . import grammar, safety
 from .data_loader import (PACKAGE_DATA_DIR, Element, Item, Template, load_elements,
@@ -36,6 +36,17 @@ class LLMRefiner(Protocol):
     def refine(self, prompt: str, system_prompt: str, examples: str) -> str: ...
 
 
+class ScopeChecker(Protocol):
+    """Optional hook (0.5.0): finds picks that go beyond the user's request.
+
+    ``check(request, picks)`` gets the request (original + English) and ``[(key, text), ...]`` of the
+    elements the request did NOT fix (randomly / relation-picked), and returns the 0-based indexes of
+    the picks that contradict or change the request. ``promptmaker.llm.ScopeChecker`` is a local-LLM one.
+    """
+
+    def check(self, request: str, picks: List[Tuple[str, str]]) -> List[int]: ...
+
+
 @dataclass
 class GenerateOptions:
     prompt_type: str = "image"                 # "image" | "video"
@@ -48,6 +59,8 @@ class GenerateOptions:
     use_related_words: bool = True
     model_profile: Optional[str] = None        # target model: data/model_profiles/<id>.json (krea2, qwen2.1, moss, minimax_h3 ...)
     use_llm: bool = False                      # only used when an LLMRefiner is set
+    scope_check: bool = False                  # only used when a ScopeChecker is set: re-pick elements
+                                               # that go beyond the user's request (one LLM call)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "GenerateOptions":
@@ -89,7 +102,8 @@ class PromptMaker:
     """Rule/template based natural-language prompt generator."""
 
     def __init__(self, data_dir: Optional[str] = None, user_data_dir: Optional[str] = None,
-                 translator: Optional[Translator] = None, llm: Optional[LLMRefiner] = None):
+                 translator: Optional[Translator] = None, llm: Optional[LLMRefiner] = None,
+                 scope_checker: Optional[ScopeChecker] = None):
         self.data_dirs = [data_dir or PACKAGE_DATA_DIR]
         user_dir = user_data_dir or os.environ.get("PROMPTMAKER_USER_DATA")
         if user_dir and os.path.isdir(user_dir):
@@ -99,6 +113,7 @@ class PromptMaker:
             except OSError:
                 pass  # 읽기 전용 폴더 등: 합치지 않아도 같은 요소로 읽힘
         self.llm = llm
+        self.scope_checker = scope_checker
         self.reload()
         if translator is None:
             translator = GoogleTranslator(fallback=DictionaryTranslator(self.ko_en))
@@ -193,6 +208,12 @@ class PromptMaker:
         filler = _Filler(self, template, options, rng, lex, english, warnings, literal, intent)
         prompt = filler.render()
 
+        # 6-1) scope guard: relation picks must stay inside what the user asked for
+        scope: Dict[str, Any] = {}
+        if options.scope_check and self.scope_checker is not None and (english or user_input):
+            filler, prompt, scope = self._scope_guard(filler, prompt, template, options, seed, lex, english,
+                                                      warnings, literal, intent, user_input)
+
         system_prompt = self.system_prompts.get("system_prompt", "")
         profile = options.model_profile or ""
         if not profile:  # default target model for the prompt type (krea2 / minimax_h3)
@@ -220,7 +241,7 @@ class PromptMaker:
             template_name=template.name, seed=seed, original_input=user_input,
             english_input=english, translated=translated, picks=filler.picks,
             lexicon={**lex.to_dict(), "intent": intent.to_dict(), "trace": filler.ctx.trace,
-                     "scene_tags": sorted(filler.ctx.tags)}, warnings=warnings, system_prompt=system_prompt,
+                     "scene_tags": sorted(filler.ctx.tags), "scope": scope}, warnings=warnings, system_prompt=system_prompt,
             model_example=model_example, model_profile=profile if (mprofile or profile in self.model_examples) else "",
             negative_prompt=formatted.negative, base_prompt=base_prompt,
         )
@@ -231,6 +252,63 @@ class PromptMaker:
         base = options.seed if options.seed is not None and options.seed >= 0 \
             else random.randrange(0, 2**31 - 1 - count)
         return [self.generate(user_input, options, seed=base + i) for i in range(count)]
+
+    # -------------------------------------------------------------- scope guard
+    SCOPE_SKIP = {"casting", "age", "outfit_type", "subject"}
+    SCOPE_RETRIES = 2
+
+    def _scope_targets(self, filler: "_Filler", intent: Intent, options: GenerateOptions) -> List[Tuple[str, str]]:
+        """Picks the request did not fix (those are the ones relations / randomness chose)."""
+        fixed = set(intent.pools) | set(intent.locks) | set(options.selections)
+        out = []
+        for key, text in filler.picks.items():
+            if key in self.SCOPE_SKIP or key in fixed or not str(text).strip():
+                continue
+            if key == "attire" and fixed & (set(self.relations.garments) | {"attire"}):
+                continue
+            out.append((key, str(text)))
+        return out
+
+    def _scope_guard(self, filler, prompt, template, options, seed, lex, english, warnings, literal, intent,
+                     user_input):
+        import time as _time
+
+        request = user_input if not english or english == user_input else f"{user_input} ({english})"
+        banned: Dict[str, set] = {}
+        info: Dict[str, Any] = {"checked": 0, "flagged": [], "retries": 0, "seconds": 0.0}
+        started = _time.time()
+        for attempt in range(self.SCOPE_RETRIES + 1):
+            targets = self._scope_targets(filler, intent, options)
+            if not targets:
+                break
+            try:
+                bad = self.scope_checker.check(request, targets) or []
+            except Exception as exc:
+                warnings.append(f"범위 검사 실패: {exc}")
+                break
+            info["checked"] += len(targets)
+            bad = [targets[i] for i in sorted(set(bad)) if 0 <= i < len(targets)]
+            if not bad:
+                break
+            info["flagged"].extend({"key": k, "text": t} for k, t in bad)
+            if attempt == self.SCOPE_RETRIES:
+                warnings.append("요청 범위를 벗어난 요소를 다시 골라도 남아 있습니다: "
+                                + ", ".join(f"{k}={t}" for k, t in bad))
+                break
+            for key, text in bad:
+                if key == "attire":  # composed outfit: ban the garments it was made of
+                    for part in list(self.relations.garments) + ["outerwear", "footwear", "accessory"]:
+                        for t in filler.cache.get(part, []):
+                            banned.setdefault(part, set()).add(t.lower())
+                else:
+                    for t in filler.cache.get(key, [text]):
+                        banned.setdefault(key, set()).add(t.lower())
+            info["retries"] += 1
+            filler = _Filler(self, template, options, random.Random(seed + 7919 * (attempt + 1)), lex, english,
+                             warnings, literal, intent, banned=banned)
+            prompt = filler.render()
+        info["seconds"] = round(_time.time() - started, 2)
+        return filler, prompt, info
 
     # -------------------------------------------------------------- helpers
     def _casting_items(self) -> List[Item]:
@@ -326,8 +404,10 @@ class _Filler:
 
     def __init__(self, maker: PromptMaker, template: Template, options: GenerateOptions,
                  rng: random.Random, lex: LexiconResult, english: str, warnings: List[str],
-                 literal_input: bool = True, intent: Optional[Intent] = None):
+                 literal_input: bool = True, intent: Optional[Intent] = None,
+                 banned: Optional[Dict[str, set]] = None):
         self.literal_input = literal_input
+        self.banned = banned or {}  # key -> lower-case texts the scope guard rejected
         self.intent = intent or Intent()
         # request locks < explicit user selections
         self.selections = {**self.intent.locks, **options.selections}
@@ -364,6 +444,10 @@ class _Filler:
         for hint in self.lex.element_hints.get(key, []):
             if hint.lower() not in known and safety.is_safe_item(hint):
                 items.append(Item(text=hint, weight=1.0))
+        ban = self.banned.get(key)
+        if ban:
+            kept = [i for i in items if i.text.lower() not in ban]
+            items = kept or items  # never leave an element empty
         return items
 
     def _default_for(self, key: str, items: List[Item]) -> Optional[str]:

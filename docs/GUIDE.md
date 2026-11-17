@@ -470,6 +470,34 @@ print(result["stats"])
 
 분석 지시문은 `promptmaker/data/vision/analyze_prompt.txt` 에서 고칠 수 있습니다. 요소 목록과 예시 문구는 현재 요소 파일에서 자동으로 채워지므로 요소를 새로 추가해도 따로 고칠 필요가 없습니다.
 
+## 7-1. 로컬 LLM (선택, 0.5.0) - 요소 검증 · 요청 범위 검사
+
+PromptMaker 의 기본 흐름은 그대로입니다: 한글 요청 → 번역 → 요소에서 검색 → **요청에 없는 요소는 관계 확률로 채움** → 영문 문법에 맞는 자연어 프롬프트.
+`promptmaker.llm` 은 이 흐름을 바꾸지 않고, 두 곳에서만 짧게 확인합니다. 모델이 없으면 둘 다 꺼진 채로 동작합니다.
+
+1. **요소 저장 전 검증** `llm.verify_items(items)` / `llm.verify_grouped({key: [text]})`
+   - 요소 txt 에 넣기 전에 "이 문구가 이 요소에 맞는 짧은 단어/구인가?" 확인 → 그대로(`ok`) / 다른 요소로 이동(`move`) / 저장 안 함(`drop`)
+   - 틀린 항목만 `번호=요소` 로 답하게 해서 출력은 보통 1~10 토큰
+2. **생성 시 요청 범위 검사** `PromptMaker(scope_checker=llm.ScopeChecker())` + `GenerateOptions(scope_check=True)`
+   - 요청이 정하지 않아 관계 확률로 채운 요소만 보내고, 요청과 **어긋나거나 범위를 벗어난** 것의 번호만 받음 (요청에 없던 요소를 채우는 것 자체는 정상)
+   - 걸린 항목은 그 생성에서만 후보에서 빼고 관계 확률로 다시 고름 (최대 2번). 결과는 `result.lexicon["scope"]`
+
+```python
+from promptmaker import PromptMaker, llm
+
+cfg = llm.LLMConfig(model_path=r"D:\models\Qwen3-4B-Instruct-2507")   # 폴더(config.json) 또는 .gguf
+llm.save_config(cfg)                       # config/llm.json (PROMPTMAKER_LLM_CONFIG 로 위치 변경)
+pm = PromptMaker(scope_checker=llm.ScopeChecker(cfg))
+pm.generate("침실에서 책 읽는 여자", scope_check=True)
+llm.verify_items([{"key": "top", "text": "a red string bikini"}], cfg=cfg)   # → swimwear 로 이동
+llm.unload_llm()                           # VRAM 반환
+```
+
+- 백엔드: `transformers`(모델 폴더, Qwen3 / Qwen2.5 Instruct, Qwen3-VL 폴더도 텍스트로 사용) · `llama_cpp`(.gguf, llama-cpp-python 필요) · `openai`(Ollama/LM Studio 등 서버) · `auto`(경로 보고 선택)
+- 속도: 탐욕 디코딩, Qwen3 생각(thinking) 모드 끔, 출력 상한을 항목 수에 맞춰 작게
+- 성인 콘텐츠는 일반 문구처럼 판단합니다(거절·검열 없음). 미성년 연상 문구는 그 전에 `safety` 규칙으로 제외됩니다.
+- 시험: `python -m promptmaker.llm "top=a red string bikini" --model D:\models\Qwen3-4B-Instruct-2507`
+
 ## 8. 안전 규칙 (성인 전용)
 
 - 모든 인물은 20세 이상: `age` 값이 20 미만이면 20으로 보정하고 경고를 남깁니다. 주어 문장에는 `adult man` 등 성인임이 명시됩니다.

@@ -47,7 +47,14 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 DEFAULT_MODEL_ID = "Qwen/Qwen3-4B-Instruct-2507"
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_PATH = os.environ.get("PROMPTMAKER_LLM_CONFIG") or os.path.join(REPO_ROOT, "config", "llm.json")
-BACKENDS = ("auto", "transformers", "llama_cpp", "openai")
+BACKENDS = ("auto", "vision", "transformers", "llama_cpp", "llama_server", "openai")
+LLAMA_CPP_HELP = (
+    "GGUF 모델은 llama.cpp 로 실행합니다. 둘 중 하나를 준비하세요: "
+    "① 실행 파이썬에 llama-cpp-python 설치 (Qwen3-VL 처럼 새 모델은 최신 빌드 필요 · 이 모델을 이미 쓰는 ComfyUI 노드가 있으면 "
+    "그 ComfyUI 파이썬에 이미 들어 있을 수 있음) ② llama.cpp 공식 배포(github.com/ggml-org/llama.cpp/releases)의 "
+    "llama-server.exe 경로 지정 → 서버를 자동으로 띄워 사용. "
+    "③ 설치 없이 쓰려면 모델 폴더를 비워 이미지 분석(VL) 모델을 함께 쓰세요."
+)
 
 
 @dataclass
@@ -61,6 +68,8 @@ class LLMConfig:
     dtype: str = "auto"                    # auto | bfloat16 | float16 | float32
     n_ctx: int = 4096                      # llama_cpp 컨텍스트 길이
     n_gpu_layers: int = -1                 # llama_cpp: -1 = 전부 GPU
+    server_path: str = ""                  # llama_server: llama-server(.exe) 파일 또는 그 폴더
+    server_port: int = 8091                # llama_server: 자동으로 띄울 포트
     batch_size: int = 40                   # 한 번에 검증할 항목 수
     max_new_tokens: int = 160              # 출력 상한 (틀린 항목만 답하므로 보통 10 토큰 이하)
     drop_unfit: bool = True                # 어떤 요소에도 맞지 않는 문구는 저장하지 않음
@@ -77,12 +86,18 @@ class LLMConfig:
         return d
 
     def resolved_backend(self) -> str:
-        if self.backend in ("transformers", "llama_cpp", "openai"):
+        """실제로 쓸 백엔드. GGUF 는 transformers 로 열 수 없으므로 백엔드를 무엇으로 골랐든 llama.cpp 계열로 보냄."""
+        if self.backend in ("openai", "vision"):
             return self.backend
-        if not self.model_path and self.model_id:
-            return "openai"
-        info = detect_model(self.model_path)
-        return "llama_cpp" if info.get("kind") == "gguf" else "transformers"
+        if not self.model_path:  # 모델을 따로 지정하지 않으면 이미지 분석(VL) 모델을 함께 씀
+            return "openai" if self.model_id else "vision"
+        if detect_model(self.model_path).get("kind") == "gguf":
+            if self.backend in ("llama_cpp", "llama_server"):
+                return self.backend
+            if has_llama_cpp() or not find_llama_server(self.server_path):
+                return "llama_cpp"
+            return "llama_server"
+        return "transformers"
 
 
 def load_config(path: Optional[str] = None) -> LLMConfig:
@@ -100,6 +115,37 @@ def save_config(cfg: LLMConfig, path: Optional[str] = None) -> str:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(cfg.to_dict(), f, ensure_ascii=False, indent=2)
     return path
+
+
+def has_llama_cpp() -> bool:
+    import importlib.util
+
+    return importlib.util.find_spec("llama_cpp") is not None
+
+
+def llama_cpp_version() -> str:
+    try:
+        import importlib.metadata as md
+
+        return md.version("llama_cpp_python")
+    except Exception:
+        return ""
+
+
+def find_llama_server(path: str) -> str:
+    """llama-server 실행 파일 경로 (파일 또는 폴더 지정). 없으면 ""."""
+    path = (path or "").strip().strip('"')
+    if not path:
+        return ""
+    if os.path.isfile(path):
+        return path
+    if os.path.isdir(path):
+        for name in ("llama-server.exe", "llama-server"):
+            for sub in ("", "bin", os.path.join("build", "bin"), os.path.join("build", "bin", "Release")):
+                cand = os.path.join(path, sub, name)
+                if os.path.isfile(cand):
+                    return cand
+    return ""
 
 
 # ------------------------------------------------------------------ 모델 폴더 확인
@@ -172,6 +218,9 @@ def strip_thinking(text: str) -> str:
 class TransformersLLM:
     def __init__(self, cfg: LLMConfig):
         info = detect_model(cfg.model_path)
+        if info.get("kind") == "gguf":
+            raise RuntimeError("GGUF 모델은 transformers 로 열 수 없습니다. 백엔드를 '자동' 또는 llama.cpp 로 바꾸세요. "
+                               + LLAMA_CPP_HELP)
         if not info["ok"]:
             raise RuntimeError(f"LLM 모델 폴더 확인 실패: {info['message']}")
         try:
@@ -242,13 +291,17 @@ class LlamaCppLLM:
         try:
             from llama_cpp import Llama
         except ImportError as err:
-            raise RuntimeError("GGUF 모델을 쓰려면 이 파이썬에 llama-cpp-python 을 설치하세요 "
-                               "(pip install llama-cpp-python). 또는 transformers 모델 폴더를 지정하세요.") from err
+            raise RuntimeError(f"이 파이썬({sys.executable})에 llama-cpp-python 이 없습니다. " + LLAMA_CPP_HELP) from err
         info = detect_model(cfg.model_path)
         if info.get("kind") != "gguf":
             raise RuntimeError(f"GGUF 파일을 찾지 못했습니다: {info['message']}")
         gpu_layers = 0 if cfg.device == "cpu" else int(cfg.n_gpu_layers)
-        self.model = Llama(model_path=info["file"], n_ctx=int(cfg.n_ctx), n_gpu_layers=gpu_layers, verbose=False)
+        try:
+            self.model = Llama(model_path=info["file"], n_ctx=int(cfg.n_ctx), n_gpu_layers=gpu_layers, verbose=False)
+        except Exception as err:
+            raise RuntimeError(f"llama-cpp-python {llama_cpp_version() or ''} 로 '{info['name']}' 을(를) 열지 못했습니다 ({err}). "
+                               "모델 구조가 이 버전보다 새로우면(예: Qwen3-VL) 최신 llama-cpp-python 이 필요합니다. "
+                               + LLAMA_CPP_HELP) from err
         self.name = info["name"]
         self.no_think = "qwen3" in self.name.lower() and "2507" not in self.name
         self.usage: Dict[str, int] = {}
@@ -297,14 +350,134 @@ class OpenAILLM:
         pass
 
 
-_BACKEND_CLASSES = {"transformers": TransformersLLM, "llama_cpp": LlamaCppLLM, "openai": OpenAILLM}
+class VisionShareLLM:
+    """이미지 분석(VL) 모델을 텍스트 전용으로 함께 사용 (promptmaker.vision 설정 · 이미 올라가 있으면 그대로 재사용).
+
+    따로 모델을 올리지 않으므로 VRAM 을 더 쓰지 않고, 추가 설치도 필요 없습니다.
+    모델을 내리는 것은 이미지 분석 쪽(``vision.unload_backends``)이 맡습니다.
+    """
+
+    def __init__(self, cfg: LLMConfig):
+        from . import vision
+
+        self.vision = vision
+        self.vcfg = vision.load_config()
+        self.backend = vision.get_backend(self.vcfg)
+        self.name = f"이미지 분석 모델 ({self.vcfg.model_ref if self.vcfg.backend == 'transformers' else self.vcfg.model_id})"
+        self.device = getattr(self.backend, "device", "")
+        self.usage: Dict[str, int] = {}
+
+    def chat(self, messages: List[Dict[str, str]], max_new_tokens: int = 64) -> str:
+        if not self.vision.is_loaded(self.vcfg):  # 이미지 분석 후 내려갔으면 다시 올림
+            self.backend = self.vision.get_backend(self.vcfg)
+        if self.vcfg.backend != "transformers":
+            api = OpenAILLM(LLMConfig(backend="openai", model_id=self.vcfg.model_id, api_base=self.vcfg.api_base,
+                                      api_key=self.vcfg.api_key))
+            out = api.chat(messages, max_new_tokens=max_new_tokens)
+            self.usage = api.usage
+            return out
+        import torch
+
+        proc, model = self.backend.processor, self.backend.model
+        msgs = [{"role": m["role"], "content": [{"type": "text", "text": m["content"]}]} for m in messages]
+        try:
+            inputs = proc.apply_chat_template(msgs, tokenize=True, add_generation_prompt=True, return_dict=True,
+                                              return_tensors="pt", enable_thinking=False)
+        except TypeError:
+            inputs = proc.apply_chat_template(msgs, tokenize=True, add_generation_prompt=True, return_dict=True,
+                                              return_tensors="pt")
+        inputs = inputs.to(model.device)
+        n_in = int(inputs["input_ids"].shape[1])
+        with torch.inference_mode():
+            out = model.generate(**inputs, max_new_tokens=max_new_tokens, do_sample=False)
+        out = out[:, n_in:]
+        self.usage = {"input_tokens": n_in, "output_tokens": int(out.shape[1])}
+        return strip_thinking(proc.batch_decode(out, skip_special_tokens=True)[0])
+
+    def close(self) -> None:
+        self.backend = None  # 모델은 이미지 분석 쪽 캐시에 남음 (vision.unload_backends 로 내림)
+
+
+class LlamaServerLLM:
+    """llama.cpp 의 llama-server 를 자동으로 띄워 OpenAI 호환 API 로 사용 (최신 모델 구조 지원이 가장 빠름)."""
+
+    def __init__(self, cfg: LLMConfig):
+        import subprocess
+
+        exe = find_llama_server(cfg.server_path)
+        if not exe:
+            raise RuntimeError("llama-server 실행 파일을 찾지 못했습니다. " + LLAMA_CPP_HELP)
+        info = detect_model(cfg.model_path)
+        if info.get("kind") != "gguf":
+            raise RuntimeError(f"GGUF 파일을 찾지 못했습니다: {info['message']}")
+        port = int(cfg.server_port or 8091)
+        gpu_layers = "0" if cfg.device == "cpu" else ("999" if int(cfg.n_gpu_layers) < 0 else str(cfg.n_gpu_layers))
+        args = [exe, "-m", info["file"], "--host", "127.0.0.1", "--port", str(port), "-c", str(int(cfg.n_ctx)),
+                "-ngl", gpu_layers, "--jinja"]
+        kw: Dict[str, Any] = {}
+        if os.name == "nt":
+            kw["creationflags"] = 0x08000000  # CREATE_NO_WINDOW
+        self.log_path = os.path.join(os.path.dirname(CONFIG_PATH), "llama_server.log")
+        os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
+        self._log = open(self.log_path, "w", encoding="utf-8", errors="replace")
+        self.proc = subprocess.Popen(args, stdout=self._log, stderr=subprocess.STDOUT, **kw)
+        base = f"http://127.0.0.1:{port}"
+        end = time.time() + 600
+        while True:
+            if self.proc.poll() is not None:
+                self.close()
+                raise RuntimeError(f"llama-server 가 종료되었습니다 (코드 {self.proc.returncode}). {self._tail()}")
+            try:
+                with urllib.request.urlopen(base + "/health", timeout=2) as res:
+                    if res.status == 200:
+                        break
+            except Exception:
+                pass
+            if time.time() > end:
+                self.close()
+                raise RuntimeError("llama-server 가 10분 안에 준비되지 않았습니다. " + self._tail())
+            time.sleep(0.5)
+        self.api = OpenAILLM(LLMConfig(backend="openai", model_id=info["name"], api_base=base + "/v1"))
+        self.name = info["name"]
+        self.device = "llama-server"
+        self.usage: Dict[str, int] = {}
+
+    def _tail(self) -> str:
+        try:
+            self._log.flush()
+            with open(self.log_path, encoding="utf-8", errors="replace") as f:
+                return f.read()[-500:].strip()
+        except Exception:
+            return ""
+
+    def chat(self, messages: List[Dict[str, str]], max_new_tokens: int = 64) -> str:
+        out = self.api.chat(messages, max_new_tokens=max_new_tokens)
+        self.usage = self.api.usage
+        return out
+
+    def close(self) -> None:
+        proc = getattr(self, "proc", None)
+        if proc is not None and proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=15)
+            except Exception:
+                proc.kill()
+        try:
+            self._log.close()
+        except Exception:
+            pass
+
+
+_BACKEND_CLASSES = {"vision": VisionShareLLM, "transformers": TransformersLLM, "llama_cpp": LlamaCppLLM, "llama_server": LlamaServerLLM,
+                    "openai": OpenAILLM}
 _cache: Dict[str, Any] = {"key": None, "llm": None, "loaded_at": 0.0, "load_seconds": 0.0}
 _lock = threading.RLock()
 
 
 def _cache_key(cfg: LLMConfig) -> Tuple:
     return (cfg.resolved_backend(), cfg.model_path, cfg.model_id, cfg.api_base, cfg.device, cfg.dtype,
-            cfg.n_ctx, cfg.n_gpu_layers)
+            cfg.n_ctx, cfg.n_gpu_layers, cfg.server_path, cfg.server_port)
 
 
 def get_llm(cfg: Optional[LLMConfig] = None):
@@ -360,6 +533,9 @@ def status(cfg: Optional[LLMConfig] = None) -> Dict[str, Any]:
             "load_seconds": _cache.get("load_seconds", 0.0),
             "backend": cfg.resolved_backend() if (cfg.model_path or cfg.model_id) else "",
             "model_check": detect_model(cfg.model_path) if cfg.model_path else None,
+            "python": sys.executable,
+            "llama_cpp": llama_cpp_version() if has_llama_cpp() else "",
+            "llama_server": find_llama_server(cfg.server_path),
         }
 
 

@@ -97,6 +97,7 @@ python -m promptmaker.server            # 또는 promptmaker-server
 | `use_related_words` | bool | 확률 기반 관련 단어 사용 |
 | `model_profile` | `krea2` / `qwen2.1` / `moss` / `minimax_h3` / `none` | 대상 모델 형식으로 출력. 비우면 이미지는 `krea2`, 영상은 `minimax_h3` (아래 "대상 모델" 참고) |
 | `framing` | `auto` / `extreme_closeup` / `closeup` / `medium` / `cowboy` / `full_body` / `none` | 샷 구도. `auto` 는 요청에서 찾음('얼빡샷' 등), 고르면 요청보다 우선. 아래 7-5 참고 (0.9.0) |
+| `body_part` | `""` / `eyes` / `lips` / `hair` / `hands` / `neck` / `shoulders` / `back` / `chest` / `waist` / `hips` / `thighs` / `legs` / `feet` | 신체 부위 클로즈업. 비우면 요청에서 찾음('다리 클로즈업'). 아래 7-6 참고 (0.11.0) |
 
 ### 모드
 
@@ -555,6 +556,30 @@ pm = PromptMaker(user_data_dir=user_dir)            # 또는 PromptMaker(restric
 - 손이 바쁘거나 몸 전체가 움직이는 포즈·동작(책을 든, 춤추는, 걷는 …)은 함께 고르지 않습니다.
 - 샷 구도와 함께: 구도에 안 담기는 탈의 동작은 빠집니다 (미디엄샷에 'down over her hips' X). 얼빡샷이면 탈의 동작을 넣지 않고 경고를 남깁니다.
 - '탈의실', '머리를 푸는' 은 탈의 요청이 아닙니다.
+
+### 7-6. 신체 부위별 클로즈업 · 분석 구도 분리 (0.11.0)
+
+요청에 **부위 + 클로즈업 말**이 붙어 있으면 부위 클로즈업으로 봅니다: '다리 클로즈업', '입술 접사', '손만 나오게', '클로즈업된 허벅지', 'close-up of her legs', 'lips close-up'. ('다리 위에 서 있는', '목걸이' 처럼 클로즈업 말이 없으면 아님)
+
+| 부위 id | 한국어 | 보이는 의상 |
+|---|---|---|
+| `eyes` `lips` `hair` | 눈·속눈썹, 입술, 머리카락 | 없음 (메이크업·헤어로 꾸밈) |
+| `hands` | 손·손가락·손톱 | 반지·팔찌 |
+| `neck` `shoulders` `chest` `back` | 목선·쇄골, 어깨, 가슴·데콜테, 등·뒤태 | 상의·원피스·수영복 등 |
+| `waist` `hips` | 허리·배꼽·복근, 엉덩이·골반 | 상·하의, 수영복 등 |
+| `thighs` `legs` | 허벅지, 다리·각선미 | 하의·스타킹 (다리는 신발도) |
+| `feet` | 발·발가락·발목 | 신발·스타킹·발찌 |
+
+- 전용 템플릿 `08_body_part_closeup.json` (`framing_only`: 부위 클로즈업일 때만 쓰임) 으로 만들고, 다른 템플릿을 고르면 구도 문장만 넣습니다.
+- 포즈·동작은 그 부위를 말하는 것만 씁니다 (다리 → 'sitting with legs crossed', 얼굴 표정 X). 맞는 게 없으면 그 문장을 빼요. 'lying on her back' 은 등 클로즈업이 아닙니다.
+- 구도 문구는 `elements/body_closeup.txt` (줄 끝 `#legs` 같은 태그, 없으면 문구로 부위 판단).
+- 웹 테스트 페이지·ComfyUI 노드의 '신체 부위 클로즈업' 선택, 라이브러리 `body_part="legs"`.
+
+**이미지 분석 구도 분리**: 분석 결과의 카메라/구도 문구는 저장할 때 나눕니다.
+- 'close-up of her legs' → `body_closeup.txt` 에 `close-up of her legs #legs`
+- 'medium shot from the waist up' → `framing.txt` 에 `... #medium` (렌즈·각도가 들어간 줄은 카메라에 그대로)
+- `framing` / `body_closeup` 에 구도가 아닌 문구가 오면 저장하지 않음 (`wrong_key`)
+- `undressing` / `undressing_state` (문구 틀) 는 분석 대상에서 뺌
 
 ### 7-4. 요소 검사 · 잘못 분류된 요소 정리 (0.8.0)
 

@@ -47,7 +47,7 @@ GARMENT_TERMS: Dict[str, Tuple[str, ...]] = {
     "swimwear": ("bikini", "bikini top", "bikini bottom", "bikini bottoms", "swimsuit", "monokini",
                  "bathing suit", "swimwear", "rash guard", "tankini"),
     "lingerie": ("lingerie", "bralette", "bra", "panties", "thong", "g-string", "underwear", "briefs", "garter",
-                 "garter belt", "garter belts", "babydoll", "negligee", "teddy", "corset", "bustier", "bodysuit",
+                 "garter belt", "garter belts", "babydoll", "negligee", "teddy", "chemise", "corset", "bustier", "bodysuit",
                  "lace set"),
     "sleepwear": ("pajamas", "pajama", "pyjamas", "nightgown", "nightie", "nightdress", "bathrobe", "robe",
                   "sleep shirt", "sleepwear", "loungewear", "lounge set", "onesie", "nightshirt"),
@@ -59,7 +59,7 @@ GARMENT_TERMS: Dict[str, Tuple[str, ...]] = {
     "top": ("shirt", "t-shirt", "tee", "blouse", "tank top", "camisole", "cami", "crop top", "sweater", "hoodie",
             "sweatshirt", "turtleneck", "top", "tube top", "halter top", "polo", "knit", "vest top",
             "undershirt", "cardigan sweater"),
-    "bottom": ("skirt", "miniskirt", "shorts", "jeans", "pants", "trousers", "leggings", "culottes", "slacks",
+    "bottom": ("skirt", "miniskirt", "mini-skirt", "micro skirt", "shorts", "jeans", "pants", "trousers", "leggings", "culottes", "slacks",
                "joggers", "hot pants"),
     "outerwear": ("coat", "jacket", "blazer", "cardigan", "parka", "windbreaker", "poncho", "cape", "raincoat",
                   "overcoat", "cover-up", "shawl", "bolero", "vest"),
@@ -70,7 +70,7 @@ GARMENT_TERMS: Dict[str, Tuple[str, ...]] = {
     "accessory": ("necklace", "earrings", "earring", "bracelet", "ring", "choker", "pendant", "hat", "cap",
                   "beret", "beanie", "sunglasses", "glasses", "eyeglasses", "headband", "hairpin", "hair clip",
                   "hair ribbon", "ribbon", "scarf", "bag", "handbag", "purse", "tote", "backpack", "watch",
-                  "gloves", "tiara", "veil", "umbrella", "strap", "collar", "anklet", "brooch", "headphones", "hair bow", "bow",
+                  "wristwatch", "gloves", "tiara", "veil", "umbrella", "strap", "collar", "anklet", "brooch", "headphones", "hair bow", "bow",
                   "belt", "clutch", "crown", "parasol", "fan", "mask", "scrunchie", "chain", "jewelry",
                   "jewellery", "bangle", "hairband", "piercing", "harness", "cuff", "wristband", "headpiece",
                   "accessories"),
@@ -89,7 +89,7 @@ SPECIFIC_GARMENTS: Tuple[Tuple[str, Tuple[str, ...]], ...] = (
                     "athletic set", "activewear", "sportswear", "leotard", "bike shorts")),
     ("swimwear", ("bikini", "swimsuit", "swimwear", "monokini", "bathing suit", "tankini")),
     ("lingerie", ("lingerie", "bralette", "bra", "panties", "thong", "g-string", "underwear", "briefs", "garter",
-                  "negligee", "bustier")),
+                  "negligee", "bustier", "teddy", "chemise")),
     ("sleepwear", ("pajama", "pajamas", "pyjamas", "nightgown", "nightie", "nightdress", "bathrobe",
                    "sleep shirt", "sleepwear", "onesie")),
     ("traditional", ("hanbok", "kimono", "yukata", "ao dai", "qipao", "cheongsam", "sari", "saree", "hanfu")),
@@ -156,6 +156,10 @@ PREPS = ("in", "on", "at", "inside", "by", "near", "beside", "along", "amid", "a
          "beneath", "under", "underneath", "within", "across", "through", "outside", "in front of", "next to",
          "against", "outdoors", "indoors", "during", "late", "early")
 MOOD_NOUNS = ("mood", "atmosphere", "vibe", "vibes", "ambiance", "ambience", "feel", "feeling", "aesthetic")
+# 0.10.0 — 피부·분위기 요소로 쓰기엔 뜻이 없는 말 (와일드카드 분석에서 나온 것)
+SKIN_REJECT = {"medium", "subtle", "moisture", "exposed", "detailed textures", "realistic detailed", "realistic",
+               "minimal exposure", "soft natural"}
+MOOD_REJECT = {"form", "lit", "clean", "personal", "focused"}
 # -ing 로 끝나지만 동작이 아니라 형용사/명사로 쓰이는 단어
 ADJ_ING = {"stunning", "charming", "alluring", "captivating", "breathtaking", "striking", "dazzling", "glistening",
            "shimmering", "flickering", "glowing", "sparkling", "gleaming", "twinkling", "flattering", "revealing",
@@ -176,7 +180,12 @@ DESCRIBE_ING = {"suggesting", "conveying", "contributing", "consisting", "displa
                 "implying", "hinting", "revealing", "rendering", "occupying", "dominating", "positioning",
                 "centering", "framing", "isolating", "separating", "drawing", "maintaining", "allowing",
                 "ensuring", "providing", "offering", "presenting", "producing", "resulting", "appearing",
-                "seeming", "being", "having", "wearing", "partially"}
+                "seeming", "being", "having", "wearing", "partially",
+                # 0.10.0 — 추상 표현 ('embodying a mix of innocence') · 옷 입기 동사 ('rocking a mesh bodysuit')
+                "embodying", "channeling", "channelling", "combining", "feeling", "keeping", "originating",
+                "coming", "embracing", "grounding", "blurring", "styling", "moving", "donning", "rocking",
+                "sporting", "flaunting", "layering", "pairing", "adorning", "lending", "projecting", "obscured",
+                "dressed", "clad"}
 PARTICIPLE_EXTRA = {"perched", "seated", "curled", "sprawled", "propped", "crouched", "draped", "tucked", "bent",
                     "half-lying", "half-sitting", "laid", "posed", "caught", "mid-laugh", "mid-stride",
                     "mid-twirl", "kneeling", "squatting", "lying", "sitting", "standing"}
@@ -308,10 +317,25 @@ _FRAG_PATTERNS: List[Tuple["re.Pattern[str]", str]] = [
      "너무 일반적인 말 (요소가 아님)"),
     (re.compile(r"^[\w-]+(?:\s+[\w-]+)?,\s*(?:eyes|lips|mouth|face|skin|hair|nose|cheeks|body)$", re.I),
      "잘못 잘린 문장 조각"),
+    # 0.10.0 — 와일드카드 분석에서 나온 잘못된 조각
+    (re.compile(r"^(?:(?:the|a|an|her|\{her\})\s+)?(?:cheeks|mouth|facial expression|exposed|setting)$|"
+                r"^(?:her|\{her\}|s)\s+(?:bare\s+)?legs$|^s\s|^an?\s+(?:so|eyes)\b", re.I), "너무 일반적인 말 · 잘린 조각 (요소가 아님)"),
+    (re.compile(r"\b(?:a|an|the|with|and|is|for|of|casting|creating)\s+(?:calm|wide|slight|neutral|relaxed|daring|"
+                r"plush|playful|sultry|muted|realistic|long)$|"
+                r"\b(?:a|an|the|with|of)\s+(?:pink|red|white|black|blue|green|purple|gold|silver)$|"
+                r"\b(?:it|another)$|\ba full-body$", re.I), "끝이 잘린 문장 조각"),
+    (re.compile(r"\b(?:bust size|cup size|[a-h]-cup)\b", re.I), "체형 수치 (요소가 아님)"),
+    (re.compile(r"[:—]|https?://|www\.|\b(?:this|these)\s+(?:ensures?|creates?|gives?)\b", re.I),
+     "라벨·기호가 섞인 조각 ('technical details : …')"),
+    (re.compile(r"(?<![\w-])(?:micro-?pores|subject'?s?|woman'?s?|girl|person)(?![\w-])|^(?:hair|skin) texture$", re.I),
+     "피사체 · 피부결 묘사가 섞인 조각"),
+    (re.compile(r"\S\s+(?:small|large|tiny|big|dark|light|bright|pale|deep)\s+(?:pink|red|white|black|blue|green|purple|"
+                r"gold|silver|brown|gray|grey)$", re.I), "끝이 잘린 문장 조각"),
+    (re.compile(r"\S\s+wearing\b", re.I), "여러 요소가 붙은 조각 ('… wearing …')"),
     (re.compile(r"\b(?:is|are|was|were)\b", re.I), "문장(동사 포함) · 요소는 짧은 구여야 함"),
     (re.compile(r"\b(?:stands|sits|lies|gazes|holds|crops|occupies|reveals|keeps|emphasizes|accentuates|suggests|"
                 r"creates|enhances|centers|conveys|shows|blurs|falls|rests|touches|looks|kisses|streams|takes|"
-                r"drifts|filters|illuminates|fills|casts|adds|gives|leans|"
+                r"drifts|filters|illuminates|fills|casts|adds|gives|leans|frames|captures|depicts|features|"
                 r"wears|has|appears|seems|includes|include)\b", re.I), "문장(동사 포함) · 요소는 짧은 구여야 함"),
 ]
 _TRIM_LEAD = [
@@ -328,7 +352,7 @@ _TRIM_LEAD = [
 ]
 _TRIM_TAIL = [
     re.compile(r"\s+(?:that|which|where|while|as|whose)\b.*$", re.I),
-    re.compile(r"\s+(?:rests|falls|stands|sits|lies|gazes|holds|touches|keeps|blurs|centers|conveys|shows|is|are|"
+    re.compile(r"\s+(?:rests|falls|stands|sits|lies|gazes|holds|touches|keeps|blurs|centers|conveys|shows|is|are|frames|"
                r"occupies|crops|reveals|emphasizes|enhances|highlights|creates|looks|streams|drifts)\b.*$", re.I),
     re.compile(r",?\s+with\s+(?:an?\s+)?(?:gentle|soft|sweet|serene|subtle|warm|natural|pink|clean|bright)$", re.I),
     re.compile(r"[,\s]+(?:with|and|or|the|a|an|of|to|by|in|on|from|for|at|into|is|under|soft|gentle|subtle)$", re.I),
@@ -389,6 +413,8 @@ def fits(key: str, text: str) -> bool:
         return is_participle(t) or (key == "pose" and bool(re.match(r"^(?:on (?:all fours|{?her}? \w+)|"
                                                                      r"head\b|shoulders\b)", low)))
     if key in GARMENT_KEYS:
+        if re.search(r"\bwine glass", low):
+            return False
         if key == "legwear" and re.search(r"\blegs?\b", low) and not _BODY_LEAD_RE.match(low):
             return True
         sg = specific_garment(t)
@@ -398,6 +424,8 @@ def fits(key: str, text: str) -> bool:
             return True
         return garment_key(t) == key
     if key == "hair":
+        if re.search(r"\bvellus\b|peach fuzz", low):
+            return False
         return bool(_HAIR_RE.search(low)) and not garment_key(t) and not _BODY_LEAD_RE.match(low) \
             and not _first_is(low, _CAMERA_RE, _HAIR_RE) and not _first_is(low, _MAKEUP_RE, _HAIR_RE)
     if key == "makeup":
@@ -406,6 +434,8 @@ def fits(key: str, text: str) -> bool:
         return bool(_EXPR_RE.search(low) or re.search(r"\beyes\b", low)) and not garment_key(t) \
             and (not is_participle(t) or bool(_EXPR_RE.fullmatch(_lead_word(low)))) and len(words) <= 8
     if key == "location":
+        if garment_key(t) or re.match(r"(?i:^(?:on|in|at)\s+an?\s+)(?:[\w-]+\s+)?[a-z]*[^aus\WA-Z]s(?:\s|$)", t):
+            return False  # 'on a transparent mesh thong set' · 'on a palm trees lining sidewalk' · 'on a kneels on a bed'
         if re.match(r"^(?:outdoors|indoors|outside|inside)\b", low):
             return True
         if not _PREP_RE.match(low):
@@ -423,22 +453,33 @@ def fits(key: str, text: str) -> bool:
             return False
         head = _head_zone(re.sub(r"^(?:bathed|lit|illuminated|washed|backlit)\s+(?:in|by|with)\s+", "", t)).lower()
         if _LIGHT_RE.search(head):
-            return True
+            return not _MOOD_NOUN_RE.search(head)
+        if re.search(r"\bunder\b", low) or _MOOD_NOUN_RE.search(low):
+            return False
         return bool(_LIGHT_RE.search(low)) and not (_HAIR_RE.search(head) or _MAKEUP_RE.search(head)
                                                     or _EXPR_RE.search(head) or _PHOTO_RE.search(head)
                                                     or _PLACE_RE.search(head) or _CAMERA_RE.search(head))
     if key == "camera":
+        if re.match(r"^(?:her\s+|\{her\}\s+)?upper body\s+(?!shot|portrait|framing|view|crop|close-up)", low):
+            return False
         return bool(_CAMERA_RE.search(low)) and not _BODY_LEAD_RE.match(low) and not _first_is(low, _HAIR_RE, _CAMERA_RE) \
             and not _first_is(low, _EXPR_RE, _CAMERA_RE)
     if key == "color_grade":
+        if re.search(r"^(?:evenly\s+)?toned$|\btoned\s+(?:build|physique|thighs?|body|figure|appearance|abs|legs|arms|"
+                     r"stomach|midriff)\b|\bwood grain\b|\blip\b", low):
+            return False
         return bool(_COLOR_RE.search(low) or re.search(r"tint|toned\b", low) or re.search(r"\b(?:warm|cool|cold|teal|orange)\b", low)
                     and not _LIGHT_RE.search(low)) and not _MAKEUP_PRODUCT_RE.search(low) and not garment_key(t)
     if key == "photo_style":
         return bool(_PHOTO_RE.search(low))
     if key == "skin":
+        if low in SKIN_REJECT or re.search(r"\b(?:penis|forearms?|possess\w*|droplets?)\b|^(?:her|the)\b", low):
+            return False
         return len(words) <= 6 and not (_BODY_LEAD_RE.match(low) or garment_key(t) or _HAIR_RE.search(low)
                                         or _PREP_RE.match(low) or _MAKEUP_PRODUCT_RE.search(low))
     if key in ("beauty", "mood"):
+        if low in MOOD_REJECT:
+            return False
         return len(words) <= 4 and not (_BODY_LEAD_RE.match(low) or garment_key(t) or _HAIR_RE.search(low)
                                         or _PREP_RE.match(low) or _CAMERA_RE.search(low) or is_participle(t))
     return True

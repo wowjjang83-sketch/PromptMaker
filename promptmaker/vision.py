@@ -37,6 +37,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .data_loader import PACKAGE_DATA_DIR, load_elements, load_json, merge_legacy_rating_files
 from .data_loader import is_usable_item
+from .element_check import check_item
 from .safety import is_safe_item
 
 DEFAULT_MODEL_ID = "Qwen/Qwen3-VL-4B-Instruct"
@@ -867,37 +868,76 @@ def _rules(restrictions, data_dir: Optional[str]):
 
 def classify(data_dirs: List[str], found: Dict[str, List[str]], allowed_keys: List[str],
              restrictions=None) -> Dict[str, List[Dict[str, str]]]:
-    """Mark every candidate as new / duplicate / unsafe / unknown_key / restricted."""
+    """Mark every candidate as new / duplicate / unsafe / unknown_key / restricted / fragment / wrong_key.
+
+    0.8.0: 요소 검사(:func:`promptmaker.element_check.check_item`)로 문장 조각은 ``fragment``,
+    형식이 맞지 않는 줄은 ``wrong_key`` 로 거르고, 다른 요소에 맞는 줄은 그 요소로 옮깁니다.
+    옮기거나 다듬은 행에는 ``key`` (저장할 요소) 와 ``original`` (원래 문구) 이 붙습니다.
+    """
     rules = _rules(restrictions, data_dirs[-1] if len(data_dirs) > 1 else None)
     result: Dict[str, List[Dict[str, str]]] = {}
+    seen_by_key: Dict[str, set] = {}
+
+    def seen_for(k: str) -> set:
+        if k not in seen_by_key:
+            seen_by_key[k] = existing_keys(data_dirs, k)
+        return seen_by_key[k]
+
     for key, values in found.items():
-        seen = existing_keys(data_dirs, key) if key in allowed_keys else set()
         rows = []
         for v in values:
+            row: Dict[str, str] = {"text": v}
+            target = key
             if key not in allowed_keys:
                 status = "unknown_key"
             elif not is_safe_item(v):
                 status = "unsafe"
             elif not is_usable_item(key, v):
                 status = "not_a_phrase"
-            elif not rules.allows(key, v):
-                status = "restricted"
-            elif normalize(v) in seen:
-                status = "duplicate"
             else:
-                status = "new"
-                seen.add(normalize(v))
-            rows.append({"text": v, "status": status})
+                chk = check_item(key, v, allowed_keys)
+                status = chk["status"] if chk["status"] in ("fragment", "wrong_key") else ""
+                if chk["status"] in ("fixed", "moved"):
+                    target = chk["key"]
+                    row.update({"text": chk["text"], "original": v, "key": target, "check": chk["reason"]})
+                elif status:
+                    row["check"] = chk["reason"]
+                text = row["text"]
+                if status:
+                    pass
+                elif not rules.allows(target, text):
+                    status = "restricted"
+                elif normalize(text) in seen_for(target):
+                    status = "duplicate"
+                else:
+                    status = "new"
+                    seen_for(target).add(normalize(text))
+            row["status"] = status
+            rows.append(row)
         result[key] = rows
     return result
+
+
+def new_items(rows: Dict[str, List[Dict[str, str]]]) -> Dict[str, List[str]]:
+    """``classify`` 결과에서 저장할 새 항목만 ``{요소: [문구]}`` 로 (옮긴 항목은 옮길 요소에)."""
+    out: Dict[str, List[str]] = {}
+    for key, lst in rows.items():
+        for r in lst:
+            if r.get("status") == "new":
+                out.setdefault(r.get("key") or key, []).append(r["text"])
+    return out
 
 
 _write_lock = threading.Lock()
 
 
 def append_items(data_dir: str, items: Dict[str, List[str]], rating: Optional[str] = None,
-                 search_dirs: Optional[List[str]] = None, restrictions=None) -> Dict[str, Any]:
+                 search_dirs: Optional[List[str]] = None, restrictions=None, check: bool = True) -> Dict[str, Any]:
     """Append new lines to ``<data_dir>/elements/<key>.txt``.
+
+    0.8.0: ``check=True`` (기본) 이면 저장 전에 요소 검사를 합니다. 문장 조각(``fragment``)과
+    형식이 맞지 않는 줄(``wrong_key``)은 건너뛰고, 끝이 잘린 문장은 다듬어 저장하며, 다른 요소에
+    맞는 줄은 그 요소 파일에 저장합니다 (결과의 ``moved`` / ``fixed`` 목록).
 
     Duplicates (checked across ``search_dirs``), unsafe items and keys without a txt file
     are skipped. Files are only appended to. 수위 구분은 0.4.0 에서 없어졌으므로 ``rating`` 은
@@ -916,6 +956,29 @@ def append_items(data_dir: str, items: Dict[str, List[str]], rating: Optional[st
     for d in search_dirs:
         known.update(element_files(d))
     header = APPEND_HEADER.format(date=datetime.date.today().isoformat())
+    moved: List[Dict[str, str]] = []
+    fixed: List[Dict[str, str]] = []
+    if check:
+        regrouped: Dict[str, List[str]] = {}
+        valid = [k for k in known if re.fullmatch(r"[a-z_][a-z0-9_]*", k)]
+        for key, values in items.items():
+            for v in values:
+                v = " ".join(str(v).split()).strip()
+                if not v:
+                    continue
+                if key not in known:
+                    regrouped.setdefault(key, []).append(v)
+                    continue
+                r = check_item(key, v, valid)
+                if r["status"] in ("fragment", "wrong_key"):
+                    skipped.setdefault(key, []).append({"text": v, "reason": r["status"], "detail": r["reason"]})
+                    continue
+                if r["status"] == "moved":
+                    moved.append({"from": key, "to": r["key"], "text": r["text"], "original": v})
+                elif r["status"] == "fixed":
+                    fixed.append({"key": key, "text": r["text"], "original": v})
+                regrouped.setdefault(r["key"], []).append(r["text"])
+        items = regrouped
     with _write_lock:
         for key, values in items.items():
             if key not in known or not re.fullmatch(r"[a-z_][a-z0-9_]*", key):
@@ -957,7 +1020,7 @@ def append_items(data_dir: str, items: Dict[str, List[str]], rating: Optional[st
             with open(path, "a", encoding="utf-8", newline="") as f:
                 f.write(chunk)
             added[key] = new
-    return {"added": added, "skipped": skipped,
+    return {"added": added, "skipped": skipped, "moved": moved, "fixed": fixed,
             "added_count": sum(len(v) for v in added.values())}
 
 
@@ -1076,7 +1139,7 @@ class ImageAnalyzer:
         rows = classify(self.data_dirs, found, keys, restrictions=rules)
         if rules is not None and full_prompt:
             full_prompt = rules.apply_to_text(full_prompt)
-        new = {k: [r["text"] for r in v if r["status"] == "new"] for k, v in rows.items()}
+        new = new_items(rows)
         usage = dict(getattr(backend, "usage", {}) or {})
         n_new = sum(len(v) for v in new.values())
         rep.update("done", f"완료: 새 항목 {n_new}개", 1.0, eta=0.0, **{k: v for k, v in usage.items()

@@ -111,7 +111,13 @@ def _split_name(filename: str):
     return parts[0], ext.lower()
 
 
-def load_elements(dirs: Iterable[str]) -> Dict[str, Element]:
+def load_elements(dirs: Iterable[str], check: bool = True) -> Dict[str, Element]:
+    """요소 파일을 읽습니다.
+
+    ``check=True`` (기본) 이면 0.8.0 의 요소 검사(:mod:`promptmaker.element_check`)를 거칩니다.
+    잘못된 요소 파일에 들어간 줄은 맞는 요소로 옮겨 쓰고, 끝이 잘린 문장은 다듬어 쓰며,
+    요소로 쓸 수 없는 문장 조각은 프롬프트 생성에 쓰지 않습니다 (파일은 바꾸지 않음).
+    """
     elements: Dict[str, Element] = {}
     for base in dirs:
         edir = os.path.join(base, "elements")
@@ -165,7 +171,48 @@ def load_elements(dirs: Iterable[str]) -> Dict[str, Element]:
             seen.add(k)
             clean.append(item)
         el.items = clean
+    if check:
+        apply_element_check(elements)
     return elements
+
+
+def apply_element_check(elements: Dict[str, Element]) -> Dict[str, int]:
+    """읽어 온 요소에 요소 검사를 적용합니다 (메모리 안에서만). 바뀐 개수를 돌려줍니다."""
+    from .element_check import CHECK_KEYS, check_item
+
+    keys = [k for k in elements if k in CHECK_KEYS]
+    stats = {"fixed": 0, "moved": 0, "dropped": 0}
+    moved: List[tuple] = []
+    for key in keys:
+        el = elements[key]
+        kept = []
+        for item in el.items:
+            r = check_item(key, item.text, keys)
+            if r["status"] == "ok":
+                kept.append(item)
+            elif r["status"] == "fixed":
+                item.text = r["text"]
+                kept.append(item)
+                stats["fixed"] += 1
+            elif r["status"] == "moved" and r["key"] in elements:
+                item.text = r["text"]
+                moved.append((r["key"], item))
+                stats["moved"] += 1
+            else:
+                stats["dropped"] += 1
+        el.items = kept
+    for key, item in moved:
+        elements[key].items.append(item)
+    for key in keys:  # 다듬거나 옮겨 와서 생긴 중복 정리
+        seen = set()
+        uniq = []
+        for item in elements[key].items:
+            k = item.text.lower()
+            if k not in seen:
+                seen.add(k)
+                uniq.append(item)
+        elements[key].items = uniq
+    return stats
 
 
 def legacy_rating_files(data_dir: str) -> List[str]:

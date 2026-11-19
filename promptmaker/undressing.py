@@ -19,7 +19,8 @@ _PLACEHOLDER_RE = re.compile(r"\{(" + "|".join(GARMENT_SLOTS) + r")\}")
 # '벗는 중' 계열은 그것만으로, '푸는 / 내리는' 계열은 옷 이름이 앞에 있을 때만 ('머리를 푸는' 은 아님)
 _KO_STRONG = re.compile(r"벗는|벗으며|벗으면서|벗으려|벗기\s*시작|벗고\s*있|벗어\s*내리|탈의(?!실)")
 _KO_WEAK = re.compile(r"(?:옷|상의|하의|치마|스커트|바지|블라우스|셔츠|브라|비키니|원피스|드레스|속옷|잠옷|가운|수영복|"
-                      r"단추|지퍼|끈|어깨끈)\s*(?:을|를)?\s*(?:푸는|풀고\s*있|풀어\s*헤치|내리는|내리고\s*있|벗겨)")
+                      r"팬티|단추|지퍼|끈|어깨끈)\s*(?:을|를)?\s*(?:푸는|풀고\s*있|풀어\s*헤치|풀며|내리는|내리고\s*있|"
+                      r"내리며|내리면서|벗겨)")
 _EN_RE = re.compile(
     r"\b(?:undress(?:ing|es)?|disrob(?:ing|es)|strip(?:ping|s)?(?: off| down)?|"
     r"(?:taking|takes|take|pulling|pulls|peeling|peels|slipping|slips|sliding|slides) (?:off|out of|down)\b|"
@@ -32,7 +33,7 @@ _EN_RE = re.compile(
 CONSUMED = ("undressing", "undress", "undresses", "disrobing", "stripping", "strip", "taking", "takes", "take",
             "off", "clothes", "clothing", "pulling", "peeling", "slipping", "sliding", "removing", "unbuttoning",
             "unzipping", "getting", "undressed", "scene", "out", "undoing", "untying", "unhooking", "loosening",
-            "strap", "straps", "string", "strings", "button", "buttons", "zipper", "zip", "sash")
+            "strap", "straps", "string", "strings", "button", "buttons", "zipper", "zip", "sash", "down", "halfway")
 
 
 def detect(original: str = "", english: str = "") -> bool:

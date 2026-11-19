@@ -1255,7 +1255,6 @@ even office lighting
 lighting focused
 lit with soft indoor ambient light
 natural daylight from an unseen window
-ambient lighting enhance the sensual
 circular ceiling light fixture
 dramatic low-angle lighting
 realistic lighting dynamics
@@ -1294,7 +1293,6 @@ directional orange lighting
 even lighting against a plain white wall
 lighting creating soft shadows along {her} spine
 diffused illumination across {her} form
-light creating a sensual
 natural glow on {her} face
 diffuse shadows across the floorboards
 directional natural light
@@ -1325,7 +1323,6 @@ muted lighting
 diffused natural light with muted tones
 naturalistic indoor lighting
 high-contrast chiaroscuro lighting casting deep shadows
-diffused sunlight creating a sensual
 natural backlighting
 light filtering through a window
 sun-dappled illumination
@@ -1434,7 +1431,6 @@ wall-mounted lamps cast warm yellow illumination
 soft shadows that emphasize the intimate
 soft outdoor lighting
 diffused pink lighting
-warm ambient lighting for a sensual
 diffused natural light filtering through pink curtains
 golden-hour sunlight filtering through the blossoms
 natural light from a nearby window
@@ -1467,13 +1463,11 @@ soft ambient lighting from bedside lamps
 soft shadows on polished wood desk
 soft lighting from the side
 ambient glow from out-of-focus lamps
-ambient lighting creating a sensual
 subtle shadows accentuating {her} décolletage
 soft ambient light reflecting off wet skin
 warm sunlight streaming through a window
 warm daylight
 harsh daylight casting sharp
-soft shadows for a sensual
 soft natural daylight with blurred green foliage
 warm ambient lighting from a lamp
 soft warm lighting from a wall sconce
@@ -1839,7 +1833,6 @@ natural light streaming through the window
 bright natural light streaming from the window
 angular shadows across the floor
 strong sunlight streaming diagonally across the floor
-flattering glow. - 她的手轻轻地抚摸她的头发和上胸
 focused lighting from the front
 natural light enters from the upper right
 even illumination with subtle shadows
@@ -2051,7 +2044,6 @@ soft sunlight from left
 sunny day lighting
 directional light source from left side
 soft natural light comes through a window
-soft natural light filtering through树叶 leaves overhead
 ambient lighting details
 soft indirect lighting from overhead fixtures
 soft shadows cast by trees

@@ -4,7 +4,7 @@ from .restrictions import Restrictions
 from .safety import MIN_AGE, SafetyError
 from .translator import DictionaryTranslator, GoogleTranslator, NoTranslator, is_english
 
-__version__ = "0.12.0"
+__version__ = "0.13.0"
 
 __all__ = [
     "PromptMaker", "GenerateOptions", "PromptResult", "LLMRefiner", "MODES", "PROMPT_TYPES",

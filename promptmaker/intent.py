@@ -52,14 +52,39 @@ _KO_VIDEO = ("영상", "동영상", "비디오", "클립", "뮤비")
 # Order matters: a keyword locks only the first element (in this order) it matches,
 # so "beach" locks the location and not "honey-blonde beach waves" in hair.
 # Groups share a keyword; a keyword consumed by an earlier group is not used by later groups.
-LOCK_GROUPS = (("time_weather",), ("location",), ("photo_style", "video_style"),
+LOCK_GROUPS = (("time_weather",), ("location",), ("photo_style", "video_style"), ("beauty",),
                ("swimwear", "dress", "top", "bottom", "sleepwear", "lingerie", "traditional", "sportswear",
                 "outerwear", "footwear", "accessory", "male_attire"), ("pose", "action", "motion"), ("expression",),
                ("lighting",), ("hair",), ("makeup",), ("skin",), ("camera",), ("color_grade",),
                ("mood",))
 LOCKABLE = tuple(k for g in LOCK_GROUPS for k in g)
 GENERIC = {"woman", "women", "man", "men", "girl", "girls", "lady", "model", "models", "person",
-           "people", "day", "time", "beautiful", "pretty", "photo", "photograph", "picture", "image", "video", "taken", "shot", "wearing"}
+           "people", "day", "time", "beautiful", "pretty", "photo", "photograph", "picture", "image", "video", "taken", "shot", "wearing",
+           "costume", "costumes", "outfit", "outfits", "attire", "clothes", "clothing", "scene"}
+# [0.13.0] 수식어(색·길이·재질)만으로는 의상·포즈 요소를 잠그지 않음
+# ('long hair' 의 long 이 'long skirt' · 'long-sleeved top' 을 잠그던 문제)
+MODIFIER_ONLY_GROUPS = {"swimwear", "dress", "top", "bottom", "sleepwear", "lingerie", "traditional", "sportswear",
+                        "outerwear", "footwear", "accessory", "male_attire", "pose", "action", "motion"}
+# 다른 요소 이름인 말은 그 요소에서만 찾음 ('hair' 가 'white shorts and her hair' 같은 의상 줄을 잠그지 않게)
+DOMAIN_WORDS = {"hair": "hair", "hairstyle": "hair", "skin": "skin", "makeup": "makeup", "lipstick": "makeup",
+                "expression": "expression", "lighting": "lighting"}
+# 장소 중심 명사 앞에 붙으면 다른 뜻이 되는 말 ('gravel garden bed' 화단, 'stream bed' 하천 바닥)
+PLACE_COMPOUND = {"garden", "gravel", "stream", "river", "plant", "flower", "sea", "creek", "lake", "ocean", "seed",
+                  "oyster", "truck", "kelp", "moss", "rose", "vegetable", "reed", "coral", "pebble", "rock", "water",
+                  "tulip", "herb", "lily", "test", "nail", "railway", "road", "canal", "pond"}
+_PLACE_CUT_RE = re.compile(r"\s(?:with|of|in|on|at|beside|behind|above|below|under|near|by|to|across|against|"
+                           r"where|that|and|next|between|over|from|for|surrounded|overlooking|facing)\b.*$")
+_PLACE_LEAD_RE = re.compile(r"^(?:(?:on|in|at|inside|by|near|beside|along|atop|onto|into|across|under|amid|"
+                            r"against|outside|within|on top of)\s+)?(?:(?:a|an|the)\s+)?")
+_NOT_PLACE_LOCK = {"set", "setting", "backdrop", "wall", "window", "interior", "indoors", "outdoors", "concert",
+                   "festival", "car", "vehicle"}
+ON_PLACES = {"bed", "sofa", "couch", "beach", "floor", "rooftop", "balcony", "bench", "futon", "mattress", "rug",
+             "carpet", "lawn", "grass", "sand", "deck", "terrace", "street", "bridge", "pier", "yacht", "boat", "stage",
+             "desk", "table", "chair", "stairs", "staircase", "train", "bus", "swing"}
+HAIR_MODS = {"long", "short", "straight", "wavy", "curly", "black", "brown", "blonde", "blond", "silky", "sleek",
+             "shoulder-length", "medium-length", "layered", "loose", "messy", "dark", "light", "glossy", "shiny",
+             "jet-black", "chestnut", "platinum", "red", "pink", "silver", "ash", "auburn", "bob", "braided", "wet",
+             "flowing", "voluminous", "thick", "fine", "bobbed", "permed", "dark-brown", "light-brown"}
 
 
 @dataclass
@@ -77,12 +102,15 @@ class Intent:
     framing: Optional[str] = None                                # 샷 구도 (framing.FRAMINGS 중 하나)
     framings_found: List[str] = field(default_factory=list)      # 요청에서 찾은 구도 전부 (충돌 확인용)
     body_part: Optional[str] = None                              # 신체 부위 클로즈업 ('다리 클로즈업' → legs)
+    masturbation: bool = False                                   # [0.13.0] 자위 장면
+    masturbation_kinds: List[str] = field(default_factory=list)  # 말한 자위 동작 (breast / clit / finger)
 
     def to_dict(self) -> Dict[str, Any]:
         return {"locks": self.locks, "pools": self.pools, "female": self.female, "male": self.male,
                 "female_noun": self.female_noun, "prompt_type": self.prompt_type,
                 "consumed": self.consumed, "nude": self.nude, "undressing": self.undressing,
-                "framing": self.framing, "framings_found": self.framings_found, "body_part": self.body_part}
+                "framing": self.framing, "framings_found": self.framings_found, "body_part": self.body_part,
+                "masturbation": self.masturbation, "masturbation_kinds": self.masturbation_kinds}
 
     def casting_ok(self, female: int, male: int) -> bool:
         if self.female is not None and female != self.female:
@@ -166,10 +194,58 @@ SKIN_TONES = {"bright": ["fair", "porcelain", "pale", "luminous"], "fair": ["fai
               "olive": ["olive"], "smooth": ["smooth"], "glossy": ["glow", "glistening"]}
 
 
+def _place_terms() -> set:
+    from .element_check import PLACE_TERMS
+    return set(PLACE_TERMS)
+
+
+def place_head(text: str) -> str:
+    """장소 문구의 중심 명사 ('on a gravel garden bed' → 'garden bed', 'on a bed with white sheets' → 'bed').
+
+    중심 명사 바로 앞 말이 :data:`PLACE_COMPOUND` 이면 둘을 붙여 돌려줌 (다른 장소로 봄).
+    """
+    low = re.sub(r"\{[^}]*\}", "", (text or "").lower()).strip(" ,.")
+    if re.match(r"(?:beside|near|by|next to|outside|behind|around|across from|opposite)\b", low):
+        return ""  # 그 장소 '옆·근처' 는 그 장소가 아님
+    low = _PLACE_LEAD_RE.sub("", low, count=1)
+    low = _PLACE_CUT_RE.sub("", low).strip(" ,")
+    words = re.findall(r"[a-z][a-z'-]*", low)
+    if not words:
+        return ""
+    if len(words) >= 2 and words[-2] in PLACE_COMPOUND:
+        return f"{words[-2]} {words[-1]}"
+    return words[-1]
+
+
+def _hair_phrase(low: str, elements: Dict[str, Element], intent: Intent) -> set:
+    """'long straight hair' → 머리 요소를 그 수식어가 모두 들어간 줄로 잠금 (없으면 요청 문구 그대로)."""
+    if "hair" not in elements:
+        return set()
+    for m in re.finditer(r"((?:[a-z-]+\s+){1,4})hair(?:ed)?\b|\b([a-z]+)-haired\b", low):
+        pre = m.group(1).split() if m.group(1) else [m.group(2)]
+        mods: List[str] = []
+        for w in reversed(pre):
+            if w in HAIR_MODS:
+                mods.insert(0, w)
+            else:
+                break
+        if not mods:
+            continue
+        items = [i.text for i in elements["hair"].items
+                 if all(_word_in(w, i.text) for w in mods) and _word_in("hair", i.text)]
+        if items:
+            intent.pools["hair"] = items
+        else:
+            intent.locks["hair"] = " ".join(mods) + " hair"
+        return set(mods) | {"hair", "haired", f"{mods[-1]}-haired"}
+    return set()
+
+
 def _phrases(text: str, elements: Dict[str, Element], intent: Intent) -> set:
     """Lock garments / skin tone written as '<modifier> <noun>'. Returns the words used."""
     used = set()
     low = text.lower()
+    used |= _hair_phrase(low, elements, intent)
     for key, nouns in GARMENT_NOUNS.items():
         if key not in elements:
             continue
@@ -188,14 +264,15 @@ def _phrases(text: str, elements: Dict[str, Element], intent: Intent) -> set:
                 # (그래서 used 에 넣지 않음 — 넣으면 키워드 검색이 건너뛰어 '셔츠' 요청이 무시됨)
                 break
             used |= set(mods) | set(noun.replace("-", " ").split())
+            head = canon if " " in noun and canon != "mini skirt" else canon.split()[-1]  # 'slip dress' 는 통째로
             items = [i.text for i in elements[key].items
-                     if all(_word_in(w, i.text) for w in mods) and _word_in(canon.split()[-1], i.text)]
+                     if all(_word_in(w, i.text) for w in mods) and _word_in(head, i.text)]
             if items:
                 intent.pools[key] = items
             else:  # nothing like it in the list: use the user's own words
                 phrase = " ".join(mods + [canon])
                 intent.locks[key] = ("an " if phrase[0] in "aeiou" else "a ") + phrase \
-                    if not canon.endswith(("s", "jeans", "pants", "shorts", "heels", "boots")) else phrase
+                    if canon.endswith("ss") or not canon.endswith("s") else phrase
             break
     m = re.search(r"\b([a-z-]+)[- ]skin(?:ned)?\b|\bskin\s+(?:is|that is)\s+([a-z-]+)", low)
     if m and "skin" in elements:
@@ -249,6 +326,7 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
     plain = _NOT_NUDE_RE.sub(" ", text)
     if any(w in NUDE_WORDS for w in tokenize(plain)) or any(k in original for k in _KO_NUDE):
         intent.nude = True
+        intent.consumed.extend(w for w in tokenize(plain) if w in NUDE_WORDS)
 
     # 옷을 벗는 중 / 벗는 장면: 옷은 입은 채 벗는 동작 ('벗고 있는' 이 누드로 잡히지 않게)
     from . import framing as _framing, undressing as _undressing
@@ -257,6 +335,15 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
         intent.undressing = True
         intent.nude = False
         pre_used |= {w for w in words if w in _undressing.CONSUMED}
+
+    # [0.13.0] 자위 장면: 동작은 masturbation.txt 에서 (가슴·클리토리스·손가락 동작 단어는 키워드로 쓰지 않음)
+    from . import masturbation as _mast
+    found, kinds = _mast.detect(original, text)
+    if found:
+        intent.masturbation, intent.masturbation_kinds = True, kinds
+        pre_used |= {w for w in words if w in _mast.CONSUMED}
+        if intent.female is None:
+            intent.female, intent.male = 1, 0
 
     # 샷 구도 (얼빡샷 · 클로즈업 · 미디엄 · 카우보이 · 전신) — 동작·장소 키워드로 쓰이지 않게 따로 뺌
     intent.framing, intent.framings_found, fwords = _framing.detect(original, text)
@@ -303,14 +390,35 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
             if not el:
                 continue
             hits = []
+            head_hits = []
             for item in el.items:
                 for kw, forms in lemmas.items():
                     if kw in used:
                         continue
+                    dom = next((DOMAIN_WORDS[f] for f in forms if f in DOMAIN_WORDS), None)
+                    if dom and dom != key:
+                        continue
+                    if key in MODIFIER_ONLY_GROUPS and kw in MODIFIERS:
+                        continue
                     if any(len(f) >= 3 and _word_in(f, item.text) for f in forms):
                         hits.append(item.text)
                         group_kws.add(kw)
+                        if key == "location" and kw in _place_terms() and place_head(item.text) in forms:
+                            head_hits.append(item.text)
                         break
+            if key == "location" and head_hits:
+                # [0.13.0] 'bed' → 침대인 장소만 ('gravel garden bed' · 'telephone beside bed' 제외)
+                hits = head_hits
+            elif key == "location" and key not in intent.pools and key not in intent.locks:
+                # 요소 목록에 그 장소가 없으면 ('침대', '소파') 요청한 말 그대로 장소로
+                from .element_check import PLACE_TERMS
+                place = next((kw for kw in lemmas if kw not in used and kw in PLACE_TERMS
+                              and kw not in GENERIC and kw not in _NOT_PLACE_LOCK), None)
+                if place:
+                    prep = "on" if place in ON_PLACES else "in"
+                    intent.locks["location"] = f"{prep} {'an' if place[0] in 'aeiou' else 'a'} {place}"
+                    hits = []
+                    group_kws = {place}
             if hits and key not in intent.pools and key not in intent.locks:
                 intent.pools[key] = hits
         used |= group_kws

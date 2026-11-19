@@ -2226,7 +2226,7 @@ a thin-strapped blue top
 a white striped short-sleeved shirt
 a white top with a sheer
 a red top with a textured
-a black top and her hair
+a black top
 a strapless pink top
 a light purple top
 a lace-trimmed camisole with floral embroidery
@@ -2342,7 +2342,7 @@ a dark-colored button-up shirt
 a light blue short-sleeved t-shirt
 an off-the-shoulder shirt
 a light-colored top with pearl embellishments
-a white top and her hair
+a white top
 a white patterned strap top
 a light pink button-up shirt
 a striped halter top
@@ -2391,7 +2391,7 @@ a slightly wrinkled shirt
 a 's shirt
 a light pink floral blouse
 a floral crop top
-a textured top and her hair
+a textured top
 an open white collared shirt
 an orange top with thin straps
 a thin orange strap top
@@ -2469,7 +2469,7 @@ a light beige sleeveless top
 a white top with red trim
 a short-sleeved magenta ribbed top
 a checkered blouse
-a sleeveless top and her long
+a sleeveless top
 a light blue striped short-sleeved shirt
 A gray hoodie
 a white sweater with pearl embellishments

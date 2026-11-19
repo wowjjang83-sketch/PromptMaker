@@ -1,0 +1,15 @@
+# 피사체 거리 (0.14.0). 카메라가 피사체에서 얼마나 떨어져 찍는지 — 샷 구도(framing)와 따로 정해집니다.
+# 줄 끝 태그로 거리를 정합니다: #close(근거리) #medium(중거리) #far(원거리) #very_far(아주 먼 거리·원경)
+# 구도와 맞지 않는 거리(얼빡샷 + 원거리)는 구도에 맞는 거리로 바뀝니다. 문장: "{distance}."
+shot up close from just an arm's length away #close
+photographed at close range, {her} presence filling the frame #close
+shot from a close distance, intimate and near #close
+shot from a few steps away #medium
+photographed from a moderate distance, leaving a little room around {her} #medium
+shot from a medium distance with some of the surroundings visible #medium
+shot from a distance, with {her} figure set against the wide surroundings #far
+photographed from afar, {her} whole figure framed by the open space around {her} #far
+long-distance shot taken from across the scene #far
+shot from far away, {her} small figure in a vast scene #very_far
+extreme long shot from a great distance, {her} tiny figure within the expansive landscape #very_far
+photographed from very far away, the surroundings dominating the frame around {her} small silhouette #very_far

@@ -38,6 +38,8 @@ GARMENT_KEYS = ("swimwear", "lingerie", "sleepwear", "sportswear", "traditional"
 POSE_GROUP = ("pose", "action")
 CHECK_KEYS = frozenset(("hair", "makeup", "skin", "expression", "pose", "action", "location", "time_weather",
                         "lighting", "camera", "color_grade", "photo_style", "mood", "beauty") + GARMENT_KEYS)
+# 의상 상태 요소 (0.15.0): 의상 이름만 있는 줄('tight red ribbed long-sleeve top')은 해당 의상 요소로 옮김
+STATE_KEYS = frozenset(("attire_state",))
 # 요소 한 줄 최대 길이 (단어). 더 길면 문장으로 봄
 MAX_WORDS = 14
 MAX_CHARS = 110
@@ -546,6 +548,28 @@ def suggest_key(text: str, keys: Optional[Iterable[str]] = None) -> Optional[str
     return None
 
 
+_STATE_LEAD_RE = re.compile(r"^(?:with|without|half|partially|partly|slightly|loosely|neatly|softly|barely|"
+                            r"open|opened|unbuttoned|unzipped|undone|pulled|lifted|hiked|rolled|tucked|slipping|"
+                            r"falling|draped|clinging|wet|damp|see-through|revealing|showing|exposing)\b", re.I)
+
+
+def garment_only_key(text: str) -> Optional[str]:
+    """의상 이름뿐인 문구면 그 의상 요소 ('tight red ribbed long-sleeve top' → top), 아니면 None.
+
+    'white blouse partially unbuttoned' 처럼 상태가 붙거나 'with the collar open' 처럼 상태로 시작하면 None.
+    """
+    t = _plain(text).strip(" ,.")
+    if not t or _STATE_LEAD_RE.match(t) or is_participle(t):
+        return None
+    zone = _head_zone(t).strip(" ,.")
+    last = None
+    for m in _GARMENT_RE.finditer(zone):
+        last = m
+    if not last or zone[last.end():].strip():
+        return None  # 의상 단어로 끝나지 않음 (뒤에 상태 설명이 붙음)
+    return garment_key(t)
+
+
 def check_item(key: str, text: str, keys: Optional[Iterable[str]] = None) -> Dict[str, str]:
     """요소 ``key`` 에 들어갈 ``text`` 를 검사합니다 (설명은 모듈 맨 위).
 
@@ -571,6 +595,11 @@ def check_item(key: str, text: str, keys: Optional[Iterable[str]] = None) -> Dic
             return {**res, "status": "wrong_key", "reason": "샷 구도 문구가 아님"}
         if key == "distance":
             return {**res, "status": "wrong_key", "reason": "피사체 거리 문구가 아님"}
+    if key in STATE_KEYS and raw:
+        gk = garment_only_key(raw)
+        if gk and (keys is None or gk in keys):
+            return {**res, "status": "moved", "key": gk, "reason": f"의상 상태가 아니라 의상 이름 → '{gk}'"}
+        return res
     if key not in CHECK_KEYS or not raw:
         return res
     targets = [k for k in (keys if keys is not None else CHECK_KEYS) if k in CHECK_KEYS]
@@ -630,7 +659,7 @@ def scan_element_files(data_dir: str) -> List[Dict[str, str]]:
     keys = [f[:-4] for f in os.listdir(edir) if f.endswith(".txt") and "." not in f[:-4]]
     for fname in sorted(os.listdir(edir)):
         key = fname.split(".")[0]
-        if not fname.endswith(".txt") or key not in CHECK_KEYS:
+        if not fname.endswith(".txt") or (key not in CHECK_KEYS and key not in STATE_KEYS):
             continue
         with open(os.path.join(edir, fname), encoding="utf-8") as f:
             lines = f.read().splitlines()

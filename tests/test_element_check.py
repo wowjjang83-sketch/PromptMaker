@@ -16,7 +16,7 @@ def _base_lines():
     edir = os.path.join(PACKAGE_DATA_DIR, "elements")
     for fname in sorted(os.listdir(edir)):
         key = fname.split(".")[0]
-        if not fname.endswith(".txt") or key not in CHECK_KEYS:
+        if not fname.endswith(".txt") or (key not in CHECK_KEYS and key != "attire_state"):
             continue
         with open(os.path.join(edir, fname), encoding="utf-8") as f:
             for line in f:
@@ -31,6 +31,12 @@ class BaseElementsTest(unittest.TestCase):
     def test_every_base_line_is_ok(self):
         bad = [(k, t, check_item(k, t)) for k, t in _base_lines() if check_item(k, t)["status"] != "ok"]
         self.assertEqual(bad, [], "기본 요소는 모두 그대로 써야 합니다")
+
+
+    def test_attire_state_keeps_states(self):
+        for t in ("white blouse partially unbuttoned", "with the collar casually open", "slipping off one shoulder",
+                  "blue plaid skirt lifted", "with the top half unbuttoned over a lace bralette"):
+            self.assertEqual(check_item("attire_state", t)["status"], "ok", t)
 
 
 class FragmentTest(unittest.TestCase):
@@ -69,6 +75,9 @@ class KeyTest(unittest.TestCase):
             ("top", "a teal strapless bikini top", "swimwear"),
             ("action", "sparkling emerald teardrop earrings", "accessory"),
             ("action", "inviting smile", "expression"),
+            ("attire_state", "tight red ribbed long-sleeve top", "top"),
+            ("attire_state", "a black leather corset", "lingerie"),
+            ("attire_state", "black leather shorts", "bottom"),
         ]
         for key, text, want in cases:
             r = check_item(key, text)

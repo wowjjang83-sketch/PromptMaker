@@ -18,6 +18,7 @@ Rules:
 - The examples only show the grammar. Do NOT copy an example; describe what is in THIS image in your own words.
 - If the examples use placeholders such as {her}, {her_obj}, {partner}, use the same placeholders instead of pronouns.
 - Be specific (colors, materials, cuts, light direction, place details), but do not invent things that are not in the image.
+- Clothing: name EVERY visible garment separately under its own garment key, including layered pieces (a corset over a top, a belt, stockings). attire_state only says how the clothes are worn and never names a garment.
 - Put each item under the most specific key that fits (for example a bikini goes under swimwear when that key exists, a jacket under outerwear, shoes under footwear).
 {extra_rules}
 

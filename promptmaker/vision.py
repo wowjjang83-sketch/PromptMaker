@@ -78,6 +78,8 @@ class VisionConfig:
     quantization: str = "auto"             # "auto": bf16 if the GPU has room, else fp8 / "fp8" / "none" (bf16)
     prefilter: bool = True                 # ask first whether a person / man / couple is in the picture,
                                            # then only ask for the elements that can apply (much shorter answers)
+    outfit_pass: bool = True               # 0.15.0: when a person is in the picture, ask a second short question
+                                           # about clothing only (small models skip garments in the long list)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "VisionConfig":
@@ -769,6 +771,8 @@ def build_prompt(data_dirs: List[str], cfg: VisionConfig, exclude=()) -> Tuple[s
         if not path:  # json-only elements (e.g. casting) are not written to
             continue
         title = (_file_title(path) or el.description or key).rstrip(". ")
+        if key in KEY_HINTS:
+            title += f" [{KEY_HINTS[key]}]"
         examples = "; ".join(f'"{i.text}"' for i in el.items[:3])
         lines.append(f"- {key}: {title}. e.g. {examples}")
         keys.append(key)
@@ -781,6 +785,49 @@ def build_prompt(data_dirs: List[str], cfg: VisionConfig, exclude=()) -> Tuple[s
     elif extra:
         prompt += "\n" + extra + "\n"
     return prompt, keys
+
+
+# 0.15.0: 요소 설명은 한글이라 작은 모델이 의상 요소를 헷갈림 → 영어 안내를 덧붙임 (분석 지시문 · 의상 질문 공용)
+KEY_HINTS: Dict[str, str] = {
+    "top": "upper-body garment: shirt, blouse, t-shirt, sweater, knit top, crop top, tank top",
+    "bottom": "lower-body garment: shorts, skirt, jeans, pants, leggings",
+    "dress": "one-piece dress, gown, jumpsuit",
+    "lingerie": "underwear and corsetry: bra, panties, corset, bustier, garter belt, bodysuit, babydoll",
+    "swimwear": "bikini, swimsuit",
+    "sleepwear": "pajamas, nightgown, robe",
+    "outerwear": "worn over the outfit: jacket, coat, blazer, cardigan",
+    "sportswear": "yoga set, sports bra, leggings for exercise",
+    "traditional": "hanbok, kimono, yukata",
+    "footwear": "shoes, heels, boots, sandals, or barefoot",
+    "legwear": "stockings, tights, socks, or bare legs",
+    "accessory": "jewelry, choker, belt, hat, glasses, bag, hair accessory",
+    "attire_state": "HOW the clothes are worn (never a garment name): unbuttoned, slipping off a shoulder, sleeves rolled up",
+}
+OUTFIT_PROMPT_PATH = os.path.join(PACKAGE_DATA_DIR, "vision", "outfit_prompt.txt")
+OUTFIT_KEYS = ("top", "bottom", "dress", "lingerie", "swimwear", "sleepwear", "outerwear", "sportswear",
+               "traditional", "footwear", "legwear", "accessory", "attire_state")
+
+
+def build_outfit_prompt(keys: List[str]) -> Tuple[str, List[str]]:
+    """의상만 묻는 짧은 지시문 (분석에 쓰는 요소 중 의상 요소만)."""
+    okeys = [k for k in OUTFIT_KEYS if k in keys]
+    lines = [f"- {k}: {KEY_HINTS.get(k, k)}" for k in okeys]
+    with open(OUTFIT_PROMPT_PATH, encoding="utf-8") as f:
+        template = f.read()
+    return template.replace("{elements}", "\n".join(lines)), okeys
+
+
+def merge_found(base: Dict[str, List[str]], extra: Dict[str, List[str]]) -> Dict[str, List[str]]:
+    """두 분석 결과를 합침 (같은 문구는 한 번만, 다른 요소에 이미 있는 문구도 빼고)."""
+    out = {k: list(v) for k, v in base.items()}
+    seen = {normalize(t) for v in out.values() for t in v}
+    for key, values in extra.items():
+        for v in values:
+            n = normalize(v)
+            if n and n not in seen:
+                seen.add(n)
+                out.setdefault(key, []).append(v)
+    return out
 
 
 # ------------------------------------------------------------------ parsing
@@ -927,6 +974,16 @@ def new_items(rows: Dict[str, List[Dict[str, str]]]) -> Dict[str, List[str]]:
         for r in lst:
             if r.get("status") == "new":
                 out.setdefault(r.get("key") or key, []).append(r["text"])
+    return out
+
+
+def skipped_items(rows: Dict[str, List[Dict[str, str]]]) -> Dict[str, List[Dict[str, str]]]:
+    """``classify`` 결과에서 저장하지 않는 항목 ``{요소: [{"text", "reason"}]}`` (reason: duplicate, fragment ...)."""
+    out: Dict[str, List[Dict[str, str]]] = {}
+    for key, lst in rows.items():
+        for r in lst:
+            if r.get("status") and r["status"] != "new":
+                out.setdefault(r.get("key") or key, []).append({"text": r["text"], "reason": r["status"]})
     return out
 
 
@@ -1133,21 +1190,37 @@ class ImageAnalyzer:
         else:
             raw = backend.chat(img, prompt)
         rep.update("parse", "응답 해석 및 중복 확인 중", 0.0)
+        usage = dict(getattr(backend, "usage", {}) or {})  # 첫 분석 기준 (의상 질문 전에)
         data, full_prompt = split_full_prompt(extract_json(raw))
         found = parse_response(data)
         limit = max(1, int(self.config.max_items_per_key))
         found = {k: v[:limit] for k, v in found.items() if k not in self.config.skip_keys}
+        outfit_raw = ""
+        if getattr(self.config, "outfit_pass", True) and (presence or {}).get("person") is not False:
+            outfit_prompt, okeys = build_outfit_prompt(keys)
+            if okeys:
+                rep.update("parse", "의상만 한 번 더 확인 중", 0.1)
+                try:
+                    if _accepts(backend.chat, "max_new_tokens"):
+                        outfit_raw = backend.chat(img, outfit_prompt, max_new_tokens=256)
+                    else:
+                        outfit_raw = backend.chat(img, outfit_prompt)
+                    extra = {k: v[:limit] for k, v in parse_response(outfit_raw).items() if k in okeys}
+                    found = merge_found(found, extra)
+                except (ValueError, json.JSONDecodeError):
+                    pass  # 의상 질문 응답이 JSON 이 아니면 첫 분석 결과만 사용
+                rep.check()
         rules = getattr(self.maker, "restrictions", None)
         rows = classify(self.data_dirs, found, keys, restrictions=rules)
         if rules is not None and full_prompt:
             full_prompt = rules.apply_to_text(full_prompt)
         new = new_items(rows)
-        usage = dict(getattr(backend, "usage", {}) or {})
         n_new = sum(len(v) for v in new.values())
         rep.update("done", f"완료: 새 항목 {n_new}개", 1.0, eta=0.0, **{k: v for k, v in usage.items()
                                                                        if k in ("input_tokens", "output_tokens")})
         stats = rep.state.to_dict()
-        return {"elements": rows, "new": {k: v for k, v in new.items() if v}, "raw": raw, "stats": stats,
+        return {"elements": rows, "new": {k: v for k, v in new.items() if v}, "skipped": skipped_items(rows),
+                "raw": raw, "outfit_raw": outfit_raw, "stats": stats,
                 "presence": presence, "asked_keys": keys,
                 "full_prompt": full_prompt if self.config.full_prompt else ""}
 

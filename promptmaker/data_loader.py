@@ -178,9 +178,9 @@ def load_elements(dirs: Iterable[str], check: bool = True) -> Dict[str, Element]
 
 def apply_element_check(elements: Dict[str, Element]) -> Dict[str, int]:
     """읽어 온 요소에 요소 검사를 적용합니다 (메모리 안에서만). 바뀐 개수를 돌려줍니다."""
-    from .element_check import CHECK_KEYS, check_item
+    from .element_check import CHECK_KEYS, STATE_KEYS, check_item
 
-    keys = [k for k in elements if k in CHECK_KEYS]
+    keys = [k for k in elements if k in CHECK_KEYS or k in STATE_KEYS]
     stats = {"fixed": 0, "moved": 0, "dropped": 0}
     moved: List[tuple] = []
     for key in keys:

@@ -14,6 +14,7 @@ if _HERE not in sys.path:
 
 from promptmaker import GenerateOptions, PromptMaker  # noqa: E402
 from promptmaker.core import MODES  # noqa: E402
+from promptmaker.framing import FRAMINGS  # noqa: E402
 
 _USER_DATA = os.path.join(_HERE, "user_data")
 _MAKER = PromptMaker(user_data_dir=_USER_DATA if os.path.isdir(_USER_DATA) else None)
@@ -49,17 +50,19 @@ class PromptMakerGenerate:
                 "use_related_words": ("BOOLEAN", {"default": True}),
                 "model_profile": (_model_choices(), {"default": "default"}),
             },
+            # 샷 구도: auto = 요청에서 찾음 ('얼빡샷' → extreme_closeup), none = 넣지 않음
             "optional": {
                 "selections_json": ("STRING", {"multiline": True, "default": "{}"}),
                 "random_elements": ("STRING", {"default": ""}),
                 "prefix": ("STRING", {"multiline": True, "default": ""}),
                 "suffix": ("STRING", {"multiline": True, "default": ""}),
+                "framing": (["auto"] + list(FRAMINGS) + ["none"], {"default": "auto"}),
             },
         }
 
     def generate(self, user_input, prompt_type, mode, template, seed,
                  translate, use_related_words, model_profile="default", selections_json="{}", random_elements="",
-                 prefix="", suffix=""):
+                 prefix="", suffix="", framing="auto"):
         try:
             selections = json.loads(selections_json or "{}")
         except json.JSONDecodeError as exc:
@@ -70,6 +73,7 @@ class PromptMakerGenerate:
             "use_related_words": use_related_words, "selections": selections,
             "random_elements": random_elements,
             "model_profile": None if model_profile == "default" else model_profile,
+            "framing": framing or "auto",
         })
         result = _MAKER.generate(user_input, opts)
         prompt = " ".join(p for p in (prefix.strip(), result.prompt, suffix.strip()) if p)

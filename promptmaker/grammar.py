@@ -84,6 +84,8 @@ def tidy(text: str) -> str:
     text = re.sub(r"\.{2,}", ".", text)
     text = re.sub(r"([,.;:!?])(?=[A-Za-z])", r"\1 ", text)
     text = re.sub(r"\(\s*\)", "", text)
+    # 요소 줄과 템플릿이 같은 말을 겹쳐 쓴 곳 ('with with a soft gaze', 'luminous skin skin')
+    text = re.sub(r"\b([A-Za-z]+)(?:\s+\1\b)+", r"\1", text, flags=re.I)
     text = fix_articles(text.strip())
     sentences = re.split(r"(?<=[.!?])\s+", text)
     return " ".join(capitalize_first(s) for s in sentences if s).strip()

@@ -107,6 +107,9 @@
 
     <label for="template">템플릿</label>
     <select id="template"></select>
+    <label for="framing">샷 구도</label>
+    <select id="framing"><option value="auto">자동 (요청에서 찾음)</option></select>
+    <p class="hint">요청에 '얼빡샷 / 클로즈업 / 미디엄샷 / 카우보이샷 / 전신샷' 이 있으면 자동으로 씁니다. 여기서 고르면 그 구도가 우선합니다.</p>
     <label for="model_profile">대상 모델 (프롬프트 형식)</label>
     <select id="model_profile"></select>
     <p class="hint" id="model_hint"></p>
@@ -296,7 +299,13 @@ function currentSelections() {
 async function loadInfo() {
   const res = await fetch("/api/info");
   INFO = await res.json();
-  fillTemplates(); fillModels(); fillElements();
+  fillTemplates(); fillModels(); fillElements(); fillFramings();
+}
+
+function fillFramings() {
+  const sel = $("framing");
+  sel.innerHTML = (INFO.framings || [{ id: "auto", label: "자동 (요청에서 찾음)" }])
+    .map(f => `<option value="${esc(f.id)}">${esc(f.label)}</option>`).join("");
 }
 
 async function generate() {
@@ -308,6 +317,7 @@ async function generate() {
     mode: $("mode").value,
     template: $("template").value,
     model_profile: $("model_profile").value || null,
+    framing: $("framing").value || "auto",
     count: parseInt($("count").value, 10) || 1,
     seed: isNaN(seed) || seed < 0 ? null : seed,
     translate: $("translate").checked,

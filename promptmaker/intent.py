@@ -73,11 +73,15 @@ class Intent:
     template_keywords: List[str] = field(default_factory=list)
     consumed: List[str] = field(default_factory=list)            # words used by the intent
     nude: bool = False                                           # the request asks for no clothes at all
+    undressing: bool = False                                     # '옷을 벗는 중/장면': 옷을 입고 벗는 동작 (누드와 다름)
+    framing: Optional[str] = None                                # 샷 구도 (framing.FRAMINGS 중 하나)
+    framings_found: List[str] = field(default_factory=list)      # 요청에서 찾은 구도 전부 (충돌 확인용)
 
     def to_dict(self) -> Dict[str, Any]:
         return {"locks": self.locks, "pools": self.pools, "female": self.female, "male": self.male,
                 "female_noun": self.female_noun, "prompt_type": self.prompt_type,
-                "consumed": self.consumed, "nude": self.nude}
+                "consumed": self.consumed, "nude": self.nude, "undressing": self.undressing,
+                "framing": self.framing, "framings_found": self.framings_found}
 
     def casting_ok(self, female: int, male: int) -> bool:
         if self.female is not None and female != self.female:
@@ -177,10 +181,12 @@ def _phrases(text: str, elements: Dict[str, Element], intent: Intent) -> set:
             while pre and pre[0] not in MODIFIERS:
                 pre.pop(0)
             mods = [w for w in pre if w in MODIFIERS]
-            used |= set(mods) | set(noun.replace("-", " ").split())
             canon = "mini skirt" if noun in ("miniskirt", "mini-skirt") else noun
             if not mods:
-                break  # a bare noun: the normal keyword search picks matching items
+                # a bare noun: the normal keyword search picks matching items
+                # (그래서 used 에 넣지 않음 — 넣으면 키워드 검색이 건너뛰어 '셔츠' 요청이 무시됨)
+                break
+            used |= set(mods) | set(noun.replace("-", " ").split())
             items = [i.text for i in elements[key].items
                      if all(_word_in(w, i.text) for w in mods) and _word_in(canon.split()[-1], i.text)]
             if items:
@@ -243,6 +249,22 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
     if any(w in NUDE_WORDS for w in tokenize(plain)) or any(k in original for k in _KO_NUDE):
         intent.nude = True
 
+    # 옷을 벗는 중 / 벗는 장면: 옷은 입은 채 벗는 동작 ('벗고 있는' 이 누드로 잡히지 않게)
+    from . import framing as _framing, undressing as _undressing
+    pre_used = set()
+    if _undressing.detect(original, text):
+        intent.undressing = True
+        intent.nude = False
+        pre_used |= {w for w in words if w in _undressing.CONSUMED}
+
+    # 샷 구도 (얼빡샷 · 클로즈업 · 미디엄 · 카우보이 · 전신) — 동작·장소 키워드로 쓰이지 않게 따로 뺌
+    intent.framing, intent.framings_found, fwords = _framing.detect(original, text)
+    for phrase in fwords:  # 'close-up' 처럼 붙은 말과 'close', 'up' 둘 다
+        toks = set(tokenize(phrase.lower()))
+        pre_used |= toks | {p for tok in toks for p in tok.split("-")}
+    if intent.framing:
+        pre_used |= {w for w in ("shot", "shots", "face", "only", "frame", "framed") if w in words}
+
     # direct item matches -> locked pools
     skip = GENERIC | STOPWORDS | set(NUM_WORDS) | FEMALE_SINGULAR | FEMALE_PLURAL | MALE_SINGULAR \
         | MALE_PLURAL | set(COUNTRY_TO_ADJ) | {n.lower() for n in nat_items}
@@ -250,8 +272,9 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
     keywords = [w for w in dict.fromkeys(words) if len(w) >= 3 and w not in skip]
     lemmas = {k: {k, simple_lemma(k)} for k in keywords}
     used = _phrases(text, elements, intent)
-    intent.consumed.extend(sorted(used))
-    if used and intent.female is None and intent.male is None:
+    intent.consumed.extend(sorted(used | pre_used))
+    used |= pre_used
+    if (used - pre_used) and intent.female is None and intent.male is None:
         # the request describes one person's look ("fair skin, white miniskirt"): one woman
         intent.female, intent.male = 1, 0
     for group in LOCK_GROUPS:

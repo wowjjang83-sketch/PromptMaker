@@ -2,14 +2,43 @@
   "id": "beauty_closeup",
   "name": "뷰티 클로즈업",
   "type": "image",
-  "keywords": ["beauty", "closeup", "close", "face", "makeup", "skin", "headshot"],
-  "description": "얼굴/피부/메이크업 위주의 클로즈업",
-  "casting_filter": {"female_max": 1, "male_max": 0},
-  "defaults": {"photo_style": "studio beauty headshot", "camera": "close-up framing"},
+  "keywords": [
+    "beauty",
+    "closeup",
+    "close",
+    "face",
+    "makeup",
+    "skin",
+    "headshot"
+  ],
+  "description": "얼굴/피부/메이크업 위주의 클로즈업 (샷 구도: 클로즈업 · 얼빡샷)",
+  "casting_filter": {
+    "female_max": 1,
+    "male_max": 0
+  },
+  "defaults": {
+    "photo_style": "studio beauty headshot",
+    "camera": "shot on an 85mm lens at f/1.4"
+  },
   "sentences": [
-    {"text": "A close-up {photo_style} of {subject}."},
-    {"text": "{Her} {skin} skin looks flawless, with {makeup} and {hair}."},
-    {"text": "{She} {is} {action}, with {expression}."},
-    {"text": "{lighting}, {lighting_effect}, ultra-detailed skin texture, {camera}."}
+    {
+      "text": "A {photo_style} of {subject}."
+    },
+    {
+      "text": "{framing}."
+    },
+    {
+      "text": "{Her} {skin} skin looks flawless, with {makeup} and {hair}."
+    },
+    {
+      "text": "{She} {is} {action}, with {expression}."
+    },
+    {
+      "text": "{lighting}, {lighting_effect}, ultra-detailed skin texture, {camera}."
+    }
+  ],
+  "framings": [
+    "closeup",
+    "extreme_closeup"
   ]
 }

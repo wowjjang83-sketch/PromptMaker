@@ -263,9 +263,7 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
         toks = set(tokenize(phrase.lower()))
         pre_used |= toks | {p for tok in toks for p in tok.split("-")}
     if intent.framing:
-        pre_used |= {"shot", "shots"} & set(words)
-    if intent.framing:
-        pre_used |= {w for w in ("face", "only", "frame", "framed") if w in words}
+        pre_used |= {w for w in ("shot", "shots", "face", "only", "frame", "framed") if w in words}
 
     # direct item matches -> locked pools
     skip = GENERIC | STOPWORDS | set(NUM_WORDS) | FEMALE_SINGULAR | FEMALE_PLURAL | MALE_SINGULAR \

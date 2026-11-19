@@ -1,0 +1,21 @@
+# 신체 부위별 클로즈업 구도. 요청에 '다리 클로즈업 / 입술 접사 / 손만 나오게 / close-up of her legs' 가 있으면 씁니다.
+# 줄 끝 태그로 부위를 정합니다: #eyes #lips #hair #hands #neck #shoulders #back #chest #waist #hips #thighs #legs #feet
+# 태그가 없으면 문구로 부위를 찾습니다. 같은 부위 줄이 여러 개면 그중 하나를 고릅니다. 문장: "{framing}."
+macro close-up of {her} eyes and lashes #eyes
+extreme close-up of {her} eyes, sharp focus on the iris #eyes
+close-up shot of {her} lips, cropped tightly around {her} mouth #lips
+macro close-up of {her} glossy lips #lips
+close-up of {her} hair filling the frame #hair
+close-up of {her} hands, framed from the wrists to the fingertips #hands
+detail shot of {her} hands and fingers #hands
+close-up of {her} neck and collarbones #neck
+close-up of {her} bare shoulders #shoulders
+close-up of {her} back, framed from the shoulder blades to the waist #back
+close-up of {her} chest and neckline #chest
+close-up of {her} waist and midriff #waist
+close-up of {her} hips #hips
+close-up of {her} thighs #thighs
+close-up of {her} legs, framed from the hips to the ankles #legs
+low close-up of {her} long legs #legs
+close-up of {her} feet and ankles #feet
+detail shot of {her} feet #feet

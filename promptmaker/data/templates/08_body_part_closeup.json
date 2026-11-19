@@ -1,0 +1,48 @@
+{
+  "id": "body_part_closeup",
+  "name": "신체 부위 클로즈업",
+  "type": "image",
+  "keywords": [
+    "closeup",
+    "close",
+    "detail",
+    "macro",
+    "body",
+    "legs",
+    "lips",
+    "hands",
+    "feet"
+  ],
+  "description": "신체 부위 하나만 담는 클로즈업 (눈·입술·손·목선·어깨·등·가슴·허리·엉덩이·허벅지·다리·발·머리카락). 요청에 부위 클로즈업이 있을 때만 씀",
+  "framings": [
+    "body_part"
+  ],
+  "framing_only": true,
+  "casting_filter": {
+    "female_max": 1,
+    "male_max": 0
+  },
+  "defaults": {
+    "camera": "shot on a 100mm macro lens"
+  },
+  "sentences": [
+    {
+      "text": "A {photo_style} of {subject}."
+    },
+    {
+      "text": "{framing}."
+    },
+    {
+      "text": "{part_detail}"
+    },
+    {
+      "text": "{She} {wears} {attire}, {attire_state?}."
+    },
+    {
+      "text": "{She} {is} {pose}."
+    },
+    {
+      "text": "{lighting}, {lighting_effect}, ultra-detailed skin texture, shallow depth of field, {camera}."
+    }
+  ]
+}

@@ -15,6 +15,7 @@ if _HERE not in sys.path:
 from promptmaker import GenerateOptions, PromptMaker  # noqa: E402
 from promptmaker.core import MODES  # noqa: E402
 from promptmaker.framing import FRAMINGS  # noqa: E402
+from promptmaker.body_parts import PARTS  # noqa: E402
 
 _USER_DATA = os.path.join(_HERE, "user_data")
 _MAKER = PromptMaker(user_data_dir=_USER_DATA if os.path.isdir(_USER_DATA) else None)
@@ -57,12 +58,14 @@ class PromptMakerGenerate:
                 "prefix": ("STRING", {"multiline": True, "default": ""}),
                 "suffix": ("STRING", {"multiline": True, "default": ""}),
                 "framing": (["auto"] + list(FRAMINGS) + ["none"], {"default": "auto"}),
+                # 신체 부위 클로즈업: none = 요청에서 찾음 ('다리 클로즈업' → legs)
+                "body_part": (["none"] + list(PARTS), {"default": "none"}),
             },
         }
 
     def generate(self, user_input, prompt_type, mode, template, seed,
                  translate, use_related_words, model_profile="default", selections_json="{}", random_elements="",
-                 prefix="", suffix="", framing="auto"):
+                 prefix="", suffix="", framing="auto", body_part="none"):
         try:
             selections = json.loads(selections_json or "{}")
         except json.JSONDecodeError as exc:
@@ -74,6 +77,7 @@ class PromptMakerGenerate:
             "random_elements": random_elements,
             "model_profile": None if model_profile == "default" else model_profile,
             "framing": framing or "auto",
+            "body_part": "" if body_part in (None, "", "none") else body_part,
         })
         result = _MAKER.generate(user_input, opts)
         prompt = " ".join(p for p in (prefix.strip(), result.prompt, suffix.strip()) if p)

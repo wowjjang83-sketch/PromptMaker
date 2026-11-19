@@ -47,6 +47,8 @@ PROMPT_PATH = os.path.join(PACKAGE_DATA_DIR, "vision", "analyze_prompt.txt")
 
 # Elements that should not be guessed from a picture.
 DEFAULT_SKIP_KEYS = ["casting", "age", "outfit_type", "nationality", "camera_movement", "pacing"]
+# 문구 틀({top} 같은 자리표시)로 만든 요소: 이미지 분석으로 채우지 않음 (설정의 skip_keys 와 상관없이)
+NO_ANALYSIS_KEYS = ("undressing", "undressing_state")
 APPEND_HEADER = "# 이미지 분석 자동 추가 ({date})"
 FULL_PROMPT_KEY = "full_prompt"
 DEFAULT_FULL_PROMPT_FILE = os.path.join(REPO_ROOT, "output", "full_prompts.txt")
@@ -761,7 +763,7 @@ def build_prompt(data_dirs: List[str], cfg: VisionConfig, exclude=()) -> Tuple[s
             files.setdefault(key, paths[0])
     lines, keys = [], []
     for key, el in elements.items():
-        if key in cfg.skip_keys or key in exclude:
+        if key in cfg.skip_keys or key in exclude or key in NO_ANALYSIS_KEYS:
             continue
         path = files.get(key)
         if not path:  # json-only elements (e.g. casting) are not written to

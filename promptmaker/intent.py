@@ -76,12 +76,13 @@ class Intent:
     undressing: bool = False                                     # '옷을 벗는 중/장면': 옷을 입고 벗는 동작 (누드와 다름)
     framing: Optional[str] = None                                # 샷 구도 (framing.FRAMINGS 중 하나)
     framings_found: List[str] = field(default_factory=list)      # 요청에서 찾은 구도 전부 (충돌 확인용)
+    body_part: Optional[str] = None                              # 신체 부위 클로즈업 ('다리 클로즈업' → legs)
 
     def to_dict(self) -> Dict[str, Any]:
         return {"locks": self.locks, "pools": self.pools, "female": self.female, "male": self.male,
                 "female_noun": self.female_noun, "prompt_type": self.prompt_type,
                 "consumed": self.consumed, "nude": self.nude, "undressing": self.undressing,
-                "framing": self.framing, "framings_found": self.framings_found}
+                "framing": self.framing, "framings_found": self.framings_found, "body_part": self.body_part}
 
     def casting_ok(self, female: int, male: int) -> bool:
         if self.female is not None and female != self.female:
@@ -264,6 +265,24 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
         pre_used |= toks | {p for tok in toks for p in tok.split("-")}
     if intent.framing:
         pre_used |= {w for w in ("shot", "shots", "face", "only", "frame", "framed") if w in words}
+
+    # 신체 부위 클로즈업 ('다리 클로즈업', 'close-up of her legs'): 일반 구도보다 우선
+    from . import body_parts as _body_parts
+    part, _ = _body_parts.detect(original, "")
+    en_part, en_phrase = _body_parts.detect("", text)
+    part = part or en_part
+    if part:
+        intent.body_part = part
+        intent.framing = _framing.BODY_PART
+        intent.framings_found = [_framing.BODY_PART]
+        if en_phrase:
+            toks = set(tokenize(en_phrase.lower()))
+            pre_used |= toks | {p for tok in toks for p in tok.split("-")}
+        # 번역문에 남은 부위 이름 ('clavicle close-up shot') 도 키워드로 쓰지 않음
+        part_re = re.compile(r"\b(?:" + str(_body_parts.PARTS[part]["en"]) + r")\b", re.I)
+        pre_used |= {w for w in words if part_re.fullmatch(w)}
+        if intent.framing and en_phrase == "":
+            pre_used |= {w for w in ("close-up", "closeup", "close", "up", "macro", "detail") if w in words}
 
     # direct item matches -> locked pools
     skip = GENERIC | STOPWORDS | set(NUM_WORDS) | FEMALE_SINGULAR | FEMALE_PLURAL | MALE_SINGULAR \

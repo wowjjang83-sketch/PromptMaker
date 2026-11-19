@@ -24,9 +24,12 @@ from typing import Dict, List, Optional, Tuple
 
 FRAMINGS: Tuple[str, ...] = ("extreme_closeup", "closeup", "medium", "cowboy", "full_body")
 # 구도별로 담기는 몸 범위 (region_rank 가 이 값 이하인 줄만 쓸 수 있음)
-MAX_RANK: Dict[str, int] = {"extreme_closeup": 0, "closeup": 1, "medium": 3, "cowboy": 4, "full_body": 5}
+# 신체 부위 클로즈업 (0.11.0): 부위는 body_parts.PARTS. 담기는 범위는 부위가 정함 (body_parts 참고)
+BODY_PART = "body_part"
+MAX_RANK: Dict[str, int] = {"extreme_closeup": 0, "closeup": 1, "medium": 3, "cowboy": 4, "full_body": 5,
+                            BODY_PART: 5}
 LABELS_KO: Dict[str, str] = {"extreme_closeup": "얼빡샷(초근접 얼굴)", "closeup": "클로즈업", "medium": "미디엄샷",
-                             "cowboy": "카우보이샷", "full_body": "전신샷"}
+                             "cowboy": "카우보이샷", "full_body": "전신샷", BODY_PART: "신체 부위 클로즈업"}
 # framing.txt 가 없거나 비었을 때 쓰는 기본 문구
 DEFAULT_PHRASES: Dict[str, str] = {
     "extreme_closeup": "extreme close-up of {her} face only, filling the entire frame from forehead to chin",

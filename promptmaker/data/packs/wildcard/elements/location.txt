@@ -1,0 +1,506 @@
+# 와일드카드 확장 요소 (location) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+on a bed
+on bed
+on the bed
+in a bathroom
+on a beach
+by the ocean
+in a temple
+on stairs
+on a couch
+on the couch
+in an intimate bedroom
+indoors
+at a pool
+at a poolside
+in a bathtub
+in a bedroom
+beside her on the sofa
+on a street
+beside her on the couch
+on a sofa
+by the sea
+on a white sofa
+in the surrounding room
+on a sunlit beach
+in a car
+in a river
+on a bridge
+on the sofa
+shoulders with shallow depth of field
+on a train
+in a minimalist bedroom
+under even studio lighting
+on a road
+in a city
+beside her on the bed
+at a harbor
+on a sandy beach
+on a staircase
+in a turquoise ocean
+on a wooden staircase
+in a minimalist room
+on the staircase
+in a dimly lit bedroom
+in a studio
+beside the bed
+in a parked white car
+on a sandy shore
+in a part of the room
+on a sidewalk
+in a city skyline
+in an adjacent room
+on a pedestrian crosswalk
+in a modern
+in a modern kitchen
+on a dark leather couch
+in a warm-toned bedroom
+in a cozy bedroom
+in a minimalist living room
+on a sun-drenched beach
+in a softly lit studio
+on a second bed
+in a softly lit room
+on a blurred beach
+in a kitchen
+on couch
+in a coffee shop
+in an office
+on a textured beige cushion or sofa
+on a textured couch
+in the kitchen
+under soft studio lighting
+in a minimalistic room
+in a mirrored door reflecting hallway
+on a faint road
+on a tiled patio
+in a turquoise sea
+on a patterned carpet beneath sofa
+in mountains
+in hazy mountains
+on a chair set
+in a parked car
+in an urban skyline
+in a white tent
+on a dark brown leather couch
+in a dimly lit barn
+in a vintage-style bedroom
+in an airy room
+in a professionally shot bedroom
+in a NSFW bedroom
+in a modern living room
+in an intimate bathroom
+in the studio
+in a sunlit bathroom
+on the beach
+on the surrounding beach
+in an outdoor garden
+on a part of the bed
+in a minimalist white room
+in a cool-toned bath
+on a sunlit seaside
+on a cream upholstered sofa
+on a white bed
+inside a car
+indoors against a plain
+in a square
+on a part of the couch
+in a white bathtub
+in a modern bathroom
+in the surrounding bathroom
+in a flowing river
+on a spread across the bed
+in the turquoise ocean
+indoors near a window
+on a beige couch
+outdoors
+near her temple
+in a softly lit gray studio
+at an onsen
+in a bath
+on a single bed
+in a grassy field
+in a gym
+on a balcony
+outdoors at what
+in a fushimi inari shrine
+in a soft pink studio
+at a coffee machine station
+in a glass door to hallway
+in a bakery
+in a doorframe to adjacent room
+in a minimalistic modern room
+in a plain solid pink studio
+in a solid deep blue studio
+in a plain maroon studio
+on a people on the shore
+at a floor surrounding the pool
+in a minimalist studio
+in a calm turquoise sea
+on a lounge bed
+in an artificial grass field
+on a concrete sidewalk
+on a telephone beside bed
+in a solid bright teal studio
+on a white houndstooth-patterned sofa
+in a pond
+in a towel hanging in bathroom
+on countertop beside bathtub
+in a slightly behind the bathtub
+on an elevated highway
+in a greenery across a river
+on a waterfront bridge
+on wooden stairs
+on the bed to her left
+on a right of couch
+in a doorway to adjacent room
+in a gravel courtyard
+in a plaza
+in misty mountains
+inside the room above her head
+on a modern building balcony
+outside window
+on a stone pier
+on a turquoise boat
+on a low hedge bordering sidewalk
+on a bottom set
+at a wooden fence along poolside
+in a mirrored wall reflecting hallway
+on a pink teapot set
+on a wet urban sidewalk
+in a red taxi
+on a cobblestone street
+in a thatched-roof villa
+in a parked black car
+at a stone waterfall
+on an abstract painting above sofa
+on a greenery beside sidewalk
+on a parked van on street
+in a portion of the room
+in an interior doorway revealing hallway
+on large glass windows revealing stairs
+on a small signpost near shore
+in a yellow taxi
+in a surrounded by brick-paved plaza
+on a street with crosswalk
+in a white car
+at an orange bucket near poolside
+at a "design bar
+in a skyline
+at a small orange-packaged candy bar
+in a merchandise inside the store
+on a window frame above bed
+in green mural walls depicting mountains
+on an ornate staircase
+outside view through the window
+on a kettlebell set
+in an AL CAFE
+outside through the window
+in a stone wall behind car
+on a plush beige sofa
+on a bench on paved patio
+in a minimal furniture in bedroom
+on dark wooden stairs
+in a corner of adjacent room
+outside shop window
+on a traffic cone beside sidewalk
+on parked bus
+in a brightly lit indoor hallway
+in a palm near temple
+on a vintage television set
+in a clean minimalist studio
+on a shallow stream bed
+at a ladder entrance into pool
+on a neutral-toned wall behind bed
+in a cobblestone plaza
+on a red suspension bridge
+in an open meadow
+at a gravel path beside pool
+on a gravel garden bed
+at a tiled poolside
+in a calm river
+in a sunlit stone-walled kitchen
+in a vintage-style café
+in a paved parking lot
+on a stone-paved patio
+on an arched bridge
+on a yellow toy train
+on a red awning above balcony
+in a green artificial turf field
+at a tropical-themed bar
+on a concrete patio
+on a dark urban street
+on a gravel sidewalk
+on a white wall behind sofa
+at a blue swimming pool
+at a grass beside lake
+on a gravel bed
+at a concrete edge of pool
+on an asphalt road
+at a branded soap bar
+on an illuminated bridge
+on a brick-paved patio
+in a window
+in a blue taxi
+on an urban parisian street
+on a grey concrete sidewalk
+on red double-decker bus
+on a docked boat
+in a green grassy field
+on a street under bright sunlight
+on black metal railing ascending stairs
+on an ornate balcony
+on a decorative boat
+in a minimalist café
+on a mustard-yellow sofa
+in an orange taxi
+on a yellow variegated plant bed
+on a gravel-lined sidewalk
+at a lush greenery bordering poolside
+in a round bathtub
+on a stone-paved sidewalk
+in a parked white taxi
+on a slightly left toward street
+on blue bus
+at a stone-edged poolside
+on glass railings leading to stairs
+in a black-framed mirror reflecting hallway
+on a green shrubbery along sidewalk
+in a modern multi-level café
+on a greenery along sidewalk
+in an other resting near temple
+in a green bridge spanning river
+on a purple-tinted upper balcony
+at a swimming pool
+on glass doors reflecting stone stairs
+on a metallic cutlery set
+beside her on couch
+at a turquoise swimming pool
+in an overcast sea
+in a minimalist pottery studio
+on a rocky shore
+in a black interior car
+indoors with gray curtains
+on a deep burgundy velvet bed
+indoors on a dark gray couch
+in a dark room
+in a sun-dappled tropical garden
+in an explicit bedroom
+in a tiled bathroom
+on a patchwork quilted couch
+on a patchwork-patterned couch
+on a plaid sofa
+on a weathered white staircase
+in a room with white walls
+in a cluttered kitchen
+on a tree-lined asphalt road
+in the edge of a bathtub
+in a warmly illuminated hotel room
+in a moody room
+in a moody studio
+in a rustic barn
+on a white-sheeted hotel bed
+on a tufted leather couch
+in a shadowed barn
+on an industrial staircase
+on the edge of a bed
+in a dark hallway
+in a dense forest garden
+in a swimming pool
+on the sheen on the couch
+in a sunlit bedroom
+in a modern office
+in the urban park
+in a warm-lit bedroom
+in a seamless white studio
+in a professionally lit bedroom
+in a cluttered bedroom
+at the edge of the pool
+on a brown leather sofa
+on a dimly lit staircase
+in a minimalist hallway
+in a brightly lit locker room
+in a sunlit ocean
+in a softly lit living room
+on the other on the bed
+in a cozy living room
+in a garden with green trees
+on a television set
+in an authentic store
+in a hospital room
+on a bed with white linens
+on a white bed with pillows
+in a blue-walled cabin room
+in a warmly lit living room
+in the cozy bedroom
+on the bright beach
+on a velvet couch
+on a rumpled white bed
+in a warm-toned room
+in a passing car
+on a gray sofa
+in a dynamic stage performance shot
+in a natural-light bedroom
+in a lived-in room
+in a casual art studio
+in a bottega veneta store
+in a wood-paneled executive office
+in a golden-lit bedroom
+in a tiled room
+in an outdoor park or garden
+in a bright kitchen
+on a purple stage
+indoors against a neutral-toned curtain backdrop
+in a sunlit grassy field
+on the natural seaside
+in a white porcelain bathtub
+on a sunlit patio
+on the neutral beach
+indoors with soft natural lighting
+in a matching bathtub
+at a sunlit backyard poolside
+in a tiled kitchen
+in a sunlit kitchen
+in a traditionally styled room
+in a sunlit garden
+on a dark-toned couch
+in a sunlit urban park
+on a rose-colored velvet couch
+in a studio portrait lit
+on an upholstered sofa
+in a minimalist office
+in the minimalist gym
+on a snowy mountain
+in a sunlit stone bath
+on the industrial staircase
+in a neutral gray studio
+in a typical of a studio
+in an indoor bookstore or library
+in the interior of the car
+on the headboard of the bed
+on a bed or couch
+in a slightly cluttered kitchen
+on a bed with a plain
+outdoors under bright daylight
+in a brown-tiled bathtub
+in a brown bathtub
+indoors with dim
+on a neatly made bed
+in an uncluttered studio
+on a metal-framed bed
+in a black car
+at a small pool
+in the surrounding garden
+on the stairs
+indoors near a large window
+on a paved street
+on a velvety brown couch
+on an alongside a second bed
+on a beige upholstered sofa
+on the edge of the couch
+on a brown leather couch
+in a turquoise bathtub
+on a dark-colored sofa
+on a black leather couch
+in a light-filled room
+in a simple room
+in a red toy car
+in a well-lit domestic or studio
+on the glossy red couch
+on an upholstered couch
+on a tufted sofa
+on a tufted green sofa
+in a bedroom with a bed
+in a dense green forest
+in a bedroom with white bedding
+on a blue bridge
+on a river beneath the bridge
+in a beige bathtub
+on a green tufted couch
+on a white couch or bed
+in a bedroom with two beds
+in the white-tiled kitchen
+in an indoor bedroom
+on a blue canopy bed
+on a dark couch
+on a red bridge
+at the poolside
+indoors in a dimly lit room
+on a dark couch or bed
+at a chrome grab bar
+on a wooden bed
+on a dark sofa
+in an opulent bedroom
+on a patterned sofa
+on the dark leather couch
+at a yellow horizontal bar
+in an even from a bathroom
+on a beige sofa
+in a corridor
+in a swimming pool area
+in a neutral-toned room
+in a hyper-detailed luxury bathroom
+on an ultra realistic beach
+in a cafe
+in a forest
+at a waterfall
+near a bed with curtains
+in seiza on a bed indoors
+on a posed on the bed
+near a bath
+at a resort
+on an outdoor beach
+on a pillow on bed
+in a dimly lit living room
+in a highly realistic studio portrait
+at a shallow pool
+in a blue ocean
+in a sun-drenched desert
+at a partially submerged in pool
+in a Japanese-style room
+in a realistic kitchen
+in an indoor bathroom
+in a Japanese garden
+in an indoor room
+on a bed sheet on bed
+in a locker room
+in a Japanese room
+on side of bed
+in a dimly lit indoor bedroom
+in a dimly lit studio
+in a brightly lit room
+on a beige linen-textured sofa
+on a beige burlap-textured couch
+on a textured beige sofa
+in a domestic bedroom
+on a patterned greenish-gold upholstered sofa
+in an atmospheric room
+on a light gray upholstered sofa
+on a deep burgundy textured couch
+on a deep purple velvet couch
+on a dark brown velvet sofa
+beside the sofa
+on a textured gray velvet couch
+on an off-white sofa
+on a sunny beach
+on a high-tech stage
+on a sheet set
+in the everyday kitchen
+on a performer on stage
+at the foot of the bed
+at a sunlit swimming pool
+in an atmospheric locker room
+in a storage room
+indoors within a warmly lit room
+indoors in a warmly lit
+in a dimly ambient room
+in a sunlit apartment
+on the tranquil seaside
+in a high-end hotel lobby
+in a bright white room
+at a tropical resort
+in a subtly lit vintage lounge
+on a carpeted staircase
+in a vintage-style room
+on a tufted leather sofa

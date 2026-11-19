@@ -1,0 +1,59 @@
+# 와일드카드 확장 요소 (sportswear) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+a white halter-neck sports bra
+a black sports bra
+a white cropped halter-neck sports bra
+a black halter-neck sports bra
+a white sports bra
+a white cropped sports bra
+a beige halter-neck sports bra
+a light blue halter-neck sports bra
+a black calvin klein sports bra
+a gray sports bra
+a white calvin klein sports bra
+a light pink halter-neck sports bra
+a grey sports bra
+a gray calvin klein sports bra
+a pink halter-neck sports bra
+a light gray sports bra
+a lavender halter-neck sports bra
+a beige halter-neck sports bra layered
+a light beige halter-neck sports bra
+a two-piece black sports bra
+a sports bra
+a halter-neck sports bra
+a pink ribbed halter-neck sports bra
+a matching cropped sports bra
+a dark grey halter-neck sports bra
+a black cropped sports bra
+a peach-colored halter-neck sports bra
+a light lavender halter-neck sports bra
+a pink calvin klein sports bra
+a light teal sports bra
+a pink crisscross sports bra
+a silver sports bra
+a matching sports bra
+an olive green nike sports bra
+a grey calvin klein sports bra
+a black alo sports bra
+a cropped red sports bra
+a mint green cropped sports bra
+a black halter-neck cropped sports bra
+a red cropped basketball jersey
+a maroon halter-neck sports bra
+a brown halter-neck sports bra
+a form-fitting white sports bra
+a form-fitting white cropped sports bra
+a light blue sports bra top
+a form-fitting light blue sports bra
+a form-fitting grey sports bra
+a light blue sports bra
+a form-fitting light gray sports bra
+a fitted grey sports bra
+a bright pink sports bra
+a form-fitting black racerback sports bra
+a jersey tied at waist
+a simple gray sports bra
+a sportswear
+a sheer black sports bra
+a blue athletic-style sports bra

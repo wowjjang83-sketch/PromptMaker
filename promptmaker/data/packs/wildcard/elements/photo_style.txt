@@ -1,0 +1,292 @@
+# 와일드카드 확장 요소 (photo_style) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+professionally lit photo
+photorealistic portrait
+professionally lit indoor photo
+realistic photography
+NSFW photo
+high-resolution photo
+full-length portrait
+amateur candid photograph
+full-length photograph
+explicit photograph
+high-angle photo
+soft-focus portrait
+photorealistic vertical portrait
+candid photo
+framed picture
+softly lit photograph
+professional-grade photo
+professionally lit portrait photograph
+framed photo
+professional beachside photo
+hyper-realistic vertical photograph
+professionally lit everyday photo
+professionally shot outdoor photo
+amateur iphone photo
+realistic portrait
+top-down photograph
+high-resolution photographic portrait
+low-angle photo
+photorealistic Japanese idol-style portrait
+rear-view photograph
+soft-focus portrait photo
+photorealistic photo
+hyper-realistic vertical portrait
+realistic photograph
+NSFW photograph
+photorealistic outdoor portrait
+documentary-style photograph
+softly lit everyday photo
+vibrant outdoor photo
+intimate mood of the portrait
+softly lit professional photograph
+soft portrait-style photograph
+candid-style photograph
+high-detail photographic style with natural lighting
+high-resolution photograph with natural lighting
+low-angle photograph
+high-resolution raw photo
+warm-toned photo
+professional nighttime photo
+professionally shot photo
+cinematic photograph with dramatic chiaroscuro lighting
+everyday photo
+vibrant stage photo
+outdoor photo
+intimate portrait
+high-resolution photograph with soft ambient lighting
+black-and-white photographic portrait
+vibrant beachside portrait
+natural photo style with soft lighting
+elegant portrait moment with soft shadows
+natural aesthetic typical of lifestyle photography
+in the middle-left photo
+in the middle-right photo
+composed aesthetic of the portrait
+soft-focus portrait photograph
+high-resolution portrait photo
+photorealistic upper-body portrait
+hyper-realistic portrait
+realistic photographic style with natural lighting
+hyper-realistic photograph
+Japanese-style photography
+other holding smartphone for selfie
+small framed photo
+blue case to take the selfie
+framed anime-style portrait
+framed photograph
+white manicured nails to take selfie
+arms raised holding smartphone for selfie
+small framed portrait
+stylized portrait
+framed line-art portrait
+intimate NSFW photograph
+photorealistic style with natural daylight
+photorealistic RAW photo
+slightly overexposed aesthetic with soft shadows
+high-resolution photo with natural lighting
+realistic photograph with soft indoor lighting
+clean aesthetic with minimal shadows
+high-detail photographic style with soft shadows
+her still
+her posture upright and still
+high-detail photographic style with cinematic lighting
+side-profile portrait
+cinematic photograph
+shallow depth-of-field photograph
+high-resolution cinematic photograph
+realistic photographic style with soft shadows
+gritty documentary-style photograph with strong shadows
+unfiltered snapshot with natural indoor lighting
+professional-grade outdoor photograph
+professionally lit NSFW photo
+professionally lit candid photo
+high-detail photo
+naturalistic photo with soft shadows
+high-detail photograph
+candid-style photo
+naturalistic photo with soft ambient lighting
+professional photograph with soft natural lighting
+high-resolution photographic style with natural lighting
+professionally lit intimate photo
+professionally lit outdoor photo
+sunlit outdoor photo
+commercial-grade photography
+high-resolution photo with natural outdoor lighting
+professional black-and-white photo
+wet-look aesthetic with soft background lighting
+warm-lit indoor photograph
+naturalistic photo with warm ambient lighting
+angled to take a selfie
+naturalistic photographic style with soft shadows
+professional-grade office photo
+candid outdoor photograph with soft daylight
+professional photograph with natural lighting
+intimate indoor photo
+high-resolution photo with soft natural lighting
+professional office photo
+softly lit candid photo
+everyday photo style with soft shadows
+dynamic black-and-white photo
+grounded cinematic still
+palm fronds framing the shot
+softly lit indoor portrait
+professional outdoor photo
+high-resolution professional photograph with natural daylight
+professional photograph with soft ambient lighting
+sun-drenched outdoor photograph
+professionally shot portrait
+naturalistic photograph with soft shadows
+serene cinematic film still
+warm film-toned portrait photograph
+full-length nude portrait
+documentary-style photograph with natural lighting
+documentary-style photography
+in a low-angle outdoor photograph
+professionally photographed portrait
+intimate portrait style with soft shadows
+unedited photograph
+black-and-white photo
+portrait photo
+candid selfie
+natural outdoor portrait photo
+soft-focus outdoor portrait photo
+airy aesthetic with soft shadows
+high-resolution photography
+vibrant 4k ultra hd photograph
+high-definition photo
+vibrant outdoor photograph
+serene mood of the photograph
+serene mood of the portrait
+naturalistic photo style with soft shadows
+intimate portrait style with gentle lighting
+natural photorealistic style with soft shadows
+approachable medical-themed portrait
+focused moment in a naturalistic photograph
+high-resolution photograph with soft shadows
+naturalistic indoor photo
+natural outdoor photograph
+glamorous photo
+photorealistic magazine-style portrait
+outdoor portrait photo
+high-resolution portrait photograph
+soft-focus outdoor portrait
+candid photographic style with soft daylight
+intimate portrait with natural lighting
+natural photo style with soft daylight
+outdoor sports-themed portrait with natural lighting
+candid feel to the portrait
+intimate photo style with soft lighting
+warm photographic style with soft shadows
+a portrait-style photograph with natural lighting
+high-resolution photographic style with gentle shadows
+minimalist photographic style with soft shadows
+intimate photographic style with soft lighting
+intimate outdoor portrait
+elegant photographic portrait
+natural-light portrait with soft shadows
+high-contrast photographic style with soft shadows
+food photo
+serene photo
+a high-resolution photo with natural daylight
+intimate portrait with gentle shadows
+magazine-style photograph with dynamic lighting
+approachable mood in a portrait-style photograph
+professional yet subtly sensual office portrait
+lifestyle-style photograph with soft natural lighting
+candid photo style with soft shadows
+candid photo style with soft backlighting
+naturalistic photo
+softly lit indoor photo
+candid photo style with even lighting
+warm tone of the photograph
+high-resolution photo with soft daylight
+softly lit indoor selfie
+high-contrast black-and-white professional portrait photograph
+face in a close-up shot
+in one photo
+slightly low-angle selfie
+polished atmosphere of the portrait
+blurred wall with a framed picture
+shoulders framing the shot
+arm framing the shot
+wall-mounted picture
+softly lit portrait
+small framed picture
+wooden cabinet with a framed portrait
+torso in a medium shot
+in the left photo
+a selfie-style photograph
+soft natural daylight photo
+warm-toned indoor photo
+professional portrait photo
+portrait-style photograph
+soft portrait-style photo
+black-and-white portrait
+candid portrait
+naturalistic photo style with soft lighting
+vertically composed photorealistic portrait
+artistic photography
+adult photography
+photorealistic style with soft shadows
+solo portrait
+explicit photography
+traditional media portrait
+taking a selfie
+cellphone photo
+realistic photographic style with dramatic shadows
+hyper-detailed realistic style with dramatic lighting
+black-and-white photorealistic portrait
+hyper-realistic photography
+photographic style with soft shadows
+realistic photographic style with dramatic lighting
+lifestyle-style photograph
+style candid photograph
+photorealistic Japanese idol-style仰拍 low-angle portrait
+hyperrealistic yet subtly surreal photographic portrait
+style realism with cinematic soft lighting
+hyper-realistic Japanese idol photo shoot portrait
+Japanese idol-style photorealistic portrait
+photorealistic 8K vertical portrait
+photorealistic 4K vertical portrait
+sharp portrait
+high-resolution erotic portrait
+soft-focus photographic portrait
+high-definition Japanese idol photography portrait
+vertical photorealistic portrait
+high-detail realistic photograph
+Japanese idol-style photography
+fashion photography
+high-detail realistic photography
+focus of Japanese gravure idol photography
+photorealistic Japanese-style portrait
+hyperrealistic cinematic portrait
+hyper-realistic yet subtly stylized photographic portrait
+white photograph
+realistic Japanese photo idol-style portrait
+beautifully composed high-fidelity photograph
+personal portrait
+realistic photographic style with soft lighting
+characteristic of early digital photography
+suggestive of professional modeling photography
+intimate photograph
+explicitly feminine erotic portrait
+photorealistic solo portrait
+hyper-realistic indoor portrait
+main photograph
+prominent photograph
+central photograph
+even on the main photo
+right-side portrait
+slightly sensual mood of the portrait
+naturalistic photograph style with balanced lighting
+modern portrait in natural indoor lighting
+candid photographic style with soft shadows
+candid photo style with soft daylight
+intimate portrait with warm ambient lighting
+realistic photo
+high-quality style for fashion photography
+candid smartphone photo
+candid smartphone selfie
+realistic front camera selfie

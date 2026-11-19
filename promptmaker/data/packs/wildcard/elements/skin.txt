@@ -1,0 +1,22 @@
+# 와일드카드 확장 요소 (skin) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+tan
+dark
+olive
+bare
+wet
+radiant
+luminous fair
+dewy
+even
+glossy
+flushed
+smooth fair
+warm-toned
+pale
+flawless
+smooth porcelain
+clear
+smooth youthful
+tanned
+unblemished

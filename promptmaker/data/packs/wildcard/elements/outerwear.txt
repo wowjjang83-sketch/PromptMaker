@@ -1,0 +1,781 @@
+# 와일드카드 확장 요소 (outerwear) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+a black blazer
+a tailored black blazer
+a dark blazer
+a black leather jacket
+a black ribbed knit cardigan
+a jacket
+a black jacket
+a brown blazer
+a white ribbed knit cardigan
+a black puffer jacket
+a coat
+a cardigan
+a grey blazer
+a denim jacket
+a gray blazer
+a cream-colored ribbed knit cardigan
+a light beige ribbed knit cardigan
+a vibrant red ribbed knit cardigan
+a sheer white long-sleeved cardigan
+a white open cardigan
+an open black blazer
+a cream-colored blazer
+a black pinstripe blazer
+a dark jacket
+a navy blue cardigan
+a black cardigan
+a dark gray blazer
+a black ribbed long-sleeve cardigan
+a cropped black blazer
+a beige trench coat
+an open grey ribbed cardigan
+a soft pink ribbed knit cardigan
+a black long-sleeved cardigan
+a beige belted trench coat
+a ribbed cream-colored knit cardigan
+a cream-colored satin blazer
+a sheer black long-sleeved cardigan
+a black leather bomber jacket
+a navy blue blazer
+a black ribbed long-sleeved cardigan
+a black crocodile-textured leather jacket
+a white long-sleeved cardigan
+a sleek black blazer
+a glossy black leather jacket
+a cropped pink leather jacket
+a long black woolen coat
+a white lab coat
+a pink cardigan
+a red jacket
+a red cardigan
+a sheer mesh duster coat
+a sheer mesh cardigan
+an off-shoulder jacket
+a long-sleeved black cardigan
+a blue ribbed knit cardigan
+a light blue fuzzy cardigan
+a glossy black puffer jacket
+a black satin blazer
+a cream ribbed knit cardigan
+a black ribbed long-sleeved cropped cardigan
+a black fur-trimmed coat
+an open matching cardigan
+a beige puffer jacket
+a black leather motorcycle jacket
+a black double-breasted coat
+a voluminous black faux fur coat
+a belted beige trench coat
+a light pink ribbed knit cardigan
+a navy blue ribbed knit cardigan
+a white off-shoulder blazer
+a white ribbed cardigan
+a beige zip-front jacket
+a black cropped cardigan
+a dark blue denim jacket
+a dark grey textured blazer
+a black hooded jacket
+a beige coat
+a sheer white ribbed long-sleeve cardigan
+a black button-up cardigan
+a tailored black double-breasted blazer
+a plush black faux fur coat
+a tailored brown herringbone blazer
+a puffy beige quilted jacket
+a sleek black leather jacket
+a ribbed cream-colored cropped jacket
+a loose-fitting off-white open cardigan
+an open-front cropped cardigan
+a black open-front blazer
+a long black overcoat
+a fitted black ribbed long-sleeved cardigan
+a cropped black leather jacket
+a black quilted puffer jacket
+a bright yellow life jacket
+a cream-colored textured knit cardigan
+a matte black leather blazer
+a sleek black belted trench coat
+a black ribbed short-sleeve cardigan
+a loose-fitting ribbed pink knit cardigan
+a cream-colored quilted puffer jacket
+a loose-fitting off-white ribbed knit cardigan
+a blue denim jacket
+a fitted black leather jacket
+a textured pink tweed double-breasted blazer
+a white cardigan
+a grey school blazer
+a beige faux-fur jacket
+a red santa jacket
+a navy blue knit cardigan
+her lab coat
+a light beige blazer
+a matching open cardigan
+a beige cardigan
+a pink ribbed cardigan
+a striped blazer
+a textured light blue fuzzy coat
+a textured gray coat
+a beige trench coat open
+a pink short-sleeved cardigan
+a white knitted cardigan
+a dark suit jacket
+a beige satin blazer
+a dark textured blazer
+a blue jacket
+a brown plaid cropped cardigan
+a red zip-up long-sleeve athletic jacket
+a white ribbed long-sleeved cardigan
+a ribbed black cardigan
+an open white ribbed long-sleeve cardigan
+an unzipped black zip-up jacket
+an open green knit cardigan
+an open white cardigan
+a black jacket draped over shoulders
+a dark coat
+a draped open cardigan over shoulders
+an off-the-shoulder cream-colored long-sleeved cardigan
+a sheer peach-colored one-shoulder ruffled cover-up
+an oversized grey blazer
+an unzipped black nike jacket
+a lavender long-sleeved cropped knit cardigan
+a white faux-fur-lined coat
+a plush white coat
+a navy blue denim jacket
+an open black jacket
+a light gray ribbed cropped cardigan
+an oversized gray ribbed knit cardigan
+an unzipped matte-black leather jacket
+an oversized fluffy gray cardigan
+an open grey fuzzy knit cardigan
+a cropped navy denim jacket
+a black cropped jacket
+a gray fluffy textured cardigan
+a white varsity jacket
+a long-sleeved ribbed cropped cardigan
+a black textured jacket with zippers
+a cream-colored plush fleece jacket
+an oversized white fluffy cardigan
+a black shearling-lined jacket
+a blue ribbed knit zip-up cardigan
+a textured grey woolen moto jacket
+an open black ribbed knit cardigan
+an open white ribbed knit cardigan
+an off-white ribbed long-sleeve cardigan
+an off-white textured cropped cardigan
+a light pink zip-up jacket
+a light beige curly-textured cropped cardigan
+a red velvet cropped cardigan
+a fur coat
+a tan faux fur hooded coat
+an off-the-shoulder fuzzy black jacket
+a sheer light blue long-sleeved cardigan
+a brown faux fur cropped jacket
+a black faux-fur jacket
+a light beige jacket
+a cover-up
+a navy blue long-sleeved zip-up cardigan
+an open navy ribbed knit cardigan
+a navy blue long-sleeved button-up cardigan
+a black puffer jacket with hood
+a sheer long-sleeved cover-up
+a fluffy white fur coat
+an open-front textured white knit cardigan
+an off-white faux fur-trimmed cropped jacket
+a black long-sleeve cardigan
+a cream-colored shearling bomber jacket
+a long-sleeved ribbed knit cropped cardigan
+a jacket draped across lap
+an outer jacket draped across lap
+a black long-sleeved blazer
+a white faux fur coat
+a white fur-lined hooded jacket
+a ribbed black long-sleeved cardigan
+a black ribbed two-piece suit jacket
+a tailored two-piece black blazer
+an off-white lace long-sleeved cover-up
+a grey blazer open
+a grey blazer unbuttoned
+a grey textured blazer worn open
+a black-and-white houndstooth overcoat layered
+a navy cardigan
+a black-and-white houndstooth coat
+a pink ribbed knit cardigan
+a pink knit cardigan
+a white shiny faux-leather jacket
+a white satin-like jacket
+an olive green ribbed knit cardigan
+a beige ribbed long-sleeve cardigan
+a light blue denim jacket
+her shoulders like an open jacket
+an unzipped dark denim jacket
+an open denim jacket
+a dark denim jacket
+an unzipped blue denim jacket
+a dark denim jacket layered
+an open black coat
+a black-and-white plaid blazer
+a long-sleeved cropped black cardigan
+a black ribbed button-down cardigan
+a plush black fur-lined coat
+a plush black fur coat
+a black fur coat
+an unzipped black long-sleeved zip-up jacket
+an open navy ribbed cardigan
+a cream-colored fluffy shearling jacket
+a cropped black fur-trimmed jacket
+a black button-up blazer
+a soft weave of blazer sleeves
+an open brown ribbed cardigan
+a black textured knit cardigan
+a silver coat rack to left
+a light blue ribbed knit cardigan
+a light gray fur hooded coat
+a light beige fur-lined hooded coat
+a black velvet blazer
+a coat draped over its back
+an off-white open cardigan
+an unzipped denim jacket
+a grey quilted belted jacket
+a white cropped blazer
+a matching red velvet cape
+a black blazer open
+a clothing racks displaying coats
+a pink satin bomber jacket
+a coat rack
+a light pink quilted fur coat
+a black faux-leather biker jacket
+an open black leather jacket
+a pink ribbed zip-up cardigan
+a pink textured tweed cropped jacket
+an open black ribbed long-sleeve cardigan
+a cream-colored tweed jacket
+a white faux fur cropped jacket
+a black tailored two-piece uniform jacket
+a black blazer over dark trousers
+a black tailored blazer with collar
+an oversized black jacket
+a cream-colored puffer jacket
+a black national geographic hooded jacket
+a white puffer jacket
+a navy ribbed long-sleeved cardigan
+an off-white sheer long-sleeve cardigan
+a white sheer long-sleeved cardigan
+an open black velvet cardigan
+a cropped black ribbed long-sleeve cardigan
+an open pink sheer cardigan
+a black longline coat
+a structured light gray blazer
+a tailored gray-and-black houndstooth blazer
+a cream-colored blazer over black top
+a tan fluffy shearling coat
+a tailored two-piece blazer
+a black ribbed blazer
+an open dark grey blazer
+a white double-breasted blazer
+a textured tweed cropped jacket
+a cream-colored fluffy shearling-style cropped jacket
+a black patent leather cropped jacket
+a grey oversized blazer
+a dark brown zip-up jacket
+a black-and-brown checkered cropped jacket
+a tailored dark gray double-breasted blazer
+an off-white tailored blazer
+a cream-colored knitted mesh cardigan
+a beige ribbed long-sleeve open cardigan
+a long-sleeved black ribbed knit cardigan
+an oversized brown ribbed knit cardigan
+a brown ribbed knit cardigan
+a brown ribbed knit cardigan open
+a navy cardigan with button closure
+a black textured tweed cardigan
+a black shearling-lined leather jacket
+a matching plush fur coat
+a plush white faux fur coat
+a loose-fitting charcoal gray knit cardigan
+a dark grey knitted cardigan
+a black denim jacket
+a black denim jacket worn open
+a tan suede coat
+a black tailored blazer
+an oversized fluffy knit cardigan
+a beige zip-front cropped jacket layered
+A white fluffy faux fur cardigan
+a cream houndstooth tweed jacket
+a sheer ribbed white long-sleeved cardigan
+a pink faux fur jacket
+a black leather moto jacket layered
+a fluffy tan faux fur jacket
+a fur pile of coat
+an individual fur strands of coat
+a cream-colored fluffy shearling-style jacket
+a black shiny bomber jacket
+a brown woolen double-breasted coat
+a dark brown woolen double-breasted blazer
+an olive green double-breasted blazer
+a brown leather jacket
+a plaid blazer with wide sleeves
+a light beige faux fur jacket
+a white fluffy hooded coat
+a white zippered bomber jacket
+a ribbed white knit cardigan
+a black cropped blazer
+an off-white blazer
+a beige long-sleeved button-down cardigan
+an open white lightweight striped cardigan
+an off-white ribbed knit cardigan
+an open black long-sleeved cardigan
+an open white long-sleeve zip-up jacket
+a black plush fur jacket
+a cream-colored textured tweed jacket
+a white long-sleeved ribbed cardigan
+a loose-fitting long-sleeved satin cardigan
+a long grey woolen coat
+an open matching zip-up cardigan
+a black textured cardigan
+a glossy black faux-leather blazer
+a brown distressed leather bomber jacket
+an oversized black denim jacket
+a ribbed olive green button-up cardigan
+a sheer black cardigan
+a black leather trench coat
+a cream-colored zip-up jacket
+a sheer long-sleeved off-white cardigan
+a grey ribbed long-sleeve cardigan layered
+a tan button-up blazer
+a bright blue ribbed cardigan
+a grey ribbed knit cardigan open
+a white zip-up bomber jacket
+an oversized grey textured knit cardigan
+a grey ribbed knit cardigan
+a black fuzzy plush coat
+a black zippered jacket
+a navy ribbed long-sleeve button-up cardigan
+a ribbed black long-sleeve cardigan
+an open grey ribbed knit cardigan
+an open dark green knit cardigan
+a black balenciaga blazer
+a leather jacket hanging neatly
+a black zip-up jacket
+a black horizontally striped knit cardigan
+a light blue zip-up track jacket
+a cream-colored double-breasted wool coat
+a black satin bomber jacket
+a dark grey ribbed knit cardigan
+a grey plaid cropped blazer
+a grey pinstripe blazer
+a soft pink belted wool coat
+a black blazer draped over shoulder
+a black sparkly textured blazer
+a beige quilted zip-up jacket
+a black blazer with subtle sheen
+a white bomber jacket
+a light brown faux fur jacket
+a houndstooth-patterned blazer
+an open black leather trench coat
+a belted black leather trench coat
+a cream-colored varsity jacket adorned
+a pale yellow cropped tweed jacket
+a cream-colored faux fur coat
+a white belted wool coat
+a cream-colored textured blazer
+a loose-fitting brown faux-leather coat
+a black faux leather jacket
+a cream-colored belted wool trench coat
+a white zip-up cropped athletic jacket
+an off-white woolen coat
+an open off-white shearling-like blazer
+a cream-colored tweed cropped blazer
+a textured black cropped blazer
+an oversized denim jacket unbuttoned
+a faux fur coat
+a plush white shearling-style cropped jacket
+a voluminous white fluffy shearling-style coat
+an off-the-shoulder white knitted cardigan
+an open black ribbed cardigan
+a loose-fitting grey perforated knit cardigan
+an olive green quilted bomber jacket
+a matte-finish brown leather jacket
+a heather gray zip-up fleece jacket
+a jacket seams
+a form-fitting black leather jacket
+a sleek black leather bomber jacket
+a lightweight white zip-front long-sleeved jacket
+a tailored double-breasted black blazer
+a white long-sleeved button-up cardigan
+a long black coat open
+a plush black shearling coat
+a voluminous white faux fur cape
+a voluminous off-white faux fur cape
+a draped coat
+a oversized black double-breasted coat
+a loose-fitting black double-breasted overcoat
+a loose-fitting black textured knit cardigan
+a fitted red long-sleeved cardigan
+a fitted red long-sleeve cardigan
+a semi-transparent cream-colored open-front raincoat
+a two-piece cream-colored tweed jacket
+an off-the-shoulder cream ribbed knit cardigan
+a crisp white short-sleeved button-up blazer
+a matching cropped blazer
+a ribbed black cropped cardigan
+a black cropped open-front cardigan
+a black long-sleeve cropped cardigan
+a cropped beige faux-leather jacket
+a fluffy black faux fur coat
+a loose-fitting black long-sleeve cardigan
+an unzipped grey distressed cropped jacket
+a glossy brown faux-leather cropped jacket
+a cropped brown leather jacket
+a slim-fit black leather jacket
+a black cropped leather jacket
+a cropped black faux leather jacket
+a structured brown herringbone blazer
+a tailored dark brown herringbone blazer
+a dark brown houndstooth blazer
+a loose-fitting brown houndstooth blazer
+a tailored dark brown houndstooth blazer
+a black hooded zip-up jacket
+a cream-colored wool-blend double-breasted coat
+a cream-colored textured wool coat
+a cream-colored wool-blend coat
+a cream-colored textured woolen blazer
+a black zip-front knit jacket
+a beige quilted puffer jacket
+a black zip-up hooded jacket
+a black zippered hooded jacket
+a light gray sheer button-up jacket
+a loose-fitting light gray long-sleeved jacket
+a soft peach-colored off-the-shoulder knitted cardigan
+a soft peach-colored knitted off-the-shoulder cardigan
+a dark grey textured wool-blend blazer
+a black jacket draped over shoulder
+a vibrant fuchsia ribbed knit cardigan
+a beige off-the-shoulder knit cardigan
+a black-and-white striped button-up cardigan
+a long-sleeved ribbed knit cardigan
+an open lightweight off-white cardigan
+a structured beige wool-blend cropped coat
+a voluminous off-white chunky-knit oversized coat
+a black faux-leather bomber jacket
+a matching cropped ribbed knit cardigan
+a black jacket draped over lap
+a heavy black quilted puffer jacket
+a loose-fitting beige woolen double-breasted coat
+a long cream-colored wool coat
+a loose-fitting black double-breasted coat
+a beige ribbed knit cardigan
+a black-and-white horizontally striped button-up cardigan
+a white textured knit cardigan
+a loose-fitting off-white open-front cardigan
+an open-front cardigan draped over shoulders
+a form-fitting ribbed cream-colored cropped jacket
+a mustard-yellow ribbed knit cardigan
+an open black cardigan
+a black button-up long-sleeve cardigan
+a sheer long-sleeved cardigan
+a dark textured coat
+a light beige ribbed cable-knit cardigan
+an open long-sleeve cream knit cardigan
+a glossy black leather bomber jacket
+a form-fitting black long-sleeved cardigan
+a white cropped long-sleeve cardigan
+a chunky-knit cream-colored oversized coat
+a sheer white long-sleeve button-up cardigan
+a short flutter-sleeve pink ribbed cardigan
+a black knitted cardigan
+a short-sleeved beige textured blazer
+a black oversized button-up jacket
+a light beige puffer jacket
+a tan overcoat with notched lapels
+a black cropped tweed jacket
+a belted camel-colored wool coat
+a tailored beige blazer
+a draped coat resting on chair
+a loose-fitting tan wool coat
+a black textured cropped cardigan
+a voluminous white faux-fur trimmed coat
+a tailored charcoal grey blazer
+a sleek black faux-leather blazer
+a light beige textured cropped jacket
+a loose-fit black button-up cardigan
+an open long-sleeve matching cardigan
+a fitted white cropped cardigan
+a ribbed peach-colored cropped cardigan
+a ribbed white cropped cardigan
+a fitted maroon button-up cardigan
+a sheer long-sleeved cream-colored cardigan
+a ribbed light pink cardigan
+a voluminous black faux-fur cropped coat
+an olive-green double-breasted trench coat
+a textured navy blue tweed blazer
+a distressed light blue denim jacket
+a brown shearling-trimmed cropped jacket
+a cropped dark-wash denim jacket layered
+a cropped dark-wash denim jacket
+a fitted red ribbed long-sleeve cardigan
+a black leather shearling-lined bomber jacket
+a black cropped button-up cardigan
+a pink fur coat
+a long beige overcoat
+a tan ribbed knit cardigan
+an open white lightweight cardigan
+a tan suede bomber jacket
+a plush grey faux-fur cropped coat
+an open olive green cardigan
+a mustard-yellow long-sleeved cardigan
+a mustard-yellow ribbed cardigan
+a long black coat
+a cropped black textured knit cardigan
+a cropped black long-sleeve cardigan
+a thin sheer white cardigan
+a beige ribbed cable-knit long-sleeve cardigan
+an open lightweight white cardigan
+a oversized black leather bomber jacket
+a fitted black long-sleeved cardigan
+a fitted black leather bomber jacket
+a black textured leather bomber jacket
+a semi-transparent jacket
+a cream-colored tailored blazer
+a jacket surface
+a black plush faux-fur coat
+a textured herringbone-patterned blazer
+a white denim jacket
+a loose-fitting white cropped jacket
+a black ribbed knit cardigan adorned
+a black ribbed V-neck cardigan adorned
+a loose-fitting off-white textured knit cardigan
+a beige wool-blend cropped blazer
+a light pink ribbed cropped cardigan
+a soft-textured black fluffy cropped jacket
+a cream-colored V-neck cropped cardigan
+a black textured tweed jacket
+a textured knitted cardigan
+a loose-fitting black blazer
+a light beige textured blazer
+a black button-up jacket
+a black tweed jacket
+a loose-fitting camel-colored wool coat
+a black panelled jacket with hood
+a loose white cropped cardigan
+a LIFE JACKET" printed in black
+a cream-colored textured knit blazer
+a fluffy taupe faux fur coat
+a white fluffy faux-fur coat
+a tailored charcoal gray blazer
+a matte black oversized blazer
+a sleek black leather blazer
+a loose-fitting black leather blazer
+a cropped black-and-white striped cardigan
+a matching sheer long-sleeve cardigan
+a sheer beige ribbed long-sleeve cardigan
+a cream-colored cropped cardigan
+a soft blush-pink ribbed knit cardigan
+a ribbed pink knit cardigan
+a ribbed off-white button-up cardigan
+a white long-sleeved ribbed knit cardigan
+a loose-fitting white long-sleeve cardigan
+a fine ribbed knit of cardigan
+a plush taupe fur coat
+a fur coat surface
+an off-the-shoulder cream-colored chunky knit cardigan
+a brown shearling-trimmed cropped bomber jacket
+a white lace-knit cropped cardigan
+a cropped black denim jacket
+a tailored grey wool blazer
+a light gray faux-fur trimmed jacket
+a fitted red ribbed knit cardigan
+a matching long-sleeve cardigan
+a light-washed denim jacket unbuttoned
+a black adidas track jacket
+a black zip-up bomber jacket
+a plush white faux-fur cropped cardigan
+a soft white fuzzy cropped cardigan
+a loose-fitting off-white long-sleeved cardigan
+a sheer lightweight off-white button-up cardigan
+a loose-fit off-white long-sleeved cardigan
+a loose-fitting white ribbed knit cardigan
+a loose-fitting black corduroy cardigan
+an open-front pink cardigan adorned
+a cropped pink cardigan
+a cream-colored ribbed long-sleeve cardigan
+a dark blue jacket draped nearby
+a white cropped ribbed knit cardigan
+a black button-up waxed cotton jacket
+a oversized black unstructured coat
+a light pink ribbed long-sleeve cardigan
+a black double-breasted overcoat
+a black double-breasted woolen coat
+a black oversized coat
+a knee-length black double-breasted overcoat
+a tailored light pink blazer
+a ribbed pink long-sleeve cardigan
+a vibrant pink ribbed knit cardigan
+a vibrant pink oversized blazer
+a navy blue knitted cardigan
+a pink long-sleeved cardigan
+a long-sleeved off-white cardigan
+a white cropped cardigan
+a black oversized blazer
+a vibrant magenta corduroy blazer
+a soft pink chunky-knit open-front cardigan
+a light pink sheer ribbed cardigan
+a semi-transparent light pink ribbed cardigan
+a matching long-sleeved open cardigan
+a chunky-knit oversized pink cardigan
+a structured tweed blazer
+a ribbed grey long-sleeve cardigan
+a ribbed grey long-sleeved cardigan
+an off-white sheer ribbed knit cardigan
+a sheer white textured long-sleeved cardigan
+a textured pink tweed cropped jacket
+a fluffy off-white hooded fleece jacket
+a ribbed long-sleeve pink cardigan
+a matching white zip-front cropped jacket
+an open long-sleeved white cropped cardigan
+a navy blue cable-knit cardigan
+a matching long-sleeved cropped cardigan
+a sheer white cardigan
+a sheer pink cardigan
+a dark blue long-sleeved cardigan
+a dark blue knitted cardigan
+a grey ribbed cardigan draped open
+a textured grey knit cardigan
+a fluffy white cropped jacket
+a crumpled black jacket
+a tight black cropped cardigan
+a beige fur-trimmed coat
+a folded denim jacket
+a crumpled black jacket nearby
+a cream ribbed cardigan left open
+a fitted dark pinstripe blazer
+a tailored black coat
+a mirror reflecting a coat rack
+a textured leather jacket
+a light blue tailored blazer
+an unzipped black bomber jacket
+a matching mint-green athletic zip-up jacket
+a sheer white long-sleeved cover-up
+her hands gripping the jacket's hem
+a cream-colored knit cardigan
+a beige zipped jacket
+a light pink long-sleeved cardigan
+a cardigan draped loosely over shoulders
+a muted pink blazer with collar
+a stylish black-and-white patterned blazer
+a blue cape
+a crisp white lab coat
+a soft pink cardigan
+a plush red fur coat
+a shiny red cropped jacket
+a navy blue double-breasted blazer
+a white striped long-sleeved cardigan
+a lavender textured blazer
+a light beige cardigan open
+a light beige ribbed cardigan
+an off-white knit cardigan
+a soft pink ribbed cardigan
+a light beige trench coat
+a matching black blazer draped open
+a white sheer open-front cardigan
+a cream-colored blazer with short sleeves
+a translucent white raincoat
+a sleeveless cream-colored blazer
+a textured gray blazer
+a white plaid hooded jacket
+a dark navy double-breasted coat
+a red coat
+a black striped track jacket
+a light cardigan
+a textured coat over black pants
+a long pink coat
+a light-colored blazer
+a heavy coat with a thick
+a light blue cardigan
+a dark cardigan
+a textured cardigan
+a beige jacket
+a dark brown blazer
+a white sheer cardigan
+a long-sleeved button-up cardigan
+a dark pinstripe blazer
+a pinstriped gray blazer
+a grey blazer with gold buttons
+a gray coat
+a gray blazer with gold buttons
+a white vertically striped blazer
+a dark gray coat
+a white pinstripe blazer
+a light green cardigan
+a light yellow short-sleeved cardigan
+a matching light yellow cardigan
+a gray textured blazer
+a black-and-white checkered jacket
+a white open-knit cardigan
+an open-knit cardigan
+a red open cardigan
+a pink jacket
+a dark gray pinstripe blazer
+a white lab coat open
+a light pink coat open
+a light pink short-sleeved cardigan
+a pale yellow cardigan
+a light blue blazer
+a red jacket with white trim
+a green long-sleeved jacket
+a light cream-colored knitted cardigan
+a light pink knitted cardigan
+a white coat
+a yellow ribbed cardigan
+a low-cut jacket
+a tan fur-lined coat
+a tan coat with a thick
+a light gray ribbed cardigan
+a light gray striped cardigan
+a black textured coat
+a knitted cardigan with buttons
+a long-sleeved coat
+a beige double-breasted blazer
+a light pink blazer
+a nude except for the jacket
+an open-front jacket over a dark
+a dark blue blazer
+a matching white coat
+a multicolored textured coat with brown
+a white textured cardigan
+a long-sleeved knit cardigan
+a beige knitted cardigan
+a gray patterned coat
+an off-the-shoulder denim jacket with yellow
+a dark pinstriped blazer
+a textured knit cardigan
+a long-sleeved cardigan open
+a jacket hanging on a hook
+a light pink button-up jacket
+a dark speckled coat
+a blue cardigan
+an ivory cardigan
+an open cardigan
+an alongside the white jacket
+a white jacket
+a black lace-trimmed cropped jacket
+an unzipped jacket
+a formal blazer
+a blazer
+a leather jacket
+an open jacket
+a dark blue metallic button-up jacket
+a jacket material
+her glossy jacket
+a gray short-sleeved cardigan
+a light gray knit cardigan
+a formal black suit jacket
+an open green jacket
+a black-and-white striped cardigan
+a plush dark gray oversized coat
+a matching long-sleeved cardigan
+a soft beige ribbed knit cardigan
+a ribbed white long-sleeve button-up cardigan
+a cream-colored cropped blazer
+an olive green off-the-shoulder cardigan
+a furry jacket

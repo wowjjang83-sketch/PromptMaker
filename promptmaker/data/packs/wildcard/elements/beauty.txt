@@ -1,0 +1,4 @@
+# 와일드카드 확장 요소 (beauty) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+slender
+seductive

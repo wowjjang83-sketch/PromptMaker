@@ -1,0 +1,481 @@
+# 와일드카드 확장 요소 (dress) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+a white dress
+a short dress
+a sleeveless dress
+a red dress
+a strapless dress
+a form-fitting black strapless mini dress
+a light pink dress
+a form-fitting black dress
+a black sleeveless dress
+a blue dress
+a dress seams
+a black ribbed halter-neck mini dress
+an off-the-shoulder white satin gown
+a white satin halter-neck slip dress
+a white sleeveless dress
+a gown
+a deep navy halter-neck dress
+a black dress
+a floral dress
+a dark dress
+a pink dress with cleavage
+a bodycon dress
+a dress with strategically placed cut-outs
+a mesh-overlay cocktail dress
+a light-colored slip dress
+a sheer white silk slip dress
+a black strapless corset-style mini dress
+a white ribbed strapless mini dress
+a white halter-neck corset dress
+a strapless black satin dress
+a white halter-neck dress
+a black halter-neck dress layered
+a black long-sleeved bodycon dress
+a pink ribbed halter-neck mini dress
+a grey ribbed knit dress
+a black long-sleeved dress
+a black halter-neck dress
+a dress details
+a brown ribbed halter-neck bodycon dress
+a matching dress
+a beige ribbed halter-neck bodycon dress
+a floral halter-neck dress layered
+a black halter-neck velvet mini dress
+a cream-colored halter-neck strap dress
+a pink halter-neck dress
+a white off-shoulder lace mini dress
+a strapless satin wedding gown
+a white strapless mini dress
+a blue plaid dress layered
+a yellow dress
+a form-fitting dress
+a cream-colored spaghetti strap mini dress
+a pale pink satin camisole dress
+a strapless red dress
+a sleek black strapless dress
+a white long-sleeved dress
+a blue plaid dress
+a cream-colored sleeveless dress embellished
+a dress lift
+a red dress with bare shoulders
+a specifically a short dress
+a mini dress
+a white dress with short sleeves
+an off-shoulder dress
+a red sleeveless dress
+a fitted dress
+a brown polka-dot dress
+a light blue floral strap dress
+a dark olive green two-piece dress
+a sheer ivory chiffon two-piece dress
+an off-shoulder cream-colored one-piece dress
+a light blue strapless form-fitting dress
+a grey ribbed strapless dress
+a form-fitting black short-sleeved mini dress
+a beige zip-front mini dress
+a black ribbed high-necked fitted dress
+a strapless black mini dress
+a lace-trimmed white corset-style dress
+a form-fitting mermaid-style satin dress
+a white off-shoulder mini dress
+a black halter-neck fitted dress layered
+a sheer grey halter-neck dress
+a sheer grey halter-neck slip dress
+a ribbed taupe halter-neck one-piece dress
+a white sleeveless mini dress
+a vibrant red halter-neck maxi dress
+a floral mini dress
+a black-and-white checkered halter-neck mini dress
+a patterned halter-neck dress
+a grey satin halter-neck dress layered
+a gray lace-up mini dress
+a ribbed knit two-piece dress
+a light pink strapless fitted dress
+a white halter-neck sleeveless dress
+a black halter-neck one-piece dress
+a navy blue strapless fitted dress
+a grey ribbed hooded bodycon dress
+a form-fitting navy blue halter-neck gown
+a single-shoulder black satin dress
+a form-fitting white halter-neck mini dress
+a white halter-neck tiered mini dress
+a form-fitting red halter-neck dress
+a white ribbed halter-neck mini dress
+a white halter-neck mini dress layered
+a gradient halter-neck dress
+a satin halter-neck mini dress
+a bronze satin slip dress
+a white lace-trimmed satin corset dress
+a form-fitting black halter-neck mini dress
+a sheer black halter-neck one-piece dress
+a ribbed beige strapless form-fitting dress
+a fitted black halter-neck dress layered
+a silver satin halter-neck mini dress
+a long-sleeved black dress
+a sleeveless halter-neck white dress
+a navy blue long-sleeved V-neck dress
+a grey ribbed mini dress
+an oversized charcoal grey hooded jumpsuit
+a ribbed high-waisted bodycon dress
+a black ribbed short-sleeve mini dress
+a sheer pink halter-neck dress
+a white satin halter-neck dress layered
+a form-fitting long-sleeve zebra-print dress
+a satin dress material
+a ribbed beige form-fitting long-sleeve dress
+a halter-neck dress in bold turquoise
+a black high-necked long-sleeve bodycon dress
+a black strapless ribbed mini dress
+a form-fitting purple ribbed long-sleeve dress
+a red satin midi dress
+a black high-neck halter dress
+a sleek high-necked black satin gown
+an off-white halter-neck two-piece dress
+a fitted tie-dye dress in brown
+a black satin halter-neck slip dress
+a brown ribbed halter-neck mini dress
+a black halter-neck cutout dress
+a beige ribbed knit button-front dress
+a beige button-down knit dress
+a button-down nude-colored halter-neck dress
+a white ribbed long-sleeved form-fitting dress
+a beige halter-neck dress
+a white ribbed knit dress
+a light blue halter-neck bodycon dress
+a peach-colored ribbed long-sleeve bodycon dress
+a black strapless corset dress adorned
+a strapless white satin gown
+a fitted red long-sleeved high-neck dress
+a black halter-neck fitted gown
+a white sleeveless jumpsuit
+an off-the-shoulder white ribbed knit dress
+a black velvet corset-style dress
+a cream-colored lace halter-neck two-piece dress
+a matching mini dress
+a deep-v-neck ruched mini dress
+a form-fitting black ribbed mini dress
+a form-fitting black long-sleeved dress layered
+a fitted pink halter-neck mini dress
+a floral print halter-neck dress
+a black strapless mini dress
+a black graduation gown
+an off-the-shoulder grey midi dress
+off-the-shoulder form-fitting ribbed gray midi dress
+a black short-sleeved mini dress
+an off-white ribbed knit dress
+a long maroon tiered halter-neck dress
+an off-shoulder black long-sleeved dress
+a vibrant fuchsia halter-neck maxi dress
+a matching ruched blouse dress
+an olive green halter-neck mini dress
+a black sleeveless mini dress
+a long-sleeved off-shoulder white faux-fur dress
+a hips like a dress
+an off-shoulder ruched mermaid wedding gown
+a sleeveless blush pink mini dress
+a white strawberry-patterned halter-neck dress layered
+a form-fitting sleeveless black dress
+a one-shoulder white satin gown
+a black ribbed high-neck cut-out dress
+a form-fitting off-white halter-neck mini dress
+a white flowy dress
+a light gray sleeveless dress
+a strapless white mini dress
+a beige ribbed turtleneck mini dress
+a sheer taupe off-the-shoulder mini dress
+a ribbed pink high-neck sleeveless dress
+a matching strapless bodice dress
+a form-fitting white ribbed two-piece dress
+a white halter-neck lace-up mini dress
+a sleeveless lace dress
+a black long-sleeved sheer mesh dress
+a matching short skirt or dress
+a form-fitting velvet dress
+a halter-neck beige satin gown
+a cream-colored halter-neck slip dress
+a form-fitting short-sleeved charcoal grey dress
+a white off-shoulder dress
+a black velvet halter-neck mini dress
+a black halter-neck sequined dress
+a sleek black strapless velvet dress
+a white halter-neck one-piece dress
+a black satin halter-neck dress
+a floral mini dress in orange
+a black halter-neck mini dress
+a thin-strapped corset-style bodice dress
+an off-the-shoulder beige ribbed knit dress
+a white halter-neck mini dress
+a black velvet halter-neck dress
+a sleek black halter-neck dress
+a royal blue halter-neck bodycon dress
+a black lace halter-neck mini dress
+an off-the-shoulder two-piece dress
+a tan strapless corset-style mini dress
+a nude-colored off-the-shoulder bodycon dress layered
+a black satin halter-neck dress adorned
+an off-the-shoulder black dress
+a halter-neck two-piece satin dress adorned
+a leopard-print mini dress
+a black ribbed long-sleeve dress
+a taupe ribbed square-neck mini dress
+a sleeveless black sequined halter-neck dress
+a black dress with thigh-high slit
+a red ribbed off-shoulder two-piece dress
+an olive-green halter-neck floor-length dress
+a dark green lace halter-neck dress
+an olive green lace halter-neck dress
+an olive green halter-neck lace dress
+a form-fitting black velvet strapless gown
+a fitted black satin strap dress
+a strapless black gown
+a form-fitting black long-sleeved bodycon dress
+a sleek black high-neck fitted dress
+a floor-length emerald green velvet gown
+a sleek sleeveless black lace gown
+a form-fitting beige ribbed two-piece dress
+a form-fitting golden sequined mini dress
+a form-fitting black one-shoulder dress
+a sleeveless black textured gown
+a form-fitting silver sequined two-piece gown
+a form-fitting one-shoulder satin mini dress
+a form-fitting one-shoulder off-white satin dress
+a form-fitting black velvet one-piece dress
+a one-shoulder white satin mini dress
+a one-shoulder satin-black mini dress
+an off-the-shoulder one-piece white dress
+a one-shoulder off-the-shoulder satin white dress
+a form-fitting black lace-crossover strap dress
+a form-fitting grey ribbed mini dress
+a white off-shoulder lace-trimmed mini dress
+a white lace-trimmed short dress
+a blue-and-white checkered strapless midi dress
+a form-fitting white sleeveless dress
+a white lace tiered mini dress
+a satin gown's creases
+a light-colored strapless mini dress
+a white polka-dot layered midi dress
+a two-piece cream-colored lace overlay dress
+a white lace-trimmed tiered mini dress
+a sleeveless high-neck satin dress
+a white pinafore dress
+a ribbed white knit dress
+a delicate lace overlay sleeveless dress
+a white puffy sleeveless dress
+a black halter-neck sleeveless dress layered
+a light-colored sleeveless mini dress layered
+a form-fitting beige satin strap dress
+a short-sleeved floral dress in cream
+a thin-strapped white sheer halter-neck dress
+a dark fitted mini dress
+a vibrant fuchsia sleeveless A-line dress
+a pink tweed mini dress
+a sleeveless bodycon dress in beige
+a form-fitting one-piece dress in cream
+a gown's lace seams
+a plaid dress
+a shiny purple satin slip dress
+a loose-fitting white pleated dress
+a floral-patterned dress
+a blue plaid shirt dress
+a navy blue floral dress
+a form-fitting black sleeveless dress
+a dark blue patterned dress
+a deep navy blue halter-neck dress
+a short white dress
+a floral-patterned dress with thin straps
+a shimmering sequined strapless dress
+a light peach sleeveless dress
+a patterned dress
+a light beige spaghetti strap dress
+an off-white slip dress that she
+a red plaid mini dress
+a black strapless dress
+a deep plunging black dress
+a form-fitting white dress
+a black spaghetti strap dress
+a form-fitting red satin strapless dress
+a form-fitting black off-shoulder dress
+an off-the-shoulder white lace dress
+a tight green strapless dress
+a form-fitting red strapless dress
+a floral-patterned sundress
+a tight pink halter dress
+a light gray satin slip dress
+a tight grey spaghetti strap dress
+a form-fitting white satin mini dress
+a pale pink spaghetti strap dress
+a light-gray lingerie-style dress
+a form-fitting gray spaghetti strap dress
+her peach-colored dress
+a form-fitting beige strapless mini dress
+a beige slip dress
+a nude-colored strapless mini dress
+a form-fitting off-the-shoulder beige dress
+an off-the-shoulder beige dress
+a form-fitting black off-the-shoulder dress
+a brown puffy-sleeve dress
+a low-cut dress with thin straps
+a soft pink satin strapless dress
+an off-white satin slip dress
+a low-cut dress
+a beige spaghetti strap dress
+a shimmering silver satin slip dress
+a dark brown spaghetti strap dress
+a dress with strategic mesh cutouts
+a short black lace dress
+a loose-fitting white satin slip dress
+a light blue off-the-shoulder dress
+a knit dress
+a striped V-neck dress
+a light lavender V-neck sleeveless dress
+a black halter-neck dress adorned
+a black off-the-shoulder dress layered
+a black dress with white collar
+a red button-up dress
+a highlights the dress's silhouette
+a satin strapless pink gown
+a gown fitted with gentle draping
+a dress sheen
+a satin pink strapless gown
+a tailored gray plaid blazer dress
+a dress slightly fitted
+a satin lavender strapless gown
+her dress slightly draped
+a sleeveless halter-neck pink dress
+a white spaghetti strap dress
+a sleeveless plaid dress in pink
+a sheer white overlay dress
+a light-colored lace-trimmed dress
+a dress from the side
+a deep V-neck floral dress
+a long-sleeved sequined black dress
+a black dress with puffy sleeves
+a fitted gray long-sleeve ruched dress
+a flowing white sundress
+a soft blush-colored long-sleeved dress
+a blue patterned mini dress
+a blue patterned halter dress
+a sheer lavender floral dress
+a vibrant yellow sleeveless dress
+her dress billowing around her feet
+a yellow button-up dress
+a soft peach-colored sleeveless dress
+a ruffled halter dress
+a sheer black dress
+a form-fitting black halter dress
+a vibrant red sleeveless dress
+a light lavender sleeveless button-up dress
+a deep navy blue halter-back dress
+a shimmering strapless gown
+a short-sleeved dress with a frayed
+a yellow plaid jumper dress
+a tan dress
+a sleeveless pleated dress
+an off-white dress
+a cream-colored strapless dress
+a long-sleeved dress with ruffled layers
+a floral-patterned dress in soft pinks
+a sleeveless black-and-white tweed dress adorned
+a cream-colored cable-knit dress
+a pink wrap dress
+a navy-blue sleeveless dress
+a black backless dress
+a red strapless dress
+a bright pink sleeveless dress
+a vibrant fuchsia one-shoulder dress
+a black sleeveless V-neck dress
+a bright red dress
+a short-sleeved wrap dress
+a pink dress with floral patterns
+a V-neck dress with stitched detailing
+a light pink strapless dress
+a matching black skirt or dress
+a sparkly pink dress
+a short pink sequined dress
+a short-sleeved floral dress
+a deep red slip dress
+a white pleated mini dress
+a dark purple dress
+a sheer floral dress
+a matching white skirt or dress
+a fitted pink dress
+an off-the-shoulder dress with ruffled edges
+a dress while casting gentle shadows
+a striped dress
+a red satin dress
+a black floral dress
+a floral-patterned dress with long sleeves
+a halter-neck dress
+a short-sleeved dress with lace trim
+a pink satin halter dress
+a gray patterned long-sleeved dress
+a long-sleeved beige mini dress
+a sheer embellished dress
+a navy plaid pinafore dress
+a beaded gown with sheer
+a fitted red long-sleeved dress
+a form-fitting dark gown
+a dress pleats
+a pink dress
+a print dress
+a short dress blue dress
+a combination of a strapless dress
+a specifically a red dress
+a sweater dress
+a china dress
+a matching black dress
+a see-through dress
+a downblouse dress that showcases cleavage
+a dress that highlights her cleavage
+a dress and a downblouse
+a short blue dress
+a denim dress
+a dress and thighhighs
+an also incorporating a dress
+a collared dress with short sleeves
+a collared dress
+a fitted short dress
+a blue dress with cleavage
+a flowy black dress
+an open-shirted white cotton dress
+an elegant dress adorned
+a knee-length pleated dress
+a translucent chiffon dress layered
+a transparent dress
+a halterneck dress
+a sheer white dress
+a form-fitting off-shoulder dress
+a white dress with cutout details
+a green dress
+a sundress
+a red off-shoulder dress see-through design
+a frayed dress
+a bottomless dress
+a blue sweater. sweater dress
+a dress pulled up
+a dress pull
+a sheer dress
+a see-through red dress
+an office gown
+a formal elegant dress
+a black dress long black hair
+a fitted teal dress
+a teal-colored dress
+a slip dress
+a form-fitting beige dress
+a white patterned dress
+a form-fitting pink off-the-shoulder long-sleeve dress
+an off-the-shoulder brown ribbed dress
+a form-fitting white spaghetti strap dress
+a soft peach-colored square-neck sleeveless dress
+a form-fitting navy blue long-sleeve dress
+a form-fitting black long-sleeve dress
+a pink textured mini dress
+a matching deep V-neck dress
+a creamy beige V-neck long-sleeved dress
+a sleeveless black textured dress
+a strapless black gown adorned
+a strapless black dress adorned
+a form-fitting beige short-sleeve dress

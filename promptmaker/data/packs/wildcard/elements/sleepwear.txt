@@ -1,0 +1,64 @@
+# 와일드카드 확장 요소 (sleepwear) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+a robe
+a light-colored floral print robe
+a patterned pink robe
+a shorts pajama set
+a light blue robe
+an open white ribbed bathrobe
+a navy blue satin pajama set
+a navy satin pajama top
+a black feather-trimmed robe
+an open royal blue satin robe
+a white robe hanging in doorway
+a hanging white robe on hanger
+a white robe hanging over doorframe
+a sheer white satin robe
+a sheer cream satin robe
+a white textured robe
+a white plush terry cloth robe
+a robe weave details
+a loose-fitting off-white wrap robe
+a sheer satin magenta robe
+a semi-transparent light blue silk robe
+a translucent blue floral-patterned robe
+a sheer light-blue satin robe
+a light blue silk robe
+a robe's semi-transparency
+a sheer pink floral robe
+a floral-patterned nightgown with spaghetti straps
+a semi-transparent nightgown
+a sheer floral robe
+a floral-patterned sleepwear top
+a pair of plaid pajama pants
+a sheer white off-shoulder nightgown
+loose striped pajama shorts
+a lace-trimmed off-the-shoulder nightgown
+a sheer white nightgown
+a sheer pink off-the-shoulder nightgown
+a cream-colored lace-trimmed nightgown
+a fluffy white robe
+a sheer purple lace-trimmed nightgown
+a white floral-patterned pajama set
+a light blue floral robe open
+a patterned robe
+a light blue satin robe open
+A light blue floral robe
+a short-sleeved nightgown with lace trim
+an orange robe
+a white robe
+a ruffled floral robe in pink
+a semi-transparent nightgown with lace trim
+a textured lavender-colored robe
+a matching floral-patterned robe in red
+a light pink satin-like open-front robe
+a floral-patterned robe
+a white striped robe
+a black geometric-patterned robe
+a frilled nightgown with ruffled straps
+a nightgown
+an open robe
+striped pajamas
+a loungewear
+a black satin robe
+a loose white V-neck robe

@@ -628,6 +628,42 @@ pm = PromptMaker(packs=["wildcard"])     # 또는 환경변수 PROMPTMAKER_PACKS
 - 요소 검사(7-4) 추가: '… and her long / and her hair' 꼬리는 잘라 냄, '… with a seductive' 처럼 끝이 잘린 줄,
   영어가 아닌 글자(중국어 등)가 섞인 줄은 쓰지 않음. 와일드카드 묶음(7-7)도 같은 규칙으로 다시 정리.
 
+### 7-9. 피사체 거리 · 비율 추천 (0.14.0)
+
+**피사체 거리** (`promptmaker/distance.py`, `elements/distance.txt`): 카메라가 피사체에서 얼마나 떨어져 찍는지.
+샷 구도(7-5)가 '몸의 어디까지 담는가' 라면, 거리는 '얼마나 떨어져서 찍는가' 입니다.
+
+| 거리 id | 요청 말 | 어울리는 구도 |
+|---|---|---|
+| `close` 근거리 | 가까이서, 근거리, 코앞 / up close, close range | 얼빡샷 · 클로즈업 · 미디엄 · 부위 클로즈업 |
+| `medium` 중거리 | 중거리, 몇 걸음 떨어져 / from a few steps away | 클로즈업 ~ 전신 |
+| `far` 원거리 | 멀리서, 원거리, 롱샷 / from a distance, from afar | 카우보이 · 전신 |
+| `very_far` 원경 | 아주 멀리서, 원경 / extreme long shot, tiny figure | 전신 |
+
+- `GenerateOptions(distance="auto")` (기본: 요청에서 찾음) · `close` · `medium` · `far` · `very_far` · `none`(넣지 않음).
+  요소 목록에서 `distance` 문구를 직접 골라도 됩니다 (`selections={"distance": "..."}`).
+- 문구는 구도 문장 바로 뒤에 한 문장으로 들어갑니다 (`picks["distance"]`).
+- 구도와 맞지 않으면 (얼빡샷 + 멀리서) 구도를 따르고 거리를 구도에 맞는 쪽으로 바꾸며 경고를 남깁니다.
+- 구도를 말하지 않았으면 거리로 구도를 정합니다 (멀리서 · 원경 → 전신샷, 가까이서 → 미디엄샷).
+- 멀리서 찍는 장면에는 '셀카' · '얼굴 가득' 같은 가까운 줄을 고르지 않습니다.
+- 요청에 거리가 없으면 무작위 모드에서 구도가 정해진 장면에 가끔(30%) 구도에 맞는 거리 문구를 넣습니다.
+- '가까이 다가가는' 처럼 동작인 말은 거리로 보지 않고, 'into the distance' (먼 곳을 바라봄) 도 거리가 아닙니다.
+- 요소 검사(7-4): 'shot from a distance' 처럼 거리만 말하는 줄은 `distance` 에 `#far` 같은 태그를 붙여 옮깁니다.
+
+**비율 추천** (`promptmaker/aspect.py`): 완성된 프롬프트의 핵심 피사체로 화면 비율을 정합니다.
+
+```python
+from promptmaker import suggest_aspect
+suggest_aspect("Full-body shot showing her from head to toe. She is lying on her side on a bed.")
+# {'ratio': '16:9', 'orientation': 'landscape', 'reasons': ['누운 · 기댄 자세 → 가로', ...], ...}
+```
+
+- 자세 · 포즈 · 행동: 서 있기 · 걷기 → 세로 / 눕기 · 엎드리기 → 가로 / 앉기 · 무릎 꿇기 → 약한 세로 / 양반다리 · 웅크리기 → 정사각형.
+  피사체(she · her · woman) 문장에서 처음 나온 자세를 크게 봅니다.
+- 구도: 얼빡샷 → 정사각형, 클로즈업 · 미디엄 · 카우보이 · 전신 → 세로. 거리: 원거리 → 가로, 원경 → 넓은 가로(2:1).
+- 장면: 와이드 · 파노라마 · 풍경 → 가로, 두 사람 이상 → 가로.
+- 결과 `ratio` 는 `9:16` · `1:1` · `16:9` · `2:1` · `9:18` 중 하나. 판단할 것이 없으면 `9:16`.
+
 ### 7-4. 요소 검사 · 잘못 분류된 요소 정리 (0.8.0)
 
 요소 txt 한 줄은 **단어 또는 짧은 구** 여야 합니다 (템플릿이 요소를 엮어 문장을 만듦). 이미지 분석·생성 프롬프트 자동 추가가 긴 문장을 쉼표로만 잘라 넣으면 이런 줄이 생겼습니다.

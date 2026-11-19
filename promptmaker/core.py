@@ -15,6 +15,7 @@ from typing import Any, Dict, Iterable, List, Optional, Protocol, Tuple, Union
 
 from . import body_parts as body_mod, framing as framing_mod, grammar, safety, undressing as undress_mod
 from . import masturbation as mast_mod
+from . import distance as distance_mod
 from .data_loader import (PACKAGE_DATA_DIR, Element, Item, Template, load_elements,
                           load_json, load_model_profiles, load_templates, load_text_files,
                           merge_legacy_rating_files, SUBJECT_KEYS, SUBJECT_LEAD_RE)
@@ -65,6 +66,8 @@ class GenerateOptions:
                                                # that go beyond the user's request (one LLM call)
     framing: str = "auto"                      # 샷 구도: auto(요청에서 찾음) | extreme_closeup | closeup | medium
                                                # | cowboy | full_body  (framing.FRAMINGS)
+    distance: str = "auto"                     # [0.14.0] 피사체 거리: auto(요청에서 찾음) | close | medium | far
+                                               # | very_far | none  (distance.DISTANCES)
     body_part: str = ""                        # 신체 부위 클로즈업: eyes | lips | hair | hands | neck | shoulders | back
                                                # | chest | waist | hips | thighs | legs | feet (body_parts.PARTS)
 
@@ -191,6 +194,9 @@ class PromptMaker:
             "framings": [{"id": "auto", "label": "자동 (요청에서 찾음)"}]
             + [{"id": f, "label": framing_mod.LABELS_KO[f]} for f in framing_mod.FRAMINGS]
             + [{"id": "none", "label": "넣지 않음"}],
+            "distances": [{"id": "auto", "label": "자동 (요청에서 찾음)"}]
+            + [{"id": d, "label": distance_mod.LABELS_KO[d]} for d in distance_mod.DISTANCES]
+            + [{"id": "none", "label": "넣지 않음"}],
             "body_parts": [{"id": "", "label": "없음"}]
             + [{"id": k, "label": body_mod.LABELS_KO[k]} for k in body_mod.PARTS],
             "model_profile_info": [p.to_info() for p in sorted(self.model_profiles.values(), key=lambda p: p.id)],
@@ -222,7 +228,8 @@ class PromptMaker:
         translated = False
         if user_input and options.translate and not is_english(user_input):
             # '얼빡샷' 같은 구도 말은 번역기가 엉뚱하게 옮기므로 ('a quick shot') 먼저 영어로 바꿔 둠
-            english = self.translator.translate(ko_pre_translate(framing_mod.ko_to_english(user_input)))
+            english = self.translator.translate(ko_pre_translate(
+                distance_mod.ko_to_english(framing_mod.ko_to_english(user_input))))
             translated = english != user_input
             err = getattr(self.translator, "last_error", None)
             if err:
@@ -246,6 +253,9 @@ class PromptMaker:
         if options.framing and options.framing not in ("auto", "none", "", framing_mod.BODY_PART) \
                 and options.framing not in framing_mod.FRAMINGS:
             raise ValueError(f"알 수 없는 framing: {options.framing} (사용 가능: auto, {', '.join(framing_mod.FRAMINGS)})")
+        if options.distance and options.distance not in ("auto", "none", "") \
+                and options.distance not in distance_mod.DISTANCES:
+            raise ValueError(f"알 수 없는 distance: {options.distance} (사용 가능: auto, none, {', '.join(distance_mod.DISTANCES)})")
         if options.body_part and options.body_part not in body_mod.PARTS:
             raise ValueError(f"알 수 없는 body_part: {options.body_part} (사용 가능: {', '.join(body_mod.PARTS)})")
         if len(set(intent.framings_found)) > 1 and options.framing in ("auto", "", None) \
@@ -308,7 +318,7 @@ class PromptMaker:
         return [self.generate(user_input, options, seed=base + i) for i in range(count)]
 
     # -------------------------------------------------------------- scope guard
-    SCOPE_SKIP = {"casting", "age", "outfit_type", "subject", "framing"}
+    SCOPE_SKIP = {"casting", "age", "outfit_type", "subject", "framing", "distance"}
     SCOPE_RETRIES = 2
 
     def _scope_targets(self, filler: "_Filler", intent: Intent, options: GenerateOptions) -> List[Tuple[str, str]]:
@@ -480,6 +490,10 @@ def _garments_fit(text: str, outfit: str) -> bool:
     return True
 
 
+DISTANCE_FAR_KEYS = ("photo_style", "video_style", "camera", "pose", "action", "motion", "camera_movement")
+_NEAR_ONLY_RE = re.compile(r"\b(?:selfies?|mirror selfie|arm'?s[- ]length|filling the (?:entire |whole )?frame|"
+                           r"macro|intimate close|tight crop)\b", re.I)
+RANDOM_DISTANCE_RATE = 0.3   # [0.14.0] 요청에 거리가 없을 때 무작위 모드에서 거리 문구를 넣는 비율
 SCENE_TAGS = {"beach", "pool", "bedroom", "bathroom", "cafe", "bar", "street", "studio", "nature",
               "urban", "indoor", "outdoor"}
 PICK_ORDER = ["location", "time_weather", "photo_style", "video_style", "attire", "attire_state",
@@ -529,6 +543,9 @@ class _Filler:
         self.body_part = ""
         self.framing_source = ""
         self.framing_phrase = ""
+        self.distance: Optional[str] = None      # [0.14.0] 피사체 거리
+        self.distance_source = ""
+        self.distance_phrase = ""
         self.undress_slot: Optional[str] = None
         self.undress_text = ""
         self.mast_slot: Optional[str] = None  # [0.13.0] 자위 동작을 넣을 자리
@@ -541,6 +558,7 @@ class _Filler:
         self.computed = self._computed_slots()
         # 샷 구도: 동작·의상과 따로 정하고, 구도에 안 담기는 포즈·의상은 고르지 않음
         self.framing, self.framing_source = self._init_framing()
+        self.distance, self.distance_source = self._init_distance()
         self.framing_phrase = self._framing_phrase() if self.framing and self.framing_source != "element" else ""
         if self.framing and self.framing_source != "element":
             # 요청의 구도 말('close-up', 'full body')로 걸린 카메라 후보는 버림 — 구도 문구를 따로 넣음
@@ -550,6 +568,10 @@ class _Filler:
         if self.framing_phrase:
             self.picks["framing"] = self.framing_phrase
             self.ctx.trace.append(f"framing: {self.framing_phrase}  [{self.framing_source}]")
+        self.distance_phrase = self._distance_phrase() if self.distance else ""
+        if self.distance_phrase:
+            self.picks["distance"] = self.distance_phrase
+            self.ctx.trace.append(f"distance: {self.distance_phrase}  [{self.distance_source}]")
         self._prepick()
 
     # ---------------------------------------------------------- element picks
@@ -652,6 +674,10 @@ class _Filler:
                 scored = [(it, w * (0.1 if mast_mod.EXPR_BAD_RE.search(it.text) else
                                     8.0 if mast_mod.EXPR_GOOD_RE.search(it.text) else 1.0), why)
                           for it, w, why in scored]
+        if self.distance in ("far", "very_far") and key in DISTANCE_FAR_KEYS:
+            # [0.14.0] 멀리서 찍는 장면에 '셀카' · '얼굴 가득' 같은 가까운 줄은 빼기
+            scored = [(it, 0.0, "피사체 거리(멀리서)와 모순") if _NEAR_ONLY_RE.search(it.text) else (it, w, why)
+                      for it, w, why in scored]
         used_sig = self._used_signatures()
         if used_sig:
             scored = [(it, w * 0.1, (why + " " if why else "") + "특징 단어 반복")
@@ -755,6 +781,63 @@ class _Filler:
                 self.body_part = self.rng.choice(list(body_mod.PARTS))
             return tf[0], "template"
         return None, ""
+
+    # ---------------------------------------------------------- distance (0.14.0)
+    def _init_distance(self) -> Tuple[Optional[str], str]:
+        """피사체 거리: 옵션 > 직접 고른 문구 > 요청 > (무작위 모드) 구도에 맞는 거리 가끔.
+
+        구도와 맞지 않으면 구도를 따르고 거리를 바꾸며, 구도가 없으면 거리로 구도를 정합니다 (멀리서 → 전신샷).
+        """
+        opt = (self.o.distance or "auto").strip()
+        if opt == "none":
+            return None, "off"
+        dist, src = None, ""
+        if opt in distance_mod.DISTANCES:
+            dist, src = opt, "option"
+        if not dist and self.selections.get("distance"):
+            sel = str(self.selections["distance"])
+            el = self.maker.elements.get("distance")
+            item = next((i for i in (el.items if el else []) if i.text.lower() == sel.lower()), None)
+            dist = next((d for d in distance_mod.DISTANCES if item is not None and d in item.tags), None) \
+                or distance_mod.distance_in_text(sel)
+            src = "selection" if dist else ""
+        if not dist and self.intent.distance:
+            dist, src = self.intent.distance, "request"
+        if not dist:
+            # 요청에 없으면: 무작위 모드에서 구도가 정해진 장면에 가끔 (구도와 맞는 거리만)
+            if self.framing and self.framing_source != "off" and self._is_random("distance") \
+                    and self.framing in distance_mod.BEST_FOR_FRAMING and self.rng.random() < RANDOM_DISTANCE_RATE:
+                ok = [d for d in distance_mod.DISTANCES if distance_mod.compatible(d, self.framing)]
+                if ok:
+                    return self.rng.choice(ok), "random"
+            return None, ""
+        if not self.framing and self.framing_source != "off":
+            fr = distance_mod.DEFAULT_FRAMING.get(dist)
+            if fr:  # 구도를 말하지 않았으면 거리로 구도를 정함
+                self.framing, self.framing_source = fr, "distance"
+                self.ctx.trace.append(f"framing: {fr}  [거리({distance_mod.LABELS_KO[dist]})에서]")
+        elif self.framing and not distance_mod.compatible(dist, self.framing):
+            fixed = distance_mod.fit_to_framing(dist, self.framing)
+            fr_label = framing_mod.LABELS_KO.get(self.framing, self.framing)
+            self.warnings.append(f"피사체 거리 '{distance_mod.LABELS_KO[dist]}' 는 '{fr_label}' 구도와 맞지 않아 "
+                                 f"'{distance_mod.LABELS_KO[fixed]}' 로 바꿨습니다.")
+            dist = fixed
+            if src == "selection":
+                src = "request"  # 고른 문구는 구도와 안 맞으므로 거리 id 로 다시 고름
+        return dist, src
+
+    def _distance_phrase(self) -> str:
+        if self.distance_source == "selection":
+            text = str(self.selections["distance"])
+        else:
+            el = self.maker.elements.get("distance")
+            items = [i for i in (el.items if el else []) if self.distance in i.tags]
+            if not items:  # 태그 없이 추가된 줄: 문구로 거리 판단
+                items = [i for i in (el.items if el else []) if not set(distance_mod.DISTANCES) & i.tags
+                         and distance_mod.distance_in_text(i.text) == self.distance]
+            text = (self.rng.choices(items, weights=[max(i.weight, 0.01) for i in items], k=1)[0].text
+                    if items else distance_mod.DEFAULT_PHRASES[self.distance])
+        return self._resolve(text) or text
 
     def _framing_phrase(self) -> str:
         if self.framing == framing_mod.BODY_PART:
@@ -1126,7 +1209,7 @@ class _Filler:
             if self.mast_slot is None:
                 ordered.append("masturbation")
         for key in ordered:
-            if key in self.computed or key in ("framing", "part_detail"):
+            if key in self.computed or key in ("framing", "part_detail", "distance"):
                 continue
             if key in ("undressing", "masturbation"):
                 self.pick(key)
@@ -1333,6 +1416,8 @@ class _Filler:
                     value = self._resolve(value, depth + 1) or ""
             elif key == "framing":
                 value = self.framing_phrase
+            elif key == "distance":
+                value = self.distance_phrase
             elif key == "part_detail":
                 value = self._part_detail()
             elif key == "attire":
@@ -1373,6 +1458,12 @@ class _Filler:
             # 구도는 앞쪽에 (주제 문장 바로 뒤) — 템플릿에 {framing} 자리가 없을 때
             sentences.insert(min(1, len(sentences)),
                              grammar.ensure_sentence(grammar.capitalize_first(self.framing_phrase)))
+        joined = " ".join(sentences).lower()
+        if self.distance_phrase and self.distance_phrase.lower() not in joined:
+            # [0.14.0] 피사체 거리는 구도 문장 바로 뒤 (구도가 없으면 주제 문장 뒤)
+            fr = self.framing_phrase.lower()[:30] if self.framing_phrase else ""
+            at = next((i + 1 for i, s in enumerate(sentences) if fr and fr in s.lower()), min(1, len(sentences)))
+            sentences.insert(at, grammar.ensure_sentence(grammar.capitalize_first(self.distance_phrase)))
         if self.undress_text:
             undress = self._resolve(self.undress_text) or ""
             if undress and undress.lower() not in joined:

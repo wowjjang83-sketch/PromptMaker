@@ -554,18 +554,23 @@ def check_item(key: str, text: str, keys: Optional[Iterable[str]] = None) -> Dic
     raw = " ".join(str(text or "").split()).strip()
     res = {"status": "ok", "key": key, "text": raw, "reason": ""}
     keys = list(keys) if keys is not None else None
-    if key in ("camera", "framing", "body_closeup") and raw:
+    if key in ("camera", "framing", "body_closeup", "distance") and raw:
         # 샷 구도 분리 (0.11.0): 부위 클로즈업 → body_closeup #부위, 일반 구도 → framing #구도
+        # 피사체 거리 (0.14.0): 'shot from a distance' 처럼 거리만 말하는 줄 → distance #거리
         from .body_parts import route_phrase
-        if key in ("framing", "body_closeup") and re.search(r"\s#[a-z_]+\s*$", raw):
+        from .distance import route_phrase as route_distance
+        if key in ("framing", "body_closeup", "distance") and re.search(r"\s#[a-z_]+\s*$", raw):
             return res  # 이미 태그가 있음
-        routed = route_phrase(raw)
+        routed = route_phrase(raw) or route_distance(raw)
         if routed and keys is not None and routed[0] in keys:  # 옮길 곳이 목록에 있을 때만 (분석 저장)
             target, tagged = routed
             return {**res, "status": "moved" if target != key else "fixed", "key": target, "text": tagged,
-                    "reason": "샷 구도 분리: " + ("부위 클로즈업" if target == "body_closeup" else "구도") + " 태그"}
+                    "reason": "샷 구도 분리: " + {"body_closeup": "부위 클로즈업", "distance": "피사체 거리"}.get(target, "구도")
+                    + " 태그"}
         if key in ("framing", "body_closeup"):
             return {**res, "status": "wrong_key", "reason": "샷 구도 문구가 아님"}
+        if key == "distance":
+            return {**res, "status": "wrong_key", "reason": "피사체 거리 문구가 아님"}
     if key not in CHECK_KEYS or not raw:
         return res
     targets = [k for k in (keys if keys is not None else CHECK_KEYS) if k in CHECK_KEYS]

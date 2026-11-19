@@ -104,13 +104,16 @@ class Intent:
     body_part: Optional[str] = None                              # 신체 부위 클로즈업 ('다리 클로즈업' → legs)
     masturbation: bool = False                                   # [0.13.0] 자위 장면
     masturbation_kinds: List[str] = field(default_factory=list)  # 말한 자위 동작 (breast / clit / finger)
+    distance: Optional[str] = None                               # [0.14.0] 피사체 거리 (distance.DISTANCES)
+    distances_found: List[str] = field(default_factory=list)     # 요청에서 찾은 거리 전부
 
     def to_dict(self) -> Dict[str, Any]:
         return {"locks": self.locks, "pools": self.pools, "female": self.female, "male": self.male,
                 "female_noun": self.female_noun, "prompt_type": self.prompt_type,
                 "consumed": self.consumed, "nude": self.nude, "undressing": self.undressing,
                 "framing": self.framing, "framings_found": self.framings_found, "body_part": self.body_part,
-                "masturbation": self.masturbation, "masturbation_kinds": self.masturbation_kinds}
+                "masturbation": self.masturbation, "masturbation_kinds": self.masturbation_kinds,
+                "distance": self.distance, "distances_found": self.distances_found}
 
     def casting_ok(self, female: int, male: int) -> bool:
         if self.female is not None and female != self.female:
@@ -352,6 +355,13 @@ def extract(original: str, english: str, elements: Dict[str, Element]) -> Intent
         pre_used |= toks | {p for tok in toks for p in tok.split("-")}
     if intent.framing:
         pre_used |= {w for w in ("shot", "shots", "face", "only", "frame", "framed") if w in words}
+
+    # [0.14.0] 피사체 거리 (가까이서 · 중거리 · 멀리서 · 원경) — 'distance', 'far' 가 장소·포즈 키워드로 걸리지 않게
+    from . import distance as _distance
+    intent.distance, intent.distances_found, dwords = _distance.detect(original, text)
+    for phrase in dwords:
+        toks = set(tokenize(phrase.lower()))
+        pre_used |= toks | {p for tok in toks for p in tok.split("-")}
 
     # 신체 부위 클로즈업 ('다리 클로즈업', 'close-up of her legs'): 일반 구도보다 우선
     from . import body_parts as _body_parts

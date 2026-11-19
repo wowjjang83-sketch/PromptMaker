@@ -528,6 +528,45 @@ pm = PromptMaker(user_data_dir=user_dir)            # 또는 PromptMaker(restric
 - 기존 파일 정리: `promptmaker.restrictions.clean_element_files(user_dir)` — 규칙 밖 줄을 지우기 전에 `backup/restrictions-<시각>/` 에 백업.
 - 20세 미만 금지 안전 규칙은 항상 먼저 적용됩니다 (규칙 최소값도 20 미만으로 내려가지 않음).
 
+### 7-4. 요소 검사 · 잘못 분류된 요소 정리 (0.8.0)
+
+요소 txt 한 줄은 **단어 또는 짧은 구** 여야 합니다 (템플릿이 요소를 엮어 문장을 만듦). 이미지 분석·생성 프롬프트 자동 추가가 긴 문장을 쉼표로만 잘라 넣으면 이런 줄이 생겼습니다.
+
+| 원래 파일 | 줄 | 문제 |
+|---|---|---|
+| camera | `19age is visible in a close-up portrait shot` | 주어 + 동사 문장 |
+| camera | `her dark black hair styled with straight bangs framing her face` | 헤어인데 `framing` 때문에 카메라 |
+| lighting | `a light blue flower pinned near {her} neck` | `light` 가 색 이름 |
+| color_grade | `a muted pink lipstick` | 메이크업인데 `muted` 때문에 색감 |
+| action | `suggesting an indoor setting with ambient lighting` | 장면 설명 분사구 |
+| pose | `looking directly at the camera with a gentle` | 끝이 잘린 조각 |
+
+`promptmaker.element_check` 가 한 줄을 판단합니다 (규칙 + 사전, AI 미사용, 수위 제한 없음).
+
+```python
+from promptmaker.element_check import check_item
+check_item("camera", "dark hair framing her face")
+# {"status": "moved", "key": "hair", "text": "dark hair framing her face", "reason": "..."}
+```
+
+| status | 뜻 | 저장(`append_items`) | 불러오기·생성 |
+|---|---|---|---|
+| `ok` | 그대로 사용 | 저장 | 사용 |
+| `fixed` | 끝이 잘린 문장을 다듬음 (`bathed in soft light that` → `soft light`) | 다듬은 문구 저장 | 다듬은 문구 사용 |
+| `moved` | 다른 요소에 맞음 | 맞는 요소 파일에 저장 | 맞는 요소로 옮겨 사용 |
+| `fragment` | 문장 조각 (주어·동사 문장, 나이·키 표기, '없음' 문장, 추측 표현, 14단어 넘는 문장) | 건너뜀 | 쓰지 않음 |
+| `wrong_key` | 형식이 맞지 않고 맞는 요소도 못 찾음 | 건너뜀 | 쓰지 않음 |
+
+- 적용 위치: `append_items()`(이미지 분석·학습 저장, `check=False` 로 끌 수 있음), `classify()`(분석 결과 표시: 행에 `key` · `original` 이 붙음), `load_elements()`(생성, 파일은 바꾸지 않음, `check=False` 로 끔).
+- 판단 대상: 헤어·메이크업·피부·표정·포즈·동작·의상류·장소·시간·조명·카메라·색감·사진 스타일·분위기·외모. 영상·상호작용·의상 상태 등은 판단하지 않습니다.
+- 기본 요소(패키지 데이터)는 모두 `ok` 여야 합니다 (`tests/test_element_check.py`). 사전을 고칠 때 이 테스트로 확인하세요.
+- 이미 쌓인 파일 정리 (먼저 `<사용자 폴더>/backups/elements_<시각>/` 에 백업, `wrong_key` 줄은 그대로 둠):
+
+```bash
+python -m promptmaker.element_check <사용자 데이터 폴더>           # 미리보기
+python -m promptmaker.element_check <사용자 데이터 폴더> --apply   # 백업 후 적용
+```
+
 ## 8. 안전 규칙 (성인 전용)
 
 - 모든 인물은 20세 이상: `age` 값이 20 미만이면 20으로 보정하고 경고를 남깁니다. 주어 문장에는 `adult man` 등 성인임이 명시됩니다.

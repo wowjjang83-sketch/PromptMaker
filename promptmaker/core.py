@@ -13,7 +13,7 @@ import re
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Protocol, Tuple, Union
 
-from . import grammar, safety
+from . import framing as framing_mod, grammar, safety, undressing as undress_mod
 from .data_loader import (PACKAGE_DATA_DIR, Element, Item, Template, load_elements,
                           load_json, load_model_profiles, load_templates, load_text_files,
                           merge_legacy_rating_files, SUBJECT_KEYS, SUBJECT_LEAD_RE)
@@ -62,6 +62,8 @@ class GenerateOptions:
     use_llm: bool = False                      # only used when an LLMRefiner is set
     scope_check: bool = False                  # only used when a ScopeChecker is set: re-pick elements
                                                # that go beyond the user's request (one LLM call)
+    framing: str = "auto"                      # 샷 구도: auto(요청에서 찾음) | extreme_closeup | closeup | medium
+                                               # | cowboy | full_body  (framing.FRAMINGS)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "GenerateOptions":
@@ -165,6 +167,10 @@ class PromptMaker:
                 for k, e in sorted(self.elements.items())
             },
             "model_profiles": sorted(set(self.model_examples) | set(self.model_profiles)),
+            # 샷 구도 선택지 (auto = 요청에서 찾음, none = 구도를 넣지 않음)
+            "framings": [{"id": "auto", "label": "자동 (요청에서 찾음)"}]
+            + [{"id": f, "label": framing_mod.LABELS_KO[f]} for f in framing_mod.FRAMINGS]
+            + [{"id": "none", "label": "넣지 않음"}],
             "model_profile_info": [p.to_info() for p in sorted(self.model_profiles.values(), key=lambda p: p.id)],
         }
 
@@ -193,7 +199,8 @@ class PromptMaker:
         english = user_input
         translated = False
         if user_input and options.translate and not is_english(user_input):
-            english = self.translator.translate(user_input)
+            # '얼빡샷' 같은 구도 말은 번역기가 엉뚱하게 옮기므로 ('a quick shot') 먼저 영어로 바꿔 둠
+            english = self.translator.translate(framing_mod.ko_to_english(user_input))
             translated = english != user_input
             err = getattr(self.translator, "last_error", None)
             if err:
@@ -209,6 +216,14 @@ class PromptMaker:
 
         # 4-1) hard constraints from the request (age, nationality, people, location ...)
         intent = extract(user_input, english, self.elements) if english or user_input else Intent()
+
+        # 4-2) 샷 구도: 직접 고른 값 > 요청
+        if options.framing and options.framing not in ("auto", "none", "") and options.framing not in framing_mod.FRAMINGS:
+            raise ValueError(f"알 수 없는 framing: {options.framing} (사용 가능: auto, {', '.join(framing_mod.FRAMINGS)})")
+        if len(set(intent.framings_found)) > 1 and options.framing in ("auto", "", None)                 and not set(intent.framings_found) <= framing_mod.CLOSE:
+            names = " + ".join(framing_mod.LABELS_KO[f] for f in intent.framings_found)
+            warnings.append(f"샷 구도가 함께 쓸 수 없게 여러 개입니다 ({names}). "
+                            f"'{framing_mod.LABELS_KO[intent.framing]}' 하나만 썼습니다.")
 
         # 5) template choice
         template = self._choose_template(options, rng, lex, intent)
@@ -264,7 +279,7 @@ class PromptMaker:
         return [self.generate(user_input, options, seed=base + i) for i in range(count)]
 
     # -------------------------------------------------------------- scope guard
-    SCOPE_SKIP = {"casting", "age", "outfit_type", "subject"}
+    SCOPE_SKIP = {"casting", "age", "outfit_type", "subject", "framing"}
     SCOPE_RETRIES = 2
 
     def _scope_targets(self, filler: "_Filler", intent: Intent, options: GenerateOptions) -> List[Tuple[str, str]]:
@@ -277,6 +292,8 @@ class PromptMaker:
             if key == "attire" and fixed & (set(self.relations.garments) | {"attire"}):
                 continue
             if intent.nude and key in ("attire", "attire_state"):  # 규칙으로 이미 비움
+                continue
+            if intent.undressing and key in (filler.undress_slot, "attire_state"):  # 요청한 탈의 동작
                 continue
             out.append((key, str(text)))
         return out
@@ -353,6 +370,15 @@ class PromptMaker:
                       if intent.casting_ok(int(i.meta.get("female", 1)), int(i.meta.get("male", 0)))]
             fit = [t for t in pool if any(self._casting_allowed(t, i) for i in wanted)]
             pool = fit or pool
+        wanted_framing = options.framing if options.framing in framing_mod.FRAMINGS else intent.framing
+        if options.framing == "none":
+            wanted_framing = None
+        if wanted_framing:  # 구도를 담을 수 있는 템플릿만 (전신샷에 '뷰티 클로즈업' 템플릿 X)
+            fit = [t for t in pool if wanted_framing in t.raw.get("framings", framing_mod.FRAMINGS)]
+            pool = fit or pool
+            if wanted_framing == "extreme_closeup":  # 얼굴만: 그 구도 전용 템플릿이 있으면 그것
+                own = [t for t in pool if wanted_framing in t.raw.get("framings", ())]
+                pool = own or pool
         if options.mode == "manual" and not tid:
             return pool[0]
         # prefer templates whose keywords / elements match the request
@@ -376,7 +402,7 @@ class PromptMaker:
 
 
 STYLE_FIT = 6.0  # weight for photo/video styles that match the template's keywords
-GARMENT_MENTION_KEYS = ("attire_state", "pose", "action", "motion")
+GARMENT_MENTION_KEYS = ("attire_state", "pose", "action", "motion", "undressing")
 # garment words an attire_state / pose line may mention -> words that must be in the outfit
 _GARMENT_WORDS = {
     "blouse": ("blouse",), "shirt": ("shirt", "blouse"), "skirt": ("skirt",), "dress": ("dress", "gown"),
@@ -386,6 +412,10 @@ _GARMENT_WORDS = {
     "sweater": ("sweater", "knit", "cardigan"), "hoodie": ("hoodie",), "robe": ("robe",),
     "kimono": ("kimono", "yukata"), "hanbok": ("hanbok",), "bra": ("bra", "bralette", "bikini"),
     "shorts": ("shorts",), "tied at the neck": ("halter",), "halter": ("halter",),
+    "unbuttoning": ("button", "shirt", "blouse", "cardigan", "coat", "jacket", "pajama", "pyjama", "nightshirt"),
+    "unbuttoned": ("button", "shirt", "blouse", "cardigan", "coat", "jacket", "pajama", "pyjama", "nightshirt"),
+    "unzipping": ("zip", "jacket", "hoodie", "dress", "skirt", "jeans", "pants", "shorts", "gown"),
+    "unzipped": ("zip", "jacket", "hoodie", "dress", "skirt", "jeans", "pants", "shorts", "gown"),
     "one strap": ("strap", "cami", "slip", "bikini", "tank", "sundress", "bra"), "zipper": ("zip", "jacket", "hoodie", "dress"), "buttons": ("button", "shirt", "blouse", "cardigan"),
 }
 
@@ -397,8 +427,14 @@ _SUBJECT_LEAD_RE = SUBJECT_LEAD_RE  # 요소 txt 에 잘못 들어간 문장 조
 # 한 프롬프트 안에서 반복되면 어색한 특징 단어 (예: 카메라 'soft bokeh' + 장소 '... bokeh background')
 SIGNATURE_WORDS = ("bokeh", "glow", "golden hour", "golden-hour", "haze", "hazy", "film grain", "grain", "backlit",
                    "backlight", "rim light", "neon", "candlelight", "moonlight", "sunlight", "lens flare", "silhouette",
-                   "depth of field", "shallow focus", "soft focus", "desaturated", "sun-kissed", "dewy", "glossy")
+                   "depth of field", "shallow focus", "soft focus", "desaturated", "sun-kissed", "dewy", "glossy",
+                   "slowly")
 _SIGNATURE_RE = re.compile(r"\b(" + "|".join(re.escape(w) for w in SIGNATURE_WORDS) + r")\b", re.I)
+
+
+def _stems(text: str) -> set:
+    """단어 앞 5글자 (unbuttoning / unbutton 을 같은 말로 봄)."""
+    return {w[:5] for w in re.findall(r"[a-z]+", (text or "").lower()) if len(w) > 3}
 
 
 def _garments_fit(text: str, outfit: str) -> bool:
@@ -415,6 +451,11 @@ PICK_ORDER = ["location", "time_weather", "photo_style", "video_style", "attire"
               "pose", "action", "motion", "interaction", "expression", "ambient_motion", "lighting",
               "lighting_effect", "camera", "camera_movement", "color_grade", "mood", "pacing",
               "male_attire"]
+
+# 샷 구도에 따라 걸러 내는 요소 (구도에 안 담기는 몸 부위·구도를 말하는 줄)
+FRAMED_KEYS = ("pose", "action", "motion", "attire_state", "camera", "camera_movement", "photo_style",
+               "video_style", "interaction", "lighting", "lighting_effect", "ambient_motion")
+UNDRESS_SLOTS = ("action", "motion", "pose")  # 탈의 동작을 넣을 자리 (템플릿에 있는 첫 번째)
 
 INTENT_NOISE = {"taken", "shot", "wearing", "year", "old", "years", "year-old", "years-old",
                 "model", "models", "idol", "idols", "actress", "solo", "alone", "twenties",
@@ -444,11 +485,28 @@ class _Filler:
         self.picks: Dict[str, str] = {}
         self.cache: Dict[str, List[str]] = {}
         self.ctx = SceneContext(maker.relations)
+        self.framing: Optional[str] = None
+        self.framing_source = ""
+        self.framing_phrase = ""
+        self.undress_slot: Optional[str] = None
+        self.undress_text = ""
+        self._otype = ""
         req_tags = maker.relations.tags_for_request(english) if english else set()
         self.ctx.add(req_tags, provider=bool(req_tags & SCENE_TAGS))
         self.ctx.add(template.raw.get("tags", []))
         self.cast = self._choose_casting()
         self.computed = self._computed_slots()
+        # 샷 구도: 동작·의상과 따로 정하고, 구도에 안 담기는 포즈·의상은 고르지 않음
+        self.framing, self.framing_source = self._init_framing()
+        self.framing_phrase = self._framing_phrase() if self.framing and self.framing_source != "element" else ""
+        if self.framing and self.framing_source != "element":
+            # 요청의 구도 말('close-up', 'full body')로 걸린 카메라 후보는 버림 — 구도 문구를 따로 넣음
+            cam = self.intent.pools.get("camera")
+            if cam and all(framing_mod.framing_in_text(c) for c in cam):
+                self.intent.pools.pop("camera", None)
+        if self.framing_phrase:
+            self.picks["framing"] = self.framing_phrase
+            self.ctx.trace.append(f"framing: {self.framing_phrase}  [{self.framing_source}]")
         self._prepick()
 
     # ---------------------------------------------------------- element picks
@@ -511,6 +569,22 @@ class _Filler:
             # 옷을 입은 장면인데 '누드' 포즈/동작이 섞이지 않게
             scored = [(it, 0.0, "의상과 모순(누드)") if _NUDE_ITEM_RE.search(it.text) else (it, w, why)
                       for it, w, why in scored]
+        if self.framing and key in FRAMED_KEYS:
+            scored = [(it, w, why) if self._fits_frame(key, it.text)
+                      else (it, 0.0, f"구도({framing_mod.LABELS_KO[self.framing]})에 안 담김") for it, w, why in scored]
+        elif not self.framing and self.framing_source != "off" and key in ("camera", "photo_style", "video_style"):
+            # 구도를 정하게 될 줄은 요청한 의상·포즈가 담기는 것만 ('미니스커트' 요청에 '허리 위 미디엄샷' X)
+            need = self._requested_rank()
+            if need:
+                def _ok(text: str) -> bool:
+                    fr = framing_mod.framing_in_text(text)
+                    return not fr or framing_mod.MAX_RANK[fr] >= need
+                scored = [(it, w, why) if _ok(it.text) else (it, 0.0, "요청한 의상·포즈가 구도에 안 담김")
+                          for it, w, why in scored]
+        if self.intent.undressing and key in UNDRESS_SLOTS and key != self.undress_slot:
+            # 탈의 동작과 함께: 손이 바쁘거나 몸 전체가 움직이는 포즈·동작은 빼기
+            scored = [(it, 0.0, "탈의 동작과 함께 못 함") if undress_mod.BUSY_RE.search(it.text) else (it, w, why)
+                      for it, w, why in scored]
         used_sig = self._used_signatures()
         if used_sig:
             scored = [(it, w * 0.1, (why + " " if why else "") + "특징 단어 반복")
@@ -520,7 +594,8 @@ class _Filler:
         if not valid:
             # nothing satisfies the relation rules: fall back to plain weights, but say so
             self.warnings.append(f"'{key}': 장면 규칙에 맞는 항목이 없어 규칙 없이 선택했습니다.")
-            valid = [(it, it.weight * boosts.get(it.text.lower(), 1.0), "규칙 완화") for it in items]
+            base = [it for it in items if self._fits_frame(key, it.text)] if self.framing and key in FRAMED_KEYS else []
+            valid = [(it, it.weight * boosts.get(it.text.lower(), 1.0), "규칙 완화") for it in (base or items)]
         chosen: List[Item] = []
         pool = list(valid)
         for _ in range(min(n, len(pool))):
@@ -564,6 +639,124 @@ class _Filler:
             self.ctx.add(it.tags if provider else it.tags - PLACE_TAGS, provider=provider)
         texts = [it.text for it in items]
         self.cache[key] = texts
+        if self.framing is None and self.framing_source != "off" and key in ("camera", "photo_style", "video_style") \
+                and texts:
+            fr = framing_mod.framing_in_text(texts[0])
+            if fr:  # 고른 카메라/스타일이 구도를 말함 ('full-body shot'): 나머지를 그 구도에 맞춤
+                self.framing, self.framing_source = fr, "element"
+                self.ctx.trace.append(f"framing: {fr}  [{key} 에서]")
+        return texts
+
+    # ---------------------------------------------------------- framing
+    def _init_framing(self) -> Tuple[Optional[str], str]:
+        opt = (self.o.framing or "auto").strip()
+        if opt == "none":
+            return None, "off"
+        if opt in framing_mod.FRAMINGS:
+            return opt, "option"
+        sel = self.selections.get("framing")
+        if sel:
+            el = self.maker.elements.get("framing")
+            item = next((i for i in (el.items if el else []) if i.text.lower() == str(sel).lower()), None)
+            fr = next((f for f in framing_mod.FRAMINGS if item is not None and f in item.tags), None) \
+                or framing_mod.framing_in_text(str(sel))
+            if fr:
+                return fr, "selection"
+        if self.intent.framing:
+            return self.intent.framing, "request"
+        tf = [f for f in self.t.raw.get("framings", []) if f in framing_mod.FRAMINGS]
+        if tf:
+            return tf[0], "template"
+        return None, ""
+
+    def _framing_phrase(self) -> str:
+        if self.framing_source == "selection":
+            text = str(self.selections["framing"])
+        else:
+            el = self.maker.elements.get("framing")
+            items = [i for i in (el.items if el else []) if self.framing in i.tags]
+            if items:
+                text = self.rng.choices(items, weights=[max(i.weight, 0.01) for i in items], k=1)[0].text
+            else:
+                text = framing_mod.DEFAULT_PHRASES[self.framing]
+        return self._resolve(text) or text
+
+    def _requested(self, key: str) -> bool:
+        return key in self.intent.pools or key in self.intent.locks or key in self.o.selections
+
+    def _requested_rank(self) -> int:
+        """요청(또는 직접 고른 값)한 의상·포즈를 담으려면 필요한 몸 범위."""
+        need = max([framing_mod.GARMENT_RANK.get(p, 0) for p in framing_mod.GARMENT_RANK
+                    if p != "accessory" and self._requested(p)] or [0])
+        for key in ("pose", "action", "motion"):
+            texts = list(self.intent.pools.get(key, [])) + [v for v in (self.intent.locks.get(key),
+                                                                         self.o.selections.get(key)) if v]
+            if texts:
+                need = max(need, min(framing_mod.region_rank(t) for t in texts))
+        return need
+
+    def _fits_frame(self, key: str, text: str) -> bool:
+        if not self.framing:
+            return True
+        if key == "camera" and self.framing_source != "element" and framing_mod.framing_in_text(text):
+            return False  # 구도 문구를 따로 넣으므로 카메라는 렌즈·각도만
+        if key in ("photo_style", "video_style", "camera"):
+            return framing_mod.compatible(framing_mod.framing_in_text(text), self.framing)
+        return framing_mod.fits(text, self.framing)
+
+    # ---------------------------------------------------------- undressing
+    GARMENT_PARTS = ("top", "bottom", "dress", "swimwear", "lingerie", "sleepwear", "sportswear", "traditional",
+                     "outerwear")
+
+    def _garment_names(self) -> Dict[str, str]:
+        names: Dict[str, str] = {}
+        for part in self.GARMENT_PARTS:
+            vals = [v for v in self.cache.get(part, []) if v]
+            if vals:
+                noun = undress_mod.garment_noun(vals[0], part) or undress_mod.garment_noun(vals[0])
+                if noun:
+                    names[part] = noun
+        asked = tuple(p for p in self.GARMENT_PARTS if self._requested(p))  # '블라우스를 벗는' → 블라우스가 대표
+        main_parts = asked + self.OUTFIT_PARTS.get(self._otype, ()) + self.GARMENT_PARTS
+        main = next((names[p] for p in main_parts if p in names), "")
+        if not main and self.cache.get("attire") and self.cache["attire"][0]:
+            main = undress_mod.garment_noun(self.cache["attire"][0])
+        if main:
+            names["garment"] = main
+        return names
+
+    def _undress_pick(self, key: str, source: str) -> List[str]:
+        el = self.maker.elements.get(source)
+        if not el:
+            return []
+        names = self._garment_names()
+        items: List[Item] = []
+        for it in el.items:
+            types = it.requires & set(self.OUTFIT_PARTS)
+            if types and self._otype not in types:
+                continue
+            text = undress_mod.fill_garments(it.text, names)
+            if text and self._fits_frame(key if key in FRAMED_KEYS else "action", text):
+                weight = it.weight
+                parts = set(undress_mod.placeholders(it.text)) - {"garment"}
+                asked = {p for p in self.GARMENT_PARTS if self._requested(p)}
+                if asked and parts and not parts & asked:
+                    weight *= 0.1  # 요청한 옷이 아닌 다른 옷을 벗는 줄 ('블라우스를 벗는' 에 '치마를 내리는')
+                items.append(Item(text=text, weight=weight))
+        # 요청이 말한 동작 ('단추를 푸는' → unbuttoning, '지퍼' → unzip) 이 들어간 줄을 우선
+        req = _stems(self.english) - {"takin", "cloth", "undre", "woman", "women", "scene", "their", "while"}
+        for item in items:
+            item.weight *= 4.0 ** len(req & _stems(item.text))
+        if not items:
+            if source == "undressing":
+                why = (f"{framing_mod.LABELS_KO[self.framing]}에는 탈의 동작이 담기지 않아"
+                       if self.framing and (names or self.framing == "extreme_closeup") else "입은 옷에 맞는 탈의 동작이 없어")
+                self.warnings.append(f"{why} 탈의 동작을 넣지 않았습니다.")
+            return []
+        chosen = self._weighted_pick(key, items, 1)
+        texts = self._commit(key, chosen)
+        if source == "undressing":
+            self.undress_text = texts[0] if texts else ""
         return texts
 
     def pick(self, key: str, n: int = 1) -> List[str]:
@@ -571,6 +764,15 @@ class _Filler:
             return self.cache[key][:n]
         if key == "attire_state" and self.intent.nude and key not in self.selections:
             return self._commit(key, [Item(text=NUDE_STATE)])
+        if self.intent.undressing and key not in self.selections:
+            if key == self.undress_slot or key == "undressing":
+                got = self._undress_pick(key, "undressing")
+                if got or key == "undressing":
+                    return got
+            elif key == "attire_state" and "attire" in self.cache and self.cache["attire"][0]:
+                got = self._undress_pick(key, "undressing_state")
+                if got:
+                    return got
         items = self._candidates(key)
         by_text = {i.text.lower(): i for i in items}
         if key in self.selections:
@@ -606,6 +808,15 @@ class _Filler:
         """Compose a coherent outfit: type -> garments -> layer -> shoes / accessories."""
         if "attire" in self.cache:
             return grammar.join_list(self.cache["attire"])
+        if self.framing == "extreme_closeup" and "attire" not in self.selections:
+            # 얼빡샷: 얼굴만 담기므로 의상·신발·액세서리를 넣지 않음
+            asked = [p for p in list(self.GARMENT_PARTS) + ["footwear"]
+                     if p in self.intent.pools or p in self.intent.locks]
+            if asked:
+                self.warnings.append("얼빡샷(얼굴만)이라 요청한 의상은 화면에 담기지 않아 넣지 않았습니다.")
+            self.ctx.trace.append("attire: (생략)  [얼빡샷]")
+            self.cache["attire"] = [""]
+            return ""
         if self.intent.nude and "attire" not in self.selections:
             # 누드 요청: 의상·신발·액세서리를 고르지 않음
             text = self.rng.choice(NUDE_ATTIRE)
@@ -626,8 +837,12 @@ class _Filler:
             otype = forced
             self.selections.setdefault("outfit_type", forced)
         otype = (self.pick("outfit_type") or ["top_bottom"])[0]
+        self._otype = otype
         self.ctx.add({otype})
         parts = self.OUTFIT_PARTS.get(otype, ("top", "bottom"))
+        if self.framing:  # 구도에 안 담기는 의상은 빼기 (미디엄샷: 하의 X). 요청한 의상은 남김
+            parts = tuple(p for p in parts if framing_mod.garment_visible(p, self.framing)
+                          or self._requested(p)) or parts[:1]
         garments = [g for g in (next(iter(self.pick(p)), "") for p in parts) if g]
         if not garments:
             return ""
@@ -640,7 +855,8 @@ class _Filler:
             if outer:
                 main += f" under {outer[0]}"
         extras, barefoot = [], False
-        if otype != "sleepwear" and "footwear" in self.maker.elements and self.rng.random() < 0.5:
+        if otype != "sleepwear" and "footwear" in self.maker.elements and self.rng.random() < 0.5 \
+                and (framing_mod.garment_visible("footwear", self.framing) or self._requested("footwear")):
             if otype == "swimwear":  # only beach-friendly shoes with swimwear
                 self.intent.pools.setdefault("footwear", [i.text for i in self.maker.elements["footwear"].items
                                                           if "summer" in i.tags])
@@ -650,7 +866,11 @@ class _Filler:
             elif shoe:
                 extras.append(shoe[0])
         if "accessory" in self.maker.elements and self.rng.random() < (0.15 if " under " in main else 0.4):
-            acc = self.pick("accessory")
+            if self.framing and not self._requested("accessory"):  # 구도에 담기는 액세서리만 (클로즈업에 핸드백 X)
+                fit = [i for i in self._candidates("accessory") if framing_mod.fits(i.text, self.framing)]
+                acc = self._commit("accessory", self._weighted_pick("accessory", fit, 1)) if fit else []
+            else:
+                acc = self.pick("accessory")
             if acc:
                 extras.append(acc[0])
         joiner = ", paired with " if " with " in main else " with "  # avoid "with ... with ..."
@@ -673,8 +893,19 @@ class _Filler:
         """Choose elements in dependency order (scene first) so relations can apply."""
         slots = self._template_slots()
         ordered = [k for k in PICK_ORDER if k in slots] + [k for k in slots if k not in PICK_ORDER]
+        if "camera" in ordered and not self.framing:  # 카메라가 구도를 정하면 나머지를 거기에 맞추도록 먼저
+            ordered = ["camera"] + [k for k in ordered if k != "camera"]
+        if self.intent.undressing:
+            self.undress_slot = next((k for k in UNDRESS_SLOTS if k in slots), None)
+            if "attire" not in slots:  # 탈의 동작이 말할 옷은 있어야 함
+                ordered.insert(0, "attire")
+            if self.undress_slot is None:
+                ordered.append("undressing")
         for key in ordered:
-            if key in self.computed:
+            if key in self.computed or key == "framing":
+                continue
+            if key == "undressing":
+                self.pick("undressing")
                 continue
             if key == "attire":
                 self._outfit()
@@ -876,6 +1107,8 @@ class _Filler:
                 value = self.computed[key]
                 if "{" in value:
                     value = self._resolve(value, depth + 1) or ""
+            elif key == "framing":
+                value = self.framing_phrase
             elif key == "attire":
                 value = self._outfit()
                 value = self._resolve(value, depth + 1) or "" if "{" in value else value
@@ -909,6 +1142,19 @@ class _Filler:
             if out is None or not out.strip():
                 continue
             sentences.append(grammar.ensure_sentence(grammar.capitalize_first(out.strip())))
+        joined = " ".join(sentences).lower()
+        if self.framing_phrase and self.framing_phrase.lower() not in joined:
+            # 구도는 앞쪽에 (주제 문장 바로 뒤) — 템플릿에 {framing} 자리가 없을 때
+            sentences.insert(min(1, len(sentences)),
+                             grammar.ensure_sentence(grammar.capitalize_first(self.framing_phrase)))
+        if self.undress_text:
+            undress = self._resolve(self.undress_text) or ""
+            if undress and undress.lower() not in joined:
+                sent = self._resolve("{She} {is} " + undress) or ""
+                outfit = (self.cache.get("attire") or [""])[0]
+                at = next((i + 1 for i, s in enumerate(sentences) if outfit and outfit[:25].lower() in s.lower()),
+                          min(2, len(sentences)))
+                sentences.insert(at, grammar.ensure_sentence(grammar.capitalize_first(sent)))
         uses_details = any("{user_details}" in (s.get("text", "") + " ".join(s.get("options", [])))
                            for s in self.t.sentences)
         if not uses_details and self.computed["user_details"]:

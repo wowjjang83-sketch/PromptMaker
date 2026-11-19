@@ -1,0 +1,10 @@
+# 탈의 중 의상 상태. 요청이 '옷을 벗는 중' 일 때 의상 상태 자리에 씁니다. 문장: "{She} {wears} {attire}, {attire_state}"
+# 줄 끝 +top_bottom +dress +swimwear +lingerie +sleepwear +traditional +sportswear 는 그 의상 종류일 때만 씁니다.
+partially unbuttoned +top_bottom
+pulled halfway up +top_bottom
+half unzipped at the back +dress
+slipping down off {her} shoulders +dress +lingerie +sleepwear
+with the strings already loosened +swimwear
+falling open at the front +sleepwear +traditional
+coming undone
+loosened and halfway off

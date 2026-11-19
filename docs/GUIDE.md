@@ -96,6 +96,7 @@ python -m promptmaker.server            # 또는 promptmaker-server
 | `translate` | bool | 영어가 아니면 번역 |
 | `use_related_words` | bool | 확률 기반 관련 단어 사용 |
 | `model_profile` | `krea2` / `qwen2.1` / `moss` / `minimax_h3` / `none` | 대상 모델 형식으로 출력. 비우면 이미지는 `krea2`, 영상은 `minimax_h3` (아래 "대상 모델" 참고) |
+| `framing` | `auto` / `extreme_closeup` / `closeup` / `medium` / `cowboy` / `full_body` / `none` | 샷 구도. `auto` 는 요청에서 찾음('얼빡샷' 등), 고르면 요청보다 우선. 아래 7-5 참고 (0.9.0) |
 
 ### 모드
 
@@ -527,6 +528,33 @@ pm = PromptMaker(user_data_dir=user_dir)            # 또는 PromptMaker(restric
 - 이미지 분석 · 학습 저장(`append_items`, `classify`): 규칙 밖 국적/나이는 저장하지 않음 (`restricted`). 분석 풀프롬프트도 `apply_to_text` 로 바꿉니다.
 - 기존 파일 정리: `promptmaker.restrictions.clean_element_files(user_dir)` — 규칙 밖 줄을 지우기 전에 `backup/restrictions-<시각>/` 에 백업.
 - 20세 미만 금지 안전 규칙은 항상 먼저 적용됩니다 (규칙 최소값도 20 미만으로 내려가지 않음).
+
+### 7-5. 샷 구도 · 탈의 장면 (0.9.0 · LLM 없이 동작)
+
+**샷 구도**는 동작·포즈와 따로 정하고, 문장 하나로 주제 문장 바로 뒤에 넣습니다 (템플릿에 `{framing}` 자리가 있으면 그 자리).
+
+| 구도 id | 요청 예 (한글/영문) | 담기는 범위 |
+|---|---|---|
+| `extreme_closeup` | 얼빡샷, 얼굴만, 초근접, extreme close-up, face only | 얼굴만 (의상·포즈 생략, '뷰티 클로즈업' 템플릿) |
+| `closeup` | 클로즈업, 헤드샷, close-up, headshot | 머리 ~ 어깨 |
+| `medium` | 미디엄샷, 상반신, 바스트샷, medium shot, waist up | 허리 위 |
+| `cowboy` | 카우보이샷, 무릎 위, cowboy shot | 허벅지 중간 위 |
+| `full_body` | 전신샷, 풀샷, full body, full-length | 머리 ~ 발끝 |
+
+- 구도에 안 담기는 포즈·동작·의상 상태·조명 효과·카메라 움직임은 고르지 않습니다 (미디엄샷에 '하이힐', '다리를 꼬고', 클로즈업에 '핸드백'). 의상도 하의·신발은 담기는 구도에서만 조합합니다. 단, 요청에 직접 쓴 의상은 남깁니다 (얼빡샷 제외).
+- 카메라·사진 스타일 줄이 다른 구도를 말하면 (`full-body shot`, `studio beauty headshot`, `wide-angle environmental portrait`) 고르지 않습니다. 구도를 정하지 않았을 때 랜덤으로 고른 카메라가 구도를 말하면 (`medium shot from the waist up`) 나머지를 그 구도에 맞춥니다.
+- 구도가 함께 쓸 수 없게 여러 개면 (`클로즈업 전신샷`) 마지막에 말한 하나만 쓰고 경고를 남깁니다. 얼빡샷 + 클로즈업처럼 둘 다 가까우면 더 가까운 쪽.
+- '얼빡샷' 같은 한국어 구도 말은 번역 전에 영어로 바꿉니다 (구글 번역이 'a quick shot' 으로 옮기는 문제).
+- 구도 문구는 `elements/framing.txt` 에서 고칠 수 있습니다. 줄 끝 `#extreme_closeup` 같은 태그가 구도를 정합니다.
+
+**탈의 장면**('옷을 벗는 중', '옷을 벗는 장면', '블라우스 단추를 푸는', 'undressing', 'taking off her top')은 누드(이미 벗은 상태)와 다릅니다.
+
+- 옷은 평소처럼 조합하고, 동작 자리(`action` → `motion` → `pose` 순, 없으면 문장 추가)에 탈의 동작을, 의상 상태 자리에 탈의 중 상태를 넣습니다.
+- 탈의 동작은 `elements/undressing.txt`, 의상 상태는 `elements/undressing_state.txt` (편집 가능). 줄 안의 `{top}` `{bottom}` `{dress}` `{swimwear}` `{lingerie}` `{sleepwear}` `{sportswear}` `{traditional}` `{outerwear}` `{garment}` 은 지금 입은 옷 이름으로 바뀌고 ('a School-style tennis micro mini pleated skirt' → 'pleated skirt'), 입지 않은 옷을 말하는 줄은 쓰지 않습니다.
+- 요청에 옷 이름·동작이 있으면 그 줄을 우선합니다 ('블라우스를 벗는' → 블라우스, '단추를 푸는' → unbuttoning). 단추 없는 옷에 'unbuttoning', 지퍼 없는 옷에 'unzipping' 은 쓰지 않습니다.
+- 손이 바쁘거나 몸 전체가 움직이는 포즈·동작(책을 든, 춤추는, 걷는 …)은 함께 고르지 않습니다.
+- 샷 구도와 함께: 구도에 안 담기는 탈의 동작은 빠집니다 (미디엄샷에 'down over her hips' X). 얼빡샷이면 탈의 동작을 넣지 않고 경고를 남깁니다.
+- '탈의실', '머리를 푸는' 은 탈의 요청이 아닙니다.
 
 ### 7-4. 요소 검사 · 잘못 분류된 요소 정리 (0.8.0)
 

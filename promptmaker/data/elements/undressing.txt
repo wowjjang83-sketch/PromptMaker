@@ -1,0 +1,23 @@
+# 탈의 동작 (현재분사구). 요청에 '옷을 벗는 중 / 옷을 벗는 장면 / undressing' 이 있으면 동작 자리에 씁니다.
+# {top} {bottom} {dress} {swimwear} {lingerie} {sleepwear} {sportswear} {traditional} {outerwear} 는 지금 입은 옷 이름,
+# {garment} 는 대표 옷 이름으로 바뀝니다 (예: 'pleated skirt'). 입지 않은 옷을 말하는 줄은 쓰지 않습니다.
+# 샷 구도에 안 담기는 줄(미디엄샷에 'down over her hips' 등)도 자동으로 빠집니다.
+slowly unbuttoning {her} {top}
+pulling {her} {top} up over {her} head
+lifting {her} {top} up to take it off
+sliding {her} {bottom} down over {her} hips
+unzipping {her} {bottom} at the side
+reaching behind {her} back to unzip {her} {dress}
+letting {her} {dress} slip off {her} shoulders
+slipping the straps of {her} {dress} off {her} shoulders
+untying the strings of {her} {swimwear}
+peeling {her} {swimwear} straps off {her} shoulders
+unhooking {her} {lingerie} at the back
+slipping the straps of {her} {lingerie} off {her} shoulders
+loosening the tie of {her} {sleepwear} and letting it fall open
+slipping {her} {sleepwear} off {her} shoulders
+loosening the sash of {her} {traditional}
+peeling off {her} {sportswear}
+shrugging {her} {outerwear} off {her} shoulders
+in the middle of taking off {her} {garment}
+halfway out of {her} {garment}

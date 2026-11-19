@@ -110,7 +110,7 @@ class AnalyzerTests(VisionTestCase):
                             "made_up": ["foo"]})
         maker = PromptMaker(data_dir=self.data, translator=NoTranslator())
         backend = FakeBackend(reply)
-        an = vision.ImageAnalyzer(maker, vision.VisionConfig(), backend=backend)
+        an = vision.ImageAnalyzer(maker, vision.VisionConfig(outfit_pass=False), backend=backend)
         res = an.analyze(_png_bytes())
         prompt = backend.prompts[-1]
         self.assertIn("- hair:", prompt)
@@ -121,6 +121,50 @@ class AnalyzerTests(VisionTestCase):
         rep = an.apply(res["new"])
         self.assertEqual(rep["added_count"], 2)
         self.assertIn("a sleek silver bob", [i.text for i in maker.elements["hair"].items])  # reloaded
+
+    def test_outfit_pass_adds_missing_garments(self):
+        """0.15.0: 첫 분석이 의상을 빠뜨리거나 attire_state 에 넣어도 의상 질문으로 채움."""
+        class Outfit(FakeBackend):
+            def chat(self, image, prompt):
+                self.prompts.append(prompt)
+                if '"person"' in prompt and "- hair:" not in prompt:
+                    return '{"person": true, "man": false, "couple": false}'
+                if "WEARING" in prompt:
+                    return json.dumps({"top": ["tight red ribbed long-sleeve top"],
+                                       "lingerie": ["a black leather corset"],
+                                       "bottom": ["black leather shorts"],
+                                       "attire_state": ["a black leather corset"]})
+                return json.dumps({"attire_state": ["tight red ribbed long-sleeve top"],
+                                   "location": ["in a bedroom with a white bedspread"]})
+
+        maker = PromptMaker(data_dir=self.data, translator=NoTranslator())
+        backend = Outfit("")
+        res = vision.ImageAnalyzer(maker, vision.VisionConfig(), backend=backend).analyze(_png_bytes())
+        self.assertEqual(len(backend.prompts), 3)
+        self.assertIn("attire_state: HOW the clothes are worn", backend.prompts[-1])
+        self.assertIn("[upper-body garment", backend.prompts[1])  # 한글 설명 옆 영어 안내
+        new = res["new"]
+        self.assertEqual(new.get("top"), ["tight red ribbed long-sleeve top"])  # attire_state 에서 옮겨짐
+        self.assertEqual(new.get("lingerie"), ["a black leather corset"])
+        self.assertEqual(new.get("bottom"), ["black leather shorts"])
+        self.assertNotIn("attire_state", new)
+        # 저장 안 한 항목(중복 등)도 결과에 남음
+        backend2 = Outfit("")
+        res2 = vision.ImageAnalyzer(maker, vision.VisionConfig(), backend=backend2).analyze(_png_bytes())
+        vision.ImageAnalyzer(maker).apply(res["new"])
+        res3 = vision.ImageAnalyzer(maker, vision.VisionConfig(), backend=Outfit("")).analyze(_png_bytes())
+        self.assertEqual(res2["new"], res["new"])
+        self.assertIn({"text": "black leather shorts", "reason": "duplicate"}, res3["skipped"]["bottom"])
+        # 사람이 없으면 의상 질문 안 함
+        class NoPerson(Outfit):
+            def chat(self, image, prompt):
+                if '"person"' in prompt and "- hair:" not in prompt:
+                    self.prompts.append(prompt)
+                    return '{"person": false, "man": false, "couple": false}'
+                return super().chat(image, prompt)
+        b = NoPerson("")
+        vision.ImageAnalyzer(maker, vision.VisionConfig(), backend=b).analyze(_png_bytes())
+        self.assertEqual(len(b.prompts), 2)
 
     def test_progress_and_cancel(self):
         class StreamingFake:
@@ -175,7 +219,8 @@ class AnalyzerTests(VisionTestCase):
                          ["male_attire", "male_look", "interaction"])
         self.assertEqual(vision.excluded_keys(None), [])
         off = TwoStep("")
-        vision.ImageAnalyzer(maker, vision.VisionConfig(prefilter=False), backend=off).analyze(_png_bytes())
+        vision.ImageAnalyzer(maker, vision.VisionConfig(prefilter=False, outfit_pass=False),
+                             backend=off).analyze(_png_bytes())
         self.assertEqual(len(off.prompts), 1)
 
     def test_config_roundtrip(self):
@@ -225,7 +270,7 @@ class QueueAndFullPromptTests(VisionTestCase):
     def test_full_prompt_requested_and_split(self):
         an = self.analyzer()
         res = an.analyze(_png_bytes())
-        self.assertIn('"full_prompt"', an._backend.prompts[-1])
+        self.assertIn('"full_prompt"', an._backend.prompts[-2])  # 마지막은 의상 질문
         self.assertEqual(res["full_prompt"], "A woman in her late twenties stands in a glass conservatory. Soft light.")
         self.assertNotIn("full_prompt", res["elements"])
         off = self.analyzer(full=False)

@@ -1,0 +1,14 @@
+Look only at what the person in the image is WEARING and list every visible piece of clothing.
+Go from head to toe and include layered pieces separately: a corset, bustier, harness or vest worn over a top, a belt, a choker, stockings, shoes.
+Reply with ONE JSON object only, no explanation and no markdown. Use only these keys:
+{elements}
+
+Rules:
+- Each value is an array of short English noun phrases (color + material + cut + garment, at most 8 words), for example "a black leather corset" or "tight red ribbed long-sleeve top".
+- One garment per phrase: never join two garments in one phrase.
+- Put each garment under the key that matches it (shorts and skirts under bottom, a corset or bra under lingerie, a sweater or blouse under top).
+- attire_state only says HOW the clothes are worn (for example "with the sleeves pushed up", "slipping off one shoulder"); it never names a garment.
+- Omit keys for things that are not visible. Do not describe the body, pose, hair or background.
+
+Example reply:
+{"top": ["a fitted white cotton tank top"], "bottom": ["light-wash denim shorts"], "footwear": ["white canvas sneakers"]}

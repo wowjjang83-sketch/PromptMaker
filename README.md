@@ -37,6 +37,7 @@ print(result.prompt)
 | `promptmaker/data/system/`, `model_examples/` | 고정 입력 (시스템 프롬프트, 모델별 예시) — 추후 LLM 옵션용 |
 | `promptmaker/web/index.html` | HTML 테스트 페이지 |
 | `promptmaker/body_parts.py` | 신체 부위별 클로즈업(다리·입술·손·발 …)과 이미지 분석 구도 문구 분리 (0.11.0, 가이드 7-6) |
+| `data/vision/outfit_prompt.txt`, `vision.KEY_HINTS` | 이미지 분석에서 의상만 한 번 더 묻기 (겹쳐 입은 코르셋·벨트 등 빠짐 방지), 의상 상태에 들어간 의상 이름은 해당 의상 요소로 (0.15.0, 가이드 7-1) |
 | `promptmaker/distance.py`, `data/elements/distance.txt`, `promptmaker/aspect.py` | 피사체 거리(가까이서·중거리·멀리서·원경)와 구도 연동, 프롬프트로 화면 비율 추천 `suggest_aspect` (0.14.0, 가이드 7-9) |
 | `promptmaker/masturbation.py`, `data/elements/masturbation.txt` | 자위 장면 (가슴 주무르기 · 클리토리스 만지기 · 질에 손가락 넣기) 과 요청 내용 반영 강화 (0.13.0, 가이드 7-8) |
 | `promptmaker/framing.py`, `undressing.py` | 샷 구도(얼빡샷·클로즈업·미디엄·카우보이·전신)와 탈의 장면 규칙 — 구도·동작·의상이 서로 맞게 (0.9.0, 가이드 7-5) |

@@ -303,6 +303,11 @@ _FRAG_PATTERNS: List[Tuple["re.Pattern[str]", str]] = [
     (re.compile(r"^no\b|\bno visible\b|\bnot visible\b|\bwithout (?:any|visible)\b", re.I),
      "'없음'을 뜻하는 문장 (요소가 아님)"),
     (re.compile(r"\b(?:likely|possibly|probably|appears to|seems to|suggesting)\b", re.I), "추측 표현 (요소가 아님)"),
+    (re.compile(r"^(?:(?:the|a|an|her|his|\{her\}|\{his\})\s+)?(?:makeup|make-up|hair|face|skin|lips|eyes|expression|"
+                r"outfit|clothing|clothes|lighting|camera|background|photo|image|pose|body)$", re.I),
+     "너무 일반적인 말 (요소가 아님)"),
+    (re.compile(r"^[\w-]+(?:\s+[\w-]+)?,\s*(?:eyes|lips|mouth|face|skin|hair|nose|cheeks|body)$", re.I),
+     "잘못 잘린 문장 조각"),
     (re.compile(r"\b(?:is|are|was|were)\b", re.I), "문장(동사 포함) · 요소는 짧은 구여야 함"),
     (re.compile(r"\b(?:stands|sits|lies|gazes|holds|crops|occupies|reveals|keeps|emphasizes|accentuates|suggests|"
                 r"creates|enhances|centers|conveys|shows|blurs|falls|rests|touches|looks|kisses|streams|takes|"
@@ -328,6 +333,7 @@ _TRIM_TAIL = [
     re.compile(r",?\s+with\s+(?:an?\s+)?(?:gentle|soft|sweet|serene|subtle|warm|natural|pink|clean|bright)$", re.I),
     re.compile(r"[,\s]+(?:with|and|or|the|a|an|of|to|by|in|on|from|for|at|into|is|under|soft|gentle|subtle)$", re.I),
     re.compile(r"\s+(?:fully|partially)$", re.I),
+    re.compile(r"\s+with\s+(?:the|her|\{her\})\s+face$", re.I),
 ]
 _LIGHTING_IS_RE = re.compile(r"^(?:the\s+)?lighting\s+(?:is\s+)?([\w-]+)$", re.I)
 

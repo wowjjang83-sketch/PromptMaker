@@ -78,6 +78,9 @@ class KeyTest(unittest.TestCase):
             ("attire_state", "tight red ribbed long-sleeve top", "top"),
             ("attire_state", "a black leather corset", "lingerie"),
             ("attire_state", "black leather shorts", "bottom"),
+            ("attire_state", "a black satin mini slip", "dress"),
+            ("top", "a white silk slip", "dress"),
+            ("bottom", "a floral one-piece", "dress"),
         ]
         for key, text, want in cases:
             r = check_item(key, text)

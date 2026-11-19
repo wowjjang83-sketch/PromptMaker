@@ -791,7 +791,7 @@ def build_prompt(data_dirs: List[str], cfg: VisionConfig, exclude=()) -> Tuple[s
 KEY_HINTS: Dict[str, str] = {
     "top": "upper-body garment: shirt, blouse, t-shirt, sweater, knit top, crop top, tank top",
     "bottom": "lower-body garment: shorts, skirt, jeans, pants, leggings",
-    "dress": "one-piece dress, gown, jumpsuit",
+    "dress": "one-piece dress, mini dress, slip dress / mini slip, gown, jumpsuit",
     "lingerie": "underwear and corsetry: bra, panties, corset, bustier, garter belt, bodysuit, babydoll",
     "swimwear": "bikini, swimsuit",
     "sleepwear": "pajamas, nightgown, robe",

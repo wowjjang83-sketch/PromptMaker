@@ -588,6 +588,7 @@ check_item("camera", "dark hair framing her face")
 - 적용 위치: `append_items()`(이미지 분석·학습 저장, `check=False` 로 끌 수 있음), `classify()`(분석 결과 표시: 행에 `key` · `original` 이 붙음), `load_elements()`(생성, 파일은 바꾸지 않음, `check=False` 로 끔).
 - 판단 대상: 헤어·메이크업·피부·표정·포즈·동작·의상류·장소·시간·조명·카메라·색감·사진 스타일·분위기·외모. 영상·상호작용·의상 상태 등은 판단하지 않습니다.
 - 기본 요소(패키지 데이터)는 모두 `ok` 여야 합니다 (`tests/test_element_check.py`). 사전을 고칠 때 이 테스트로 확인하세요.
+- 0.10.0: 와일드카드 프롬프트(약 4만 5천 줄)를 요소로 나눠 보며 찾은 잘못된 줄도 거릅니다 — 추상 표현·옷 입기 동사로 시작하는 동작(`embodying …`, `rocking a mesh bodysuit`), 헤어에 들어간 옷(`a fringe chemise` → 속옷), 장소가 아닌 `on a palm trees …`, 장면 묘사가 붙은 조명(`pedestrians under bright daylight sky`), 몸매 뜻의 `toned`·`wood grain` 색감, `technical details : …` 같은 라벨, `woman`·`micro-pores` 같은 피사체·피부결 묘사, 끝에 형용사·색만 남은 조각(`holding a bouquet of pink`).
 - 이미 쌓인 파일 정리 (먼저 `<사용자 폴더>/backups/elements_<시각>/` 에 백업, `wrong_key` 줄은 그대로 둠):
 
 ```bash

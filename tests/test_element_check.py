@@ -165,3 +165,34 @@ class ApplyTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WildcardJunkTest(unittest.TestCase):
+    """0.10.0 — 와일드카드 분석에서 나온 잘못된 줄은 걸러야 함."""
+
+    def test_rejected(self):
+        for key, text in (
+                ("action", "embodying a mix of innocence"), ("action", "rocking a mesh-overlay lingerie set"),
+                ("action", "holding a bouquet of pink"), ("action", "keeping it cool"),
+                ("pose", "looking down at it"), ("location", "on a palm trees lining sidewalk"),
+                ("location", "on a kneels on a bed"), ("location", "on a transparent mesh thong set"),
+                ("lighting", "pedestrians under bright daylight sky"), ("lighting", "intimate atmosphere with minimal shadows"),
+                ("camera", "upper body without harsh shadows"), ("camera", "technical details : 24mm wide-angle lens"),
+                ("color_grade", "toned thighs"), ("color_grade", "wood grain"), ("color_grade", "a muted lip color"),
+                ("skin", "natural matte penis"), ("skin", "forearm"), ("skin", "realistic"), ("mood", "form"),
+                ("makeup", "C-cup bust size, full make-up"), ("makeup", "{her} cheeks"),
+                ("expression", "a so her facial expression"), ("legwear", "her bare legs"),
+                ("accessory", "bangs wearing round-framed glasses"), ("hair", "vellus hair along upper lip"),
+                ("hair", "young woman with long dark hair")):
+            self.assertNotEqual(check_item(key, text)["status"], "ok", (key, text))
+
+    def test_garment_in_hair_moves(self):
+        self.assertEqual(check_item("hair", "a fringe chemise")["key"], "lingerie")
+        self.assertEqual(check_item("hair", "fringe micro mini-skirt")["key"], "bottom")
+
+    def test_kept(self):
+        for key, text in (("location", "on a charming Paris street lined with cafés"), ("legwear", "bare legs"),
+                          ("color_grade", "high-contrast black and white"), ("action", "balancing on a rooftop ledge"),
+                          ("hair", "a neat fringe"), ("lighting", "soft natural daylight"), ("camera", "upper body shot"),
+                          ("mood", "carefree"), ("skin", "smooth porcelain"), ("footwear", "white chunky sneakers")):
+            self.assertEqual(check_item(key, text)["status"], "ok", (key, text))

@@ -57,7 +57,8 @@ GARMENT_TERMS: Dict[str, Tuple[str, ...]] = {
                    "tennis outfit", "athletic set", "activewear", "sportswear", "jersey", "leotard", "bike shorts"),
     "traditional": ("hanbok", "kimono", "yukata", "ao dai", "qipao", "cheongsam", "sari", "saree", "hanfu",
                     "dirndl", "kebaya"),
-    "dress": ("dress", "sundress", "minidress", "gown", "jumpsuit", "romper", "playsuit"),
+    "dress": ("dress", "sundress", "minidress", "gown", "jumpsuit", "romper", "playsuit",
+              "slip", "mini slip", "slip dress", "one-piece", "one piece", "sheath"),  # 0.15.1: 미니슬립 · 원피스
     "top": ("shirt", "t-shirt", "tee", "blouse", "tank top", "camisole", "cami", "crop top", "sweater", "hoodie",
             "sweatshirt", "turtleneck", "top", "tube top", "halter top", "polo", "knit", "vest top",
             "undershirt", "cardigan sweater"),

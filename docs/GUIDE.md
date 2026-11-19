@@ -598,6 +598,36 @@ pm = PromptMaker(packs=["wildcard"])     # 또는 환경변수 PROMPTMAKER_PACKS
 
 읽는 순서는 기본 요소 → 확장 묶음 → 사용자 데이터 폴더입니다.
 
+### 7-8. 자위 장면 · 요청 내용 그대로 반영 (0.13.0)
+
+**자위 장면** (성인 여성 혼자): 요청에 '자위', '스스로 만지는', 'masturbating', 'touching herself' 가 있으면
+`elements/masturbation.txt` (사용자 편집 가능, 현재분사구) 에서 동작 한 줄을 넣습니다.
+
+| 요청 말 | 우선하는 동작 |
+|---|---|
+| 가슴 · 유두 / breast · nipple | 가슴 주무르기 (`fondling {her} own breasts with one hand` …) |
+| 클리토리스 · 음핵 / clit | 클리토리스 만지기 (`rubbing {her} clitoris with {her} fingertips` …) |
+| 손가락 · 질 / finger inside · vagina | 질에 손가락 넣기 (`sliding two fingers inside {her} vagina` …) |
+
+- 동작 자리(action/motion)가 비어 있으면 거기에, 탈의 동작이 차지했으면 따로 한 문장으로 넣습니다.
+- 포즈는 눕기·앉기·무릎 꿇기 같은 것만 (서 있기·걷기 X), 손이 바쁜 포즈·동작 X, 신발 X, 쾌감 표정 우선.
+- 장소를 말하지 않으면 침대·소파·방 같은 실내 사적인 곳을 우선합니다.
+- '팬티를 내리며' → 탈의 동작이 팬티를 내리는 줄로 (`undressing.txt` 의 팬티 줄은 요청에 팬티·속옷이 있을 때만 씀).
+
+**요청 내용 그대로 반영** (AI채팅 오생성 사례 '긴생머리 … 미니슬립 … 침대에서 … 자위'):
+
+- 번역 전 처리: '긴생머리' → long straight hair, '미니슬립 의상' → mini slip dress (`translator.KO_PRE_TERMS`),
+  번역문 'mini-slip costume' → mini slip dress (`normalize_english`).
+- 머리 수식어(`long straight hair`)는 머리 요소에서만, 색·길이 같은 수식어 하나만으로는 의상·포즈를 잠그지 않음
+  ('long' 이 긴 치마·긴팔 상의를 잠그던 문제), 'hair' 는 머리 요소에서만 찾음.
+- 장소는 중심 명사가 같은 줄만 ('bed' → 'on a bed with white sheets' O, 'on a gravel garden bed'·'on a telephone beside bed' X).
+  요소에 그 장소가 없으면 요청한 말 그대로 ('on a sofa').
+- 'seductive' 같은 외모 형용사는 외모(beauty) 요소로 (포즈 'standing in a seductive' 를 잠그지 않음).
+- 'costume', 'outfit', 'high-definition' 은 'The scene also features …' 에 남지 않음.
+- 의상 종류는 요청 문장에 실제 옷 이름이 있는 종류를 우선 ('white bikini' 요청에 후디가 걸려도 수영복).
+- 요소 검사(7-4) 추가: '… and her long / and her hair' 꼬리는 잘라 냄, '… with a seductive' 처럼 끝이 잘린 줄,
+  영어가 아닌 글자(중국어 등)가 섞인 줄은 쓰지 않음. 와일드카드 묶음(7-7)도 같은 규칙으로 다시 정리.
+
 ### 7-4. 요소 검사 · 잘못 분류된 요소 정리 (0.8.0)
 
 요소 txt 한 줄은 **단어 또는 짧은 구** 여야 합니다 (템플릿이 요소를 엮어 문장을 만듦). 이미지 분석·생성 프롬프트 자동 추가가 긴 문장을 쉼표로만 잘라 넣으면 이런 줄이 생겼습니다.

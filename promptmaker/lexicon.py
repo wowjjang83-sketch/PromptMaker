@@ -20,7 +20,8 @@ STOPWORDS = set(
     """a an the and or but of in on at to for with by from as is are was were be been being
     this that these those it its into over under very really so some any my your her his their our
     me you she he they we i please make create generate image picture photo video prompt want
-    show draw give scene shot style about like""".split()
+    show draw give scene shot style about like
+    while alone during""".split()
 )
 
 

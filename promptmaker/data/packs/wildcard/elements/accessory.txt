@@ -1434,7 +1434,7 @@ a gold-toned bracelet on {her} wrist
 a dark blue knitted beanie
 a dark belt
 long dangling pearl earrings
-a frayed cuffs and {her} hair
+a frayed cuffs
 a white houndstooth flat cap
 a black-and-white plaid beret tilted forward
 a black quilted leather handbag
@@ -2408,7 +2408,7 @@ a patterned scarf in black
 a black belt at the waist
 a small diamond pendant
 a small metallic handbag
-a delicate necklace and {her} long
+a delicate necklace
 small earrings and {her} fingernails
 a textured straw hat
 a black striped handbag
@@ -2440,7 +2440,7 @@ a pink knitted beanie
 a brown knitted beanie
 a tied scarf
 a light under-eye bags
-a matching choker and {her} long
+a matching choker
 a wooden fan
 a small engraved pendant
 a delicate gold heart-shaped necklace

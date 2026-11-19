@@ -25,6 +25,42 @@ def is_english(text: str) -> bool:
     return ascii_letters / len(letters) >= 0.9
 
 
+# [0.13.0] 번역기가 뜻을 잃는 한국어 말 → 번역 전에 영어로 바꿔 둠
+# ('긴생머리' → 'long hair' 로 생머리가 빠짐, '미니슬립 의상' → 'mini-slip costume')
+KO_PRE_TERMS = (
+    ("긴 생머리", "long straight hair"), ("긴생머리", "long straight hair"),
+    ("짧은 생머리", "short straight hair"), ("생머리", "straight hair"),
+    ("미니슬립 의상", "mini slip dress"), ("미니 슬립 의상", "mini slip dress"),
+    ("미니슬립", "mini slip dress"), ("미니 슬립", "mini slip dress"),
+    ("슬립 원피스", "slip dress"), ("슬립원피스", "slip dress"), ("슬립 드레스", "slip dress"),
+    ("클리토리스", "clitoris"),
+)
+
+
+def ko_pre_translate(text: str) -> str:
+    """번역 전에 :data:`KO_PRE_TERMS` 의 한국어 말을 영어로 바꿉니다 (긴 말 먼저)."""
+    if not text:
+        return text
+    out = text
+    for ko, en in KO_PRE_TERMS:
+        out = out.replace(ko, f" {en} ")
+    return re.sub(r"\s{2,}", " ", out).strip()
+
+
+_EN_FIXES = (
+    (re.compile(r"\bmini[- ]?slips?(?:[- ](?:costume|outfit|dress))?\b", re.I), "mini slip dress"),
+    (re.compile(r"\bslip (?:costume|outfit)\b", re.I), "slip dress"),
+)
+
+
+def normalize_english(text: str) -> str:
+    """번역문에서 번역기가 어색하게 옮긴 옷 이름을 요소 이름으로 ('mini-slip costume' → 'mini slip dress')."""
+    out = text or ""
+    for rx, rep in _EN_FIXES:
+        out = rx.sub(rep, out)
+    return out
+
+
 class NoTranslator:
     """Returns the text unchanged."""
 

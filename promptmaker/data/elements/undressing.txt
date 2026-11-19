@@ -21,3 +21,7 @@ peeling off {her} {sportswear}
 shrugging {her} {outerwear} off {her} shoulders
 in the middle of taking off {her} {garment}
 halfway out of {her} {garment}
+# 팬티 내리기 (요청에 팬티·속옷이 있을 때만 씀)
+pulling {her} panties down {her} thighs
+sliding {her} panties down to {her} knees
+hooking {her} thumbs into {her} panties and pulling them down

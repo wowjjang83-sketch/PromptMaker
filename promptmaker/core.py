@@ -14,6 +14,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Protocol, Tuple, Union
 
 from . import body_parts as body_mod, framing as framing_mod, grammar, safety, undressing as undress_mod
+from . import masturbation as mast_mod
 from .data_loader import (PACKAGE_DATA_DIR, Element, Item, Template, load_elements,
                           load_json, load_model_profiles, load_templates, load_text_files,
                           merge_legacy_rating_files, SUBJECT_KEYS, SUBJECT_LEAD_RE)
@@ -22,7 +23,7 @@ from .restrictions import Restrictions
 from .lexicon import LexiconResult, analyze
 from .model_profiles import ModelProfile, format_prompt
 from .relations import PLACE_TAGS, Relations, SceneContext
-from .translator import DictionaryTranslator, GoogleTranslator, NoTranslator, Translator, is_english
+from .translator import DictionaryTranslator, GoogleTranslator, NoTranslator, Translator, is_english, ko_pre_translate, normalize_english
 
 MODES = ("manual", "random", "random_by_type", "random_by_element")
 PROMPT_TYPES = ("image", "video")
@@ -221,7 +222,7 @@ class PromptMaker:
         translated = False
         if user_input and options.translate and not is_english(user_input):
             # '얼빡샷' 같은 구도 말은 번역기가 엉뚱하게 옮기므로 ('a quick shot') 먼저 영어로 바꿔 둠
-            english = self.translator.translate(framing_mod.ko_to_english(user_input))
+            english = self.translator.translate(ko_pre_translate(framing_mod.ko_to_english(user_input)))
             translated = english != user_input
             err = getattr(self.translator, "last_error", None)
             if err:
@@ -230,6 +231,9 @@ class PromptMaker:
         elif user_input and not is_english(user_input):
             warnings.append("번역이 꺼져 있어 영어가 아닌 입력은 키워드 검색에 사용되지 않습니다.")
             english = ""
+
+        # 2-1) [0.13.0] 번역문 다듬기 ('mini-slip costume' → 'mini slip dress')
+        english = normalize_english(english)
 
         # 3) keyword search + 4) related words
         lex = analyze(english, self.elements, self.related_db if options.use_related_words else {},
@@ -319,6 +323,8 @@ class PromptMaker:
             if intent.nude and key in ("attire", "attire_state"):  # 규칙으로 이미 비움
                 continue
             if intent.undressing and key in (filler.undress_slot, "attire_state"):  # 요청한 탈의 동작
+                continue
+            if intent.masturbation and key in (filler.mast_slot, "masturbation"):  # 요청한 자위 동작
                 continue
             out.append((key, str(text)))
         return out
@@ -491,7 +497,10 @@ BODY_STRICT_KEYS = ("pose", "action", "motion", "interaction")  # 탈의 동작�
 INTENT_NOISE = {"taken", "shot", "wearing", "year", "old", "years", "year-old", "years-old",
                 "model", "models", "idol", "idols", "actress", "solo", "alone", "twenties",
                 "thirties", "early", "late", "mid", "gravure", "pictorial",
-                "photoshoot", "editorial", "magazine", "japanese", "korean", "chinese"}
+                "photoshoot", "editorial", "magazine", "japanese", "korean", "chinese",
+                "costume", "costumes", "outfit", "outfits", "attire", "clothes", "clothing", "scene", "high-definition",
+                "high-quality", "quality", "resolution", "high-resolution"}
+_PANTIES_RE = re.compile(r"\b(?:panties|underwear|knickers|thong|g-string)\b", re.I)
 
 
 class _Filler:
@@ -522,6 +531,8 @@ class _Filler:
         self.framing_phrase = ""
         self.undress_slot: Optional[str] = None
         self.undress_text = ""
+        self.mast_slot: Optional[str] = None  # [0.13.0] 자위 동작을 넣을 자리
+        self.mast_text = ""
         self._otype = ""
         req_tags = maker.relations.tags_for_request(english) if english else set()
         self.ctx.add(req_tags, provider=bool(req_tags & SCENE_TAGS))
@@ -570,6 +581,11 @@ class _Filler:
                 hi = rules.female_age_max if rules.female_age_max is not None else lo
                 kept = [Item(text=str(a)) for a in range(lo, hi + 1)]
             items = kept or items
+        if self.intent.masturbation and key == "pose" and key not in self.selections:
+            # 자위 장면: 서 있기 · 걷기 같은 포즈는 빼고, 눕기 · 앉기 포즈가 없으면 기본 포즈를 더함
+            kept = [i for i in items if mast_mod.POSE_GOOD_RE.search(i.text) and not mast_mod.POSE_BAD_RE.search(i.text)
+                    and not mast_mod.HANDS_BUSY_RE.search(i.text)]
+            items = kept or [Item(text=t) for t in mast_mod.FALLBACK_POSES]
         ban = self.banned.get(key)
         if ban:
             kept = [i for i in items if i.text.lower() not in ban]
@@ -621,6 +637,21 @@ class _Filler:
             # 탈의 동작과 함께: 손이 바쁘거나 몸 전체가 움직이는 포즈·동작은 빼기
             scored = [(it, 0.0, "탈의 동작과 함께 못 함") if undress_mod.BUSY_RE.search(it.text) else (it, w, why)
                       for it, w, why in scored]
+        if self.intent.masturbation:
+            if key in UNDRESS_SLOTS and key not in (self.mast_slot, self.undress_slot):
+                # 자위 동작과 함께: 손이 바쁜 포즈·동작은 빼고, 눕기·앉기 포즈를 우선
+                scored = [(it, 0.0, "자위 동작과 함께 못 함")
+                          if undress_mod.BUSY_RE.search(it.text) or mast_mod.HANDS_BUSY_RE.search(it.text)
+                          else (it, w * (3.0 if key == "pose" and mast_mod.POSE_GOOD_RE.search(it.text) else 1.0), why)
+                          for it, w, why in scored]
+            elif key == "location" and key not in self.intent.pools and key not in self.selections:
+                # 장소를 말하지 않은 자위 장면: 침대·소파·방 같은 실내 사적인 곳을 우선
+                scored = [(it, w * (10.0 if mast_mod.PRIVATE_PLACE_RE.search(it.text) else 0.05), why)
+                          for it, w, why in scored]
+            elif key == "expression":
+                scored = [(it, w * (0.1 if mast_mod.EXPR_BAD_RE.search(it.text) else
+                                    8.0 if mast_mod.EXPR_GOOD_RE.search(it.text) else 1.0), why)
+                          for it, w, why in scored]
         used_sig = self._used_signatures()
         if used_sig:
             scored = [(it, w * 0.1, (why + " " if why else "") + "특징 단어 반복")
@@ -847,10 +878,13 @@ class _Filler:
             return []
         names = self._garment_names()
         items: List[Item] = []
+        panties_asked = bool(_PANTIES_RE.search(self.english or "")) or self._otype == "lingerie"
         for it in el.items:
             types = it.requires & set(self.OUTFIT_PARTS)
             if types and self._otype not in types:
                 continue
+            if _PANTIES_RE.search(it.text) and not panties_asked:
+                continue  # '팬티를 내리는' 줄은 요청에 팬티·속옷이 있을 때만
             text = undress_mod.fill_garments(it.text, names)
             if text and self._fits_frame(key if key in FRAMED_KEYS else "action", text):
                 weight = it.weight
@@ -863,6 +897,9 @@ class _Filler:
         req = _stems(self.english) - {"takin", "cloth", "undre", "woman", "women", "scene", "their", "while"}
         for item in items:
             item.weight *= 4.0 ** len(req & _stems(item.text))
+        if source == "undressing" and _PANTIES_RE.search(self.english or ""):
+            # '팬티를 내리는' 요청: 팬티를 내리는 줄만 (다른 옷을 벗는 줄 X)
+            items = [i for i in items if _PANTIES_RE.search(i.text)] or items
         if not items:
             if source == "undressing":
                 why = (f"{framing_mod.LABELS_KO[self.framing]}에는 탈의 동작이 담기지 않아"
@@ -875,9 +912,35 @@ class _Filler:
             self.undress_text = texts[0] if texts else ""
         return texts
 
+    def _mast_pick(self, key: str) -> List[str]:
+        """[0.13.0] 자위 동작 한 줄 (요청한 종류 우선: 가슴 / 클리토리스 / 손가락)."""
+        el = self.maker.elements.get("masturbation")
+        lines = [Item(text=i.text, weight=i.weight) for i in el.items] if el and el.items else []
+        if not lines:
+            return []
+        asked = set(self.intent.masturbation_kinds)
+        items: List[Item] = []
+        for it in lines:
+            kinds = mast_mod.line_kinds(it.text)
+            if asked:  # 말한 동작과 꼭 같은 줄 > 일부만 같은 줄 > 다른 동작
+                it.weight *= 20.0 if kinds == asked else 3.0 if kinds < asked else 0.3 if kinds & asked else 0.02
+            if self._fits_frame(key if key in FRAMED_KEYS else "action", it.text) or not self.framing:
+                items.append(it)
+        if not items:
+            return []
+        chosen = self._weighted_pick(key, items, 1)
+        texts = self._commit(key, chosen)
+        if key == "masturbation":
+            self.mast_text = texts[0] if texts else ""
+        return texts
+
     def pick(self, key: str, n: int = 1) -> List[str]:
         if key in self.cache and len(self.cache[key]) >= min(n, len(self.cache[key]) or n):
             return self.cache[key][:n]
+        if self.intent.masturbation and key not in self.selections and key in (self.mast_slot, "masturbation"):
+            got = self._mast_pick(key)
+            if got or key == "masturbation":
+                return got
         if key == "attire_state" and self.intent.nude and key not in self.selections:
             return self._commit(key, [Item(text=NUDE_STATE)])
         if self.intent.undressing and key not in self.selections:
@@ -959,10 +1022,16 @@ class _Filler:
             vals = self.pick("attire")
             return vals[0] if vals else ""
         forced = None
-        for otype, parts in self.OUTFIT_PARTS.items():
-            if any(p in self.intent.pools or p in self.selections for p in parts):
-                forced = otype
-                break
+        asked_types = [otype for otype, parts in self.OUTFIT_PARTS.items()
+                       if any(p in self.intent.pools or p in self.selections for p in parts)]
+        if asked_types:
+            # [0.13.0] 요청 문장에 그 옷 이름이 실제로 있는 종류를 우선 ('white bikini' 요청에 'hoodie' 줄이 걸려도 수영복)
+            from .element_check import GARMENT_TERMS
+            named = [o for o in asked_types if any(
+                re.search(r"\b" + re.escape(t) + r"(?:s|es)?\b", self.english or "", re.I)
+                for p in self.OUTFIT_PARTS[o] for t in GARMENT_TERMS.get(p, ()))
+                or any(p in self.intent.locks or p in self.selections for p in self.OUTFIT_PARTS[o])]
+            forced = (named or asked_types)[0]
         if forced:
             otype = forced
             self.selections.setdefault("outfit_type", forced)
@@ -997,6 +1066,8 @@ class _Filler:
             if leg:
                 extras.append(leg[0])
         shoe_p = 0.5 if not body else (0.9 if self.body_part == "feet" else 0.5 if "footwear" in visible else 0.0)
+        if self.intent.masturbation and not self._requested("footwear"):
+            shoe_p = 0.0  # 침대 위 자위 장면에 신발 X (요청했을 때만)
         if otype != "sleepwear" and "footwear" in self.maker.elements and self.rng.random() < shoe_p \
                 and (body or framing_mod.garment_visible("footwear", self.framing) or self._requested("footwear")):
             if otype == "swimwear":  # only beach-friendly shoes with swimwear
@@ -1050,11 +1121,15 @@ class _Filler:
                 ordered.insert(0, "attire")
             if self.undress_slot is None:
                 ordered.append("undressing")
+        if self.intent.masturbation:
+            self.mast_slot = next((k for k in ("action", "motion") if k in slots and k != self.undress_slot), None)
+            if self.mast_slot is None:
+                ordered.append("masturbation")
         for key in ordered:
             if key in self.computed or key in ("framing", "part_detail"):
                 continue
-            if key == "undressing":
-                self.pick("undressing")
+            if key in ("undressing", "masturbation"):
+                self.pick(key)
                 continue
             if key == "attire":
                 self._outfit()
@@ -1305,6 +1380,18 @@ class _Filler:
                 outfit = (self.cache.get("attire") or [""])[0]
                 at = next((i + 1 for i, s in enumerate(sentences) if outfit and outfit[:25].lower() in s.lower()),
                           min(2, len(sentences)))
+                sentences.insert(at, grammar.ensure_sentence(grammar.capitalize_first(sent)))
+        if self.mast_text:
+            joined = " ".join(sentences).lower()
+            mast = self._resolve(self.mast_text) or ""
+            if mast and mast.lower() not in joined:
+                sent = self._resolve("{She} {is} " + mast) or ""
+                pose = (self.cache.get("pose") or [""])[0]
+                pose = (self._resolve(pose) or "") if pose else ""
+                undress = (self._resolve(self.undress_text) or "") if self.undress_text else ""
+                at = next((i + 1 for i, s in enumerate(sentences)
+                           if (undress and undress[:25].lower() in s.lower()) or (pose and pose[:25].lower() in s.lower())),
+                          min(3, len(sentences)))
                 sentences.insert(at, grammar.ensure_sentence(grammar.capitalize_first(sent)))
         uses_details = any("{user_details}" in (s.get("text", "") + " ".join(s.get("options", [])))
                            for s in self.t.sentences)

@@ -324,6 +324,12 @@ _FRAG_PATTERNS: List[Tuple["re.Pattern[str]", str]] = [
                 r"plush|playful|sultry|muted|realistic|long)$|"
                 r"\b(?:a|an|the|with|of)\s+(?:pink|red|white|black|blue|green|purple|gold|silver)$|"
                 r"\b(?:it|another)$|\ba full-body$", re.I), "끝이 잘린 문장 조각"),
+    # 0.13.0 — 와일드카드에서 온 '… and her long' · '… with a seductive' 조각, 영어가 아닌 글자
+    (re.compile(r"\s+and\s+(?:her|\{her\})\s+(?:[\w-]+\s+){0,2}(?:hair|long|short)$", re.I),
+     "끝에 다른 요소가 붙은 조각 ('… and her hair')"),
+    (re.compile(r"\b(?:a|an|the|with|in)\s+(?:seductive|sensual|alluring|flirtatious|flirty|confident|coy|teasing|"
+                r"inviting|sexy|sweet|dreamy|mysterious|innocent|provocative|sly)$", re.I), "끝이 잘린 문장 조각"),
+    (re.compile(r"[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7a3]"), "영어가 아닌 글자가 섞인 줄"),
     (re.compile(r"\b(?:bust size|cup size|[a-h]-cup)\b", re.I), "체형 수치 (요소가 아님)"),
     (re.compile(r"[:—]|https?://|www\.|\b(?:this|these)\s+(?:ensures?|creates?|gives?)\b", re.I),
      "라벨·기호가 섞인 조각 ('technical details : …')"),
@@ -355,6 +361,9 @@ _TRIM_TAIL = [
     re.compile(r"\s+(?:rests|falls|stands|sits|lies|gazes|holds|touches|keeps|blurs|centers|conveys|shows|is|are|frames|"
                r"occupies|crops|reveals|emphasizes|enhances|highlights|creates|looks|streams|drifts)\b.*$", re.I),
     re.compile(r",?\s+with\s+(?:an?\s+)?(?:gentle|soft|sweet|serene|subtle|warm|natural|pink|clean|bright)$", re.I),
+    re.compile(r"\s+and\s+(?:her|\{her\})\s+(?:[\w-]+\s+){0,2}(?:hair|long|short)$", re.I),
+    re.compile(r",?\s+(?:with|in)\s+(?:an?\s+)?(?:seductive|sensual|alluring|flirtatious|flirty|confident|coy|teasing|"
+               r"inviting|sexy|sweet|dreamy|mysterious|innocent|provocative|sly)$", re.I),
     re.compile(r"[,\s]+(?:with|and|or|the|a|an|of|to|by|in|on|from|for|at|into|is|under|soft|gentle|subtle)$", re.I),
     re.compile(r"\s+(?:fully|partially)$", re.I),
     re.compile(r"\s+with\s+(?:the|her|\{her\})\s+face$", re.I),

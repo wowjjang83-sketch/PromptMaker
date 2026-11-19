@@ -33,6 +33,7 @@ KO_PRE_TERMS = (
     ("미니슬립 의상", "mini slip dress"), ("미니 슬립 의상", "mini slip dress"),
     ("미니슬립", "mini slip dress"), ("미니 슬립", "mini slip dress"),
     ("슬립 원피스", "slip dress"), ("슬립원피스", "slip dress"), ("슬립 드레스", "slip dress"),
+    ("미니원피스", "mini dress"), ("미니 원피스", "mini dress"), ("미니드레스", "mini dress"), ("미니 드레스", "mini dress"),
     ("클리토리스", "clitoris"),
 )
 
@@ -50,6 +51,7 @@ def ko_pre_translate(text: str) -> str:
 _EN_FIXES = (
     (re.compile(r"\bmini[- ]?slips?(?:[- ](?:costume|outfit|dress))?\b", re.I), "mini slip dress"),
     (re.compile(r"\bslip (?:costume|outfit)\b", re.I), "slip dress"),
+    (re.compile(r"\bmini[- ]?one[- ]?pieces?\b|\bmini[- ]dress(es)?\b", re.I), "mini dress"),
 )
 
 

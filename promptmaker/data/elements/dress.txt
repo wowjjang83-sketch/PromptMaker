@@ -14,6 +14,11 @@ a wrap dress in emerald silk
 a gingham babydoll dress #summer
 a satin cocktail dress #party
 an off-the-shoulder ruffled dress #summer
+# 미니 원피스 · 미니 드레스 (0.15.2)
+a fitted black mini dress
+a satin mini dress with thin straps
+a ditsy floral mini dress #summer
+a knit mini dress #winter
 # 미니 슬립 (짧은 슬립 원피스)
 a silk mini slip dress
 a satin mini slip dress with thin straps

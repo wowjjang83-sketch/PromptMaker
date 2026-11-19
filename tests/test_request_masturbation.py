@@ -184,3 +184,24 @@ class HelperTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MiniDressRequestTest(unittest.TestCase):
+    """0.15.2: '미니원피스 · 미니드레스' 요청은 미니 원피스로 (전엔 아무 원피스 + 'features mini')."""
+
+    def test_korean_terms(self):
+        from promptmaker.translator import ko_pre_translate, normalize_english
+        for ko in ("미니원피스", "미니 원피스", "미니드레스", "미니 드레스"):
+            self.assertEqual(ko_pre_translate(ko), "mini dress")
+        self.assertEqual(normalize_english("a red mini-dress"), "a red mini dress")
+        self.assertEqual(normalize_english("a mini one-piece"), "a mini dress")
+
+    def test_generation_keeps_mini_dress(self):
+        from promptmaker import NoTranslator, PromptMaker
+        maker = PromptMaker(translator=NoTranslator())
+        for _ in range(5):
+            res = maker.generate("a woman wearing a mini dress on a bed")
+            text = getattr(res, "prompt", None) or res["prompt"]
+            self.assertIn("mini", text.lower())
+            self.assertRegex(text.lower(), r"mini (?:slip )?dress")
+            self.assertNotIn("features mini", text)

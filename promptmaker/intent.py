@@ -177,7 +177,7 @@ GARMENT_NOUNS = {
                "trousers", "leggings"],
     "top": ["crop top", "tank top", "top", "blouse", "shirt", "t-shirt", "tee", "sweater", "camisole",
             "hoodie", "turtleneck", "tube top", "bralette"],
-    "dress": ["mini dress", "sundress", "slip dress", "dress", "gown"],
+    "dress": ["mini slip dress", "mini dress", "minidress", "mini-dress", "sundress", "slip dress", "dress", "gown"],
     "swimwear": ["bikini", "swimsuit", "monokini", "one-piece"],
     "outerwear": ["coat", "jacket", "blazer", "cardigan", "trench"],
     "footwear": ["high heels", "heels", "boots", "sneakers", "sandals", "loafers", "flats"],
@@ -262,6 +262,18 @@ def _phrases(text: str, elements: Dict[str, Element], intent: Intent) -> set:
                 pre.pop(0)
             mods = [w for w in pre if w in MODIFIERS]
             canon = "mini skirt" if noun in ("miniskirt", "mini-skirt") else noun
+            canon = "mini dress" if noun in ("minidress", "mini-dress") else canon
+            if not mods and " " in canon and canon != "mini skirt":
+                # 0.15.2: 'mini dress' · 'slip dress' 처럼 두 단어 의상은 수식어가 없어도 두 단어가 다 있는 줄로
+                # (전엔 'dress' 만 보고 아무 원피스나 골라 '미니원피스' 요청이 무시되고 'features mini' 로 남음)
+                parts = canon.split()
+                items = [i.text for i in elements[key].items if all(_word_in(w, i.text) for w in parts)]
+                if items:
+                    intent.pools[key] = items
+                else:
+                    intent.locks[key] = ("an " if canon[0] in "aeiou" else "a ") + canon
+                used |= set(parts) | set(noun.replace("-", " ").split())
+                break
             if not mods:
                 # a bare noun: the normal keyword search picks matching items
                 # (그래서 used 에 넣지 않음 — 넣으면 키워드 검색이 건너뛰어 '셔츠' 요청이 무시됨)

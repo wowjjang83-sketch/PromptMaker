@@ -1,0 +1,17 @@
+# 와일드카드 확장 요소 (time_weather) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+at night
+during daytime
+pedestrians under bright daylight sky
+on a trees at night
+during golden hour
+under deep blue twilight sky
+on a palm trees at night
+on a gold carousel at night
+under soft golden hour lighting
+at night with white marble pillars
+on a wet alleyway at night
+under a partly cloudy sky
+under overcast
+during the day
+at twilight

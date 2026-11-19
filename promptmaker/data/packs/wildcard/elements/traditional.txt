@@ -1,0 +1,36 @@
+# 와일드카드 확장 요소 (traditional) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+a kimono
+a light mint-green silk kimono
+a floral-patterned yukata
+a patterned kimono with bold stripes
+a light green satin kimono
+a sheer tie-dye long-sleeved open kimono
+a vibrant yellow kimono with orange
+a white floral-patterned kimono with orange
+a light pink two-piece kimono
+a light pink floral-patterned yukata
+a loose-fitting white yukata adorned
+a vibrant floral-patterned yukata in pink
+a light-colored floral yukata
+a white half-length kimono
+a purple floral yukata
+a purple floral-patterned yukata
+a white yukata
+a patterned yukata
+a white patterned yukata
+a vibrant floral kimono
+a textured deep red kimono
+a pink satin yukata
+a black patterned yukata
+a matching patterned yukata
+a floral-patterned kimono
+a white kimono
+a Japanese-style kimono
+a clear kimono details
+a traditional red kimono layered
+a red kimono
+an open kimono
+a semi-transparent kimono
+a kimono yukata
+a bath yukata

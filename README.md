@@ -32,6 +32,7 @@ print(result.prompt)
 | `promptmaker/` | 라이브러리 본체 (엔진, 문법, 번역, 키워드 검색, 안전 규칙) |
 | `promptmaker/data/templates/*.json` | 템플릿 10종 (이미지 7, 영상 3) — 사용자 추가/수정 가능 |
 | `promptmaker/data/elements/*.txt, *.json` | 템플릿 요소 목록 (30여 종) — 사용자 추가/수정 가능 |
+| `promptmaker/data/packs/wildcard/elements/*.txt` | 와일드카드 확장 요소 약 2만 1천 줄 (기본은 꺼짐, `PromptMaker(packs=["wildcard"])`, 0.12.0, 가이드 7-7) |
 | `promptmaker/data/lexicon/` | 관련 단어 사전, 오프라인 한영 사전 |
 | `promptmaker/data/system/`, `model_examples/` | 고정 입력 (시스템 프롬프트, 모델별 예시) — 추후 LLM 옵션용 |
 | `promptmaker/web/index.html` | HTML 테스트 페이지 |

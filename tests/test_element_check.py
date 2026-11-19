@@ -196,3 +196,34 @@ class WildcardJunkTest(unittest.TestCase):
                           ("hair", "a neat fringe"), ("lighting", "soft natural daylight"), ("camera", "upper body shot"),
                           ("mood", "carefree"), ("skin", "smooth porcelain"), ("footwear", "white chunky sneakers")):
             self.assertEqual(check_item(key, text)["status"], "ok", (key, text))
+
+
+class WildcardPackTest(unittest.TestCase):
+    """0.12.0 — 와일드카드 확장 요소 묶음 (기본은 꺼짐)."""
+
+    def test_pack_lines_are_ok_and_not_in_base(self):
+        from promptmaker.core import PACKS_DIR
+        edir = os.path.join(PACKS_DIR, "wildcard", "elements")
+        base = {(k, t.lower()) for k, t in _base_lines()}
+        n = 0
+        for fname in sorted(os.listdir(edir)):
+            key = fname[:-4]
+            with open(os.path.join(edir, fname), encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    n += 1
+                    self.assertEqual(check_item(key, line)["status"], "ok", (key, line))
+                    self.assertNotIn((key, line.lower()), base)
+        self.assertGreater(n, 10000)
+
+    def test_pack_is_off_by_default_and_can_be_enabled(self):
+        from promptmaker.core import available_packs
+        self.assertIn("wildcard", available_packs())
+        off = PromptMaker()
+        on = PromptMaker(packs=["wildcard"])
+        self.assertEqual(off.packs, [])
+        self.assertEqual(on.packs, ["wildcard"])
+        self.assertGreater(len(on.elements["top"].items), len(off.elements["top"].items) + 1000)
+        self.assertTrue(on.generate("bikini on the beach", seed=1).prompt)

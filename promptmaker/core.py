@@ -11,7 +11,7 @@ import os
 import random
 import re
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Optional, Protocol, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Protocol, Tuple, Union
 
 from . import body_parts as body_mod, framing as framing_mod, grammar, safety, undressing as undress_mod
 from .data_loader import (PACKAGE_DATA_DIR, Element, Item, Template, load_elements,
@@ -103,14 +103,31 @@ class PromptResult:
         return self.prompt
 
 
+# 0.12.0 확장 요소 묶음 위치 (data/packs/<이름>/elements/*.txt)
+PACKS_DIR = os.path.join(PACKAGE_DATA_DIR, "packs")
+
+
+def available_packs() -> List[str]:
+    """켤 수 있는 확장 요소 묶음 이름 목록 (예: ['wildcard'])."""
+    if not os.path.isdir(PACKS_DIR):
+        return []
+    return sorted(d for d in os.listdir(PACKS_DIR) if os.path.isdir(os.path.join(PACKS_DIR, d, "elements")))
+
+
 class PromptMaker:
     """Rule/template based natural-language prompt generator."""
 
     def __init__(self, data_dir: Optional[str] = None, user_data_dir: Optional[str] = None,
                  translator: Optional[Translator] = None, llm: Optional[LLMRefiner] = None,
                  scope_checker: Optional[ScopeChecker] = None,
-                 restrictions: Optional[Union[Restrictions, Dict[str, Any]]] = None):
+                 restrictions: Optional[Union[Restrictions, Dict[str, Any]]] = None,
+                 packs: Optional[Iterable[str]] = None):
         self.data_dirs = [data_dir or PACKAGE_DATA_DIR]
+        # 0.12.0 확장 요소 묶음 (기본은 꺼짐): packs=["wildcard"] 또는 환경변수 PROMPTMAKER_PACKS="wildcard"
+        if packs is None:
+            packs = [p for p in re.split(r"[,\s]+", os.environ.get("PROMPTMAKER_PACKS", "")) if p]
+        self.packs = [p for p in packs if os.path.isdir(os.path.join(PACKS_DIR, p))]
+        self.data_dirs += [os.path.join(PACKS_DIR, p) for p in self.packs]
         user_dir = user_data_dir or os.environ.get("PROMPTMAKER_USER_DATA")
         self.user_dir = user_dir if user_dir and os.path.isdir(user_dir) else None
         # 국적 · 여성 나이 규칙 (기본 Korean/Japanese · 20~22). 사용자 폴더 restrictions.json 이 있으면 그것

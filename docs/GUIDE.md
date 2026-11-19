@@ -581,6 +581,23 @@ pm = PromptMaker(user_data_dir=user_dir)            # 또는 PromptMaker(restric
 - `framing` / `body_closeup` 에 구도가 아닌 문구가 오면 저장하지 않음 (`wrong_key`)
 - `undressing` / `undressing_state` (문구 틀) 는 분석 대상에서 뺌
 
+### 7-7. 와일드카드 확장 요소 묶음 (0.12.0)
+
+AI Gallery Manager 의 일반 와일드카드(마스터 제외) 프롬프트 약 4만 5천 줄을 요소별로 나눈 문구 약 2만 1천 줄이
+`promptmaker/data/packs/wildcard/elements/<요소>.txt` 에 들어 있습니다. 모두 요소 검사(7-4)를 통과했고, 기본 요소와 겹치지
+않으며, 국적(Korean·Japanese 외)·나이·남성 묘사가 든 문구는 없습니다.
+
+기본 요소와 달리 장면 태그(`#beach`, `#winter` …)가 없어서 **기본은 꺼져 있습니다** (켜면 해변 장면에 침실 소품처럼 장면이
+어긋날 수 있음). 필요할 때 켭니다.
+
+```python
+from promptmaker import PromptMaker, available_packs
+available_packs()                        # ['wildcard']
+pm = PromptMaker(packs=["wildcard"])     # 또는 환경변수 PROMPTMAKER_PACKS=wildcard
+```
+
+읽는 순서는 기본 요소 → 확장 묶음 → 사용자 데이터 폴더입니다.
+
 ### 7-4. 요소 검사 · 잘못 분류된 요소 정리 (0.8.0)
 
 요소 txt 한 줄은 **단어 또는 짧은 구** 여야 합니다 (템플릿이 요소를 엮어 문장을 만듦). 이미지 분석·생성 프롬프트 자동 추가가 긴 문장을 쉼표로만 잘라 넣으면 이런 줄이 생겼습니다.

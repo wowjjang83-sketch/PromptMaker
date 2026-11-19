@@ -1,0 +1,654 @@
+# 와일드카드 확장 요소 (camera) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+eye-level angle
+wide shot
+medium close-up
+medium close-up shot
+medium shot
+shallow depth of field blurring the background
+close-up photo
+high-angle perspective
+low-angle perspective
+close-up photograph
+slightly high-angle perspective
+taken from a slightly low angle
+slightly low angle
+shot on sony a7r v
+low-angle shot from above
+shot with sony a7r v
+slightly elevated angle
+full-body photograph
+slightly high angle
+depth of field
+full body
+upper torso with shallow depth of field
+low angle
+a close-up frontal view
+diffused from above
+taken from a slightly elevated angle
+cowboy shot
+shallow depth of field emphasizing her form
+soft bokeh background
+a close-up front view
+in a close-up
+a side profile close-up
+in a close-up side view
+framed in a medium shot
+shallow depth of field emphasizing her face
+an extreme macro close-up of cunnilingus
+a close-up shot from a low angle
+taken from a slightly elevated eye-level angle
+photorealistic full-body portrait
+dutch angle
+from below
+high-resolution photo with shallow depth of field
+taken from a low angle
+POV shot
+framed in a medium close-up shot
+close-up portrait photo
+framed by a shallow depth of field
+a low-angle close-up
+positioned in a close-up shot
+viewed from a low angle
+high-angle perspective looking down
+point of view looking down between
+POV perspective
+shallow depth of field blurring background elements
+slightly tilted angle
+soft focus background
+a low-angle close-up shot
+eye-level shot with shallow depth of field
+extreme ultra close-up photograph
+view from below during active deep penetration
+framed in a medium close-up
+slightly angled from above
+high-resolution photograph with shallow depth of field
+realistic depth of field
+intimate close-up shot
+slightly low-angle shot
+A close-up photo style
+a close-up side profile
+a close-up portrait style
+close-up perspective
+viewed from a side angle
+low angle shot from the side
+dutch angle shot
+high angle
+overhead angle
+shallow depth of field blurring foreground
+bokeh background
+natural depth of field
+angled slightly downward from above
+intimate close-up
+soft focus on the background elements
+framed in a close-up shot
+angled from above
+upper torso from a slightly elevated angle
+positioned at a low angle
+side profile view from a low angle
+high-angle shot from above
+side profile shot from a low angle
+low-angle shot from below
+a close-up view showing her face
+a blurred depth of field
+realistic perspective
+slight motion blur
+hyper-realistic close-up portrait
+minimal depth of field
+depth of field shallow
+dark wood framing
+camera angle
+recessed ceiling lights illuminating scene from above
+a right side of frame
+a focus on the physicality
+shallow depth of field emphasizing their forms
+intimate medium shot
+intimate portrait with shallow depth of field
+a full-body portrait
+intimate mood with shallow depth of field
+indistinct bokeh
+a high-angle studio shot
+close-up viewpoint
+a close-up front view with face
+blue bokeh
+bokeh effect
+intimate framing
+viewed from a high angle
+shallow depth of field blurring the surroundings
+low-angle view from above
+slightly tilted perspective
+a front-facing close-up
+viewed in a close-up side view
+viewed from a low side angle
+three-quarter view from a slightly low angle
+side profile angle
+low angle shot from slightly above
+viewed from a high-angle perspective
+motion blur
+A photorealistic close-up shot
+hyper-realistic full-body portrait
+focus sharpness
+shallow depth of field blurring background details
+a focus on the tactile
+viewed from a high-angle close-up
+lens flare
+streetlights casting lens flares
+side profile
+streetlights casting lens flare
+soft bokeh effect in background reflections
+sharp focus on her body
+subtle motion blur
+sensual focus on the body's form
+low-angle shot with shallow depth of field
+shot from a low-angle perspective
+sharp focus on her face
+direct from above
+soft focus on the background
+close-up shot from the side
+close-up shot from below
+a focus on the exposed body
+close-up profile shot
+shot from a slightly elevated angle
+close-up moment between
+slightly soft focus
+a close-up shot from the chest up
+framed with a shallow depth of field
+bokeh in the background
+airy bokeh
+framed by soft studio lighting
+a medium close-up portrait shot
+slight bokeh in the background
+intimate portrait shot with soft indoor lighting
+soft focus on her hands
+high-angle shot
+a close-up shot from a frontal angle
+a close-up shot looking slightly upward
+prominent lens flare streaks across the frame
+a close-up shot from a high angle
+low-angle shot from above her shoulder
+wooden framing
+medium shot from above
+low angle shot focusing on her torso
+white bokeh
+in a close-up view
+slightly tilted angle from above
+a close-up from a slightly elevated angle
+eye-level shot
+bright bokeh
+a three-quarter profile close-up
+blurred with bokeh
+angled perspective
+photorealistic close-up portrait
+85mm lens
+from above
+A POV
+A wide shot emphasizing the background
+24mm wide-angle lens
+slight bokeh blur on background elements
+focus on facial expressions
+wide-angle shot
+dutch angle perspective
+focus on intimate body language
+focus on chest area
+cowboy shot perspective
+depth of field focused on the face
+intimate POV perspective
+upside-down perspective
+focused perspective
+A hyper-realistic full-body shot
+soft bokeh lights scattered throughout the scene
+close-up selfie portrait
+soft bokeh in depth of field
+three-camera lens array
+low-angle perspective capturing her seated posture
+chair's chrome frame
+sharp focus on hair strands
+side angle
+sharp focus with soft bokeh
+bright bokeh highlights through leaves
+window frame in dim ambient light
+of frame on ground
+depth of field blurred into soft bokeh
+medium close-up shot slightly low-angle
+sharp focus on eyes
+soft bokeh from reflective surfaces in background
+scattered sparkling bokeh lights
+soft bokeh blur in background
+soft bokeh light reflections on water surface
+subtle motion blur in background crowd movement
+in soft focus
+subtle lens flare from phone flash reflection
+eye-level gaze from camera perspective
+sharp focus with soft bokeh in foreground
+black metal framing
+soft bokeh in the floral arrangement backdrop
+slightly high-angle selfie perspective
+headrests in focus
+soft bokeh from ambient lighting
+soft bokeh from background lights
+close-up shot of two black-and-white polaroid
+soft bokeh in background
+lens flare from phone screen
+wide shot through a magnifying glass
+subtle bokeh in background enhancing depth
+soft bokeh highlighting festive lights
+soft bokeh effect from out-of-focus data elements
+bokeh effect created by out-of-focus leaves
+sharp focus capturing fine lace weave details
+sharp focus on facial expression
+bokeh effect on right side of frame
+sharp focus on hijab lace weave
+slightly low-angle perspective
+sharp focus on satin sheen
+of frame
+soft bokeh from shallow depth of field
+reddish-brown window frame under soft daylight
+slight lens flare from ambient light source
+framed photos under warm ambient lighting
+slight bokeh blur in background depth
+soft bokeh from blurred wall reflections
+window frame under soft natural light
+motion blur from passing scenery
+soft bokeh blur in background depth
+blurred bokeh from hanging lanterns
+mirrored doors framing shot
+soft bokeh from background lights creating depth
+warm-toned wood framing
+green-painted door frame under soft natural daylight
+wooden door frame under soft daylight illumination
+slight bokeh effect in background foliage
+exposed wooden framing
+sharp focus on skin surface detail
+sharp focus on skin tone
+window frame under bright natural daylight
+slight motion blur on lifted leg
+wide angle view distorting the room corners
+focus on the physical intimacy
+slightly tilted perspective with dramatic
+a soft-focus bokeh effect
+unambiguous focus on her body
+close-up perspective emphasizing the physical contact
+sharp focus on the bodies
+purple bokeh lights
+focus on the physical interaction
+tilted perspective
+A full-body medium shot
+close-up photorealistic RAW photo
+a focus on the explicit physical details
+focus on the exposed
+sharp focus on the wet surface
+sharp focus on the intimate interaction
+explicit focus on the physical interaction
+sharp focus on the central erotic action
+top-down angle
+close-up perspective with warm indoor lighting
+tilted perspective with warm orange ambient lighting
+shot in low-key lighting with deep shadows
+close-up shot emphasizing the physical contact
+focus on the physicality of the scene
+focus on the tactile interaction
+tightly framed from a low angle
+window framing
+tightly framed to focus on her torso
+explicit focus on her exposed form
+sensual focus on her exposed body
+sharp focus on her torso
+subtle motion blur on the lips
+tactile focus on her hands
+a medium close-up focusing on her torso
+a focus on the interplay of light
+sensual focus on the fluid
+explicit visual focus on her body
+sensual focus on her body
+medium shot focusing on her upper torso
+a focus on the natural beauty
+a focus on the vulnerability
+a focus on her expressive face
+soft focus background emphasizing the intimate
+a focus on anatomical clarity
+sensual focus on the exposed skin
+focus on the raw
+voyeuristic perspective
+a focus on the exposed skin
+framed from a low angle looking up
+focus on the physical contact
+soft bokeh highlights
+a focus on the exposed anatomy
+camera angle slightly elevated
+a focus on her exposed skin
+medium shot with even indoor lighting
+close-up angle
+framed from a slightly elevated angle
+close-up shot with natural office lighting
+medium shot from a slightly elevated angle
+wide shot with harsh
+a focus on the physical connection
+medium close-up shot from a low angle
+a focus on organic human form
+macro photograph
+immersive close-up shot
+a focus on physical connection
+full-length mirror selfie
+low-angle close-up shot emphasizing her exposed skin
+soft focus on her skin
+cinematic close-up photograph
+close-up outdoor photo
+cinematic medium shot
+intimate angle
+engaging perspective
+close-up shot emphasizing her expressive face
+intimate close-up shot from a low angle
+close-up shot emphasizing the intimate
+slightly tilted shot
+close-up angle emphasizing the physical connection
+medium shot emphasizing her form
+shot with natural daylight
+soft focus on the wooden bed frame
+a focus on her direct gaze
+shallow depth-of-field bokeh background
+focus on the erotic interaction
+focused framing
+cinematic close-up shot from a low angle
+framed in a tight medium shot
+centered framing
+eye-level medium shot
+shallow depth-of-field bokeh effect
+lens flare highlights
+framed as a close-up
+white bokeh lights
+intimate medium close-up
+framed in a tight medium close-up shot
+eye-level perspective
+shot with soft lighting
+camera angle low
+subtle lens flare effects
+grounded perspective
+sharp focus on her skin
+a subtle lens flare effect
+a focus on her body language
+gentle bokeh background
+foreground foliage framing
+medium shot with shallow depth of field
+a close-up inset showing a vaginal entrance
+side profile with gentle backlighting
+close-up shot with soft focus background
+A close-up selfie photo style
+a full-body studio photograph
+a close-up rear view
+bokeh hexagonal light patterns overlaying the scene
+medium close-up framing
+close-up photo style portrait
+slightly wide-angle shot
+slightly wide-angle
+slightly wide framing
+focus on her poised
+yellow lens flares from overhead
+framed in a close-up
+framed in a shallow depth-of-field
+a full-body overhead shot
+a mid-action shot
+yellow lens flares across her face
+a close-up portrait with soft natural lighting
+intimate portrait shot under soft natural daylight
+subtle lens flare
+bokeh effects enhancing the dreamy
+soft focus on her eyes
+soft bokeh in the background of trees
+a full-body portrait shot
+a medium close-up portrait with natural lighting
+soft bokeh in the background
+minimalistic framing
+intimate from above
+a close-up portrait with natural lighting
+close-up raw photo
+close-up professional portrait photograph
+a medium close-up frame
+professional close-up portrait photograph
+full body proportions
+even from above
+a side view close-up
+eye-level angle against a plain
+diagonal perspective
+a close-up from a slightly low angle
+low-to-mid close-up view
+low-angle view
+close-up shot focusing on her posterior
+focus on her body
+chest-to-thigh view from a slightly low angle
+a camera lens
+full-body views
+close-up shot focusing on her rear
+close-up view from the side
+close-up side view with face
+a close-up with shallow depth of field
+slightly high angle shot
+buttocks from below
+fisheye shot from behind
+a fisheye distortion
+a close-up shot from the shoulder up
+three distinct close-up shots
+angled shot from below
+a close-up view of her face
+a high-angle close-up shot
+golden bokeh from the lamp
+side-view angle
+a slight angle of her body
+shot from a slightly elevated eye-level angle
+a medium shot from a low angle
+personal perspective
+flattering perspective
+low-angle selfie view from below
+black framing
+low angle shot from the chest up
+chest-up view from a slightly elevated angle
+a low-angle close-up from below
+a high-angle close-up
+warm-toned bokeh
+slightly overhead perspective
+full-body shot from above
+slightly low-angle shot with her face
+a close-up shot from a side angle
+full-body view from above
+slightly low-angle shot from above
+slightly tilted angle from the side
+a close-up selfie view from slightly above
+frontal angle under even
+bokeh effects
+thighs from above
+low angle shot focusing on her thighs
+a full-body frontal view
+a close-up focusing on her face
+low angle shot focusing on her face
+eye-level medium shot against a plain
+medium shot from the side
+seen from below
+close-up side profile shot
+high-angle view from above
+low angle shot from slightly below
+centered shot from a low angle
+lens flare across the frame
+sunlit bokeh
+slightly blurred bokeh effect
+low-angle shot from a slightly above perspective
+beige bokeh
+slightly lower angle
+centered shot from a slightly elevated angle
+soft-focus close-up photo
+photorealistic medium close-up portrait
+randomly applied lens filter e.g
+focus on intimate interactions
+depicted from below at a dutch angle
+uncensoreded pov scene indoors
+in a POV
+pov shot taken indoors on a day
+dutch angle shot indoors
+taken from below
+full body view
+full body wide shot
+full-body pose
+slight motion blur in the water
+detailed focus on water reflections
+intimate close-up capturing raw physicality
+85mm lens size millimeters
+focus on the couple's intimate interaction
+pose full body expression
+50mm lens
+intimate close-up capturing the physicality
+close-up focus on facial expressions
+intimate close-up capturing raw desire
+shallow focus on the couple
+intimate close-up focusing on her face
+close-up shot focusing on face
+slight motion blur from water movement
+dutch angle camera shot
+from below perspective
+subtle motion blur in background movement
+focus on chest
+depth of field effect
+dynamic motion blur subtly
+50mm focal length
+close-up focus
+POV shot from above
+focus on chest cleavage
+POV shot from low angle
+POV shot from chest level
+realistic posing POV
+POV angle from behind
+subtle shadows POV
+shot from the perspective
+a low-angle仰拍 shot
+focal length 50mm
+depth of field focusing on her face
+clothing details POV
+close-up expression
+style portrait shot in a sunlit park
+shot on an 85mm lens
+24mm focal length
+wide-angle lens
+low-angle rear-side framing
+natural lens flare overlays
+POV camera perspective emphasizing closeness
+motion blur feet
+clothing POV
+vertical full-body portrait
+focus on exposed shoulders
+dynamic pose POV
+cowboys shot perspective
+border framing
+framed with a low-angle仰拍 perspective
+posture POV
+A POV sensation
+focus on face
+POV shot from below
+focus on facial expression
+shot from a dutch angle
+105mm focal length
+slight perspective distortion
+close-up shots focusing on waistline
+macro lenses capturing details of hair
+close-up of the figure's face
+85mm focal length
+waistline close-up foot details
+realistic camera angle
+close-ups emphasizing hair long hair
+close-up of certain areas
+close-up of the face
+depth of field controlled within 2cm
+realistic anatomy POV
+chest close-up
+close-up of her face
+low-angle perspective emphasizing bare shoulders
+realistic shading POV
+focus on sign
+from behind perspective
+focus on exposed thighs
+realistic camera lens 24mm
+focus on action
+shot from a low angle directly behind
+close-up focus on face
+close-up shot focusing on lower body
+shot from an angled perspective
+lens language
+close-up focusing on her focused expression
+slight motion blur in background
+shot with an ultra-wide-angle lens
+close-up focus on hands
+centered focus through a low-angle POV shot
+framed vertically
+camera perspective
+ultra-high resolution POV
+framed through a POV perspective
+shoulder-focused framing
+soft focus on boy's face
+POV shot from behind
+focus on feet soles
+low-angle shooting perspective
+foot close-up
+dutch angle shooting perspective
+from below angle
+depth of field focus on torso
+18mm focal length
+focus on eyes
+shot from a low angle POV
+low-angle perspective emphasizing height
+close-up moment of quiet poise
+POV shot focusing on lower body
+POV perspective immersing viewer into personal space
+macro lens focus on her facial expression
+style close-up side profile
+pov crotch
+a 35mm prime lens
+ultra-wide angle lens
+close-up photograph focusing on the lower torso
+roof framing
+intimate close-up portrait
+a focus on naturalistic realism
+top-down perspective
+angled perspective from slightly above
+slightly distorted perspective
+positioned in profile from above
+inverted perspective
+elegant framing
+focus on her expression
+soft focus in the background
+shot from a low angle
+prominent lens facing outward toward the viewer
+a medium close-up shot indoors
+framed by a medium shot
+a focus on form
+partially framed by sunlight
+wooden door frame
+candid perspective
+front three-quarter angle
+framed tightly from a low angle
+a close-up shot from the mid-torso up
+this perspective
+subtle motion blur that lends an organic
+medium shot from the chest down
+A photorealistic full-body shot
+realistic full-body portrait
+framed in a tight cowboy shot
+a close-up upper-body shot
+full-body outdoor photograph
+A full-body side-profile shot
+full-body monochromatic photograph
+A realistic full-body shot
+framed tightly
+slightly softer focus on the collage panels
+full-body shots
+high-resolution close-up photograph of her face
+close-up interactions
+full-body shots of characters in different positions
+soft focus backgrounds
+warm-toned selfie shot with gentle natural lighting
+framed by a soft fringe
+bokeh highlights
+a close-up portrait framing
+intimate close-up portrait with natural skin tones
+close-up selfie-style photo
+a close-up medium shot
+photorealistic extreme close-up
+sharp focus on intense crimson-red eyes
+brilliant starburst lens flares
+cinematic soft focus background
+natural lens flare

@@ -1,0 +1,1235 @@
+# 와일드카드 확장 요소 (makeup) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+thick lips
+pouty lips
+thin lips
+parted lips
+{her} eyebrows
+blush applied
+minimal makeup
+a soft pink lipstick
+a neutral lip color
+red lipstick
+red nail polish
+subtle blush applied
+long lashes
+{her} eyelashes
+false lashes
+dark false eyelashes
+natural-toned foundation
+a thin black eyeliner
+upper lip
+a subtle pink lipstick
+foundation applied
+glossy red lips
+nail polish
+inviting eyes
+long eyelashes
+subtle foundation
+long false lashes
+engaging eyes
+a neutral-toned lipstick
+red lips
+dark nail polish
+eyebrows slightly arched
+{her} jawline soft, eyebrows naturally arched
+a natural-toned lipstick
+blush applied for a natural finish
+natural eyelashes
+slightly arched eyebrows
+soft pink lips
+a glossy lip color
+striking brown eyes
+eyebrows arched
+straight eyebrows
+a subtle lip color
+black eyeliner
+{her} jawline defined, eyebrows naturally arched
+bright red lipstick
+{her} eyeliner
+lips parted gently
+a subtle pink lip color
+a glossy pink lip color
+{her} lashes
+wrist contour
+small, lips slightly parted
+large almond-shaped eyes with long lashes
+black nail polish
+upper lip contour
+well-defined eyebrows
+blush applied in a natural tone
+pink lipstick
+collarbone contour
+berry gloss lipstick
+peach velvet lipstick
+dark lashes
+almond-shaped eyes with dark lashes
+dark eyelashes
+defined makeup
+natural lip color
+thin eyebrows
+dark eyes with subtle eyeliner
+blush applied for a natural glow
+foundation applied for even skin tone
+pink nail polish
+dark eyes
+soft lips
+cheek contour
+violet velvet lipstick
+grape stain lipstick
+soft pink velvet lipstick
+berry matte lipstick
+blush applied for a natural look
+foundation applied for a smooth complexion
+minimal eyeliner
+a neutral-toned eyeliner
+dark red nail polish
+dramatic winged eyeliner
+striking green eyes
+subtle lipstick
+lips parted in a sensual expression
+teal sheer lipstick
+magenta matte lipstick
+grape velvet lipstick
+red satin lipstick
+rust stain lipstick
+lavender sheer lipstick
+magenta velvet lipstick
+peach metallic lipstick
+dark with defined eyebrows
+dark brown eyes with subtle eyeliner
+natural-toned blush
+subtle makeup including glossy lips
+white nail polish
+red nail polish on fingers
+hot pink cream lipstick
+soft pink cream lipstick
+violet gloss lipstick
+golden velvet lipstick
+rose velvet lipstick
+soft pink satin lipstick
+lavender gloss lipstick
+berry velvet lipstick
+orange cream lipstick
+lavender satin lipstick
+mauve sheer lipstick
+fuchsia velvet lipstick
+golden metallic lipstick
+berry satin lipstick
+red sheer lipstick
+black metallic lipstick
+green cream lipstick
+cherry sheer lipstick
+cherry metallic lipstick
+brown cream lipstick
+golden sheer lipstick
+natural-looking makeup
+a soft blush applied
+a faint blush applied
+a soft pink lip color
+subtle makeup including defined eyeliner
+upper lip edges
+striking makeup
+silver nail polish
+{her} nails
+black stain lipstick
+pink cream lipstick
+burgundy cream lipstick
+red metallic lipstick
+mauve stain lipstick
+violet satin lipstick
+hot pink metallic lipstick
+peach gloss lipstick
+peach stain lipstick
+hot pink matte lipstick
+green gloss lipstick
+beige velvet lipstick
+rust metallic lipstick
+plum matte lipstick
+brown matte lipstick
+fuchsia matte lipstick
+berry metallic lipstick
+rust satin lipstick
+lavender metallic lipstick
+berry sheer lipstick
+soft pink matte lipstick
+peach matte lipstick
+red velvet lipstick
+magenta metallic lipstick
+shimmer metallic lipstick
+soft pink metallic lipstick
+rose gloss lipstick
+rust matte lipstick
+natural makeup enhancing {her} bright eyes
+makeup minimal
+natural makeup highlighting {her} defined cheekbones
+natural makeup with glossy pink lips
+eyebrows neatly shaped
+eyebrows gently arched
+lipstick applied
+a glossy, muted pink lipstick
+minimal blush
+mascara-enhanced lashes
+bright pink lipstick
+{her} lips painted a bold red
+eyebrows slightly raised
+red nail polish on fingertips
+dramatic makeup
+winged eyeliner
+purple nail polish
+striking eyes
+subtle makeup highlighting {her} cheekbones
+cheekbone contour
+subtle red lipstick
+bright red lips
+defined eyelashes
+to {her} right with parted lips
+lower lip
+pink matte lipstick
+violet sheer lipstick
+rust gloss lipstick
+hot pink satin lipstick
+grape sheer lipstick
+terracotta stain lipstick
+terracotta gloss lipstick
+coral velvet lipstick
+green sheer lipstick
+silver metallic lipstick
+cream gloss lipstick
+terracotta cream lipstick
+pink satin lipstick
+terracotta velvet lipstick
+cream velvet lipstick
+peach satin lipstick
+teal satin lipstick
+terracotta matte lipstick
+red cream lipstick
+teal velvet lipstick
+magenta gloss lipstick
+terracotta metallic lipstick
+fuchsia cream lipstick
+lavender cream lipstick
+golden cream lipstick
+lavender stain lipstick
+terracotta sheer lipstick
+grape cream lipstick
+rose stain lipstick
+grape gloss lipstick
+burgundy metallic lipstick
+burgundy matte lipstick
+orange stain lipstick
+orange velvet lipstick
+plum cream lipstick
+rust sheer lipstick
+black velvet lipstick
+gentle makeup
+a soft, slightly parted lips expression
+defined jawlineArched eyebrows
+dark brown eyes with defined eyeliner
+dark with subtle eyeliner
+slightly upward, eyebrows naturally arched
+subtle makeup-free eyes with natural lashes
+subtle under-eye makeup
+subtle eye makeup
+eyes with defined lashes
+full lips with a glossy finish
+large dark eyes with subtle eyeliner
+natural eyebrows
+natural-looking eyeliner
+defined dark eyebrows
+makeup applied
+eyebrows neatly arched
+subtly arched eyebrows
+a natural foundation
+subtle eyeshadow
+natural-looking foundation
+a glossy nude lip color
+lips closed
+a smooth foundation
+puckered lips
+pink lips
+subtle makeup including defined eyebrows
+dark blue nail polish
+adorned with dark nail polish
+one hand gently touching {her} lips
+lips parted in a soft smile
+bold makeup
+natural blush
+subtle winged eyeliner
+nude lipstick
+voluminous lashes
+minimal nail polish
+glossy lips slightly parted
+clear nail polish
+lips parted in a gentle smile
+trendy full makeup with subtle eyeliner
+trendy full makeup
+soft pink blush
+striking red lips
+black satin lipstick
+fuchsia metallic lipstick
+violet cream lipstick
+gloss sheer lipstick
+brown metallic lipstick
+coral sheer lipstick
+teal stain lipstick
+plum sheer lipstick
+rose metallic lipstick
+burgundy gloss lipstick
+cream satin lipstick
+orange satin lipstick
+peach sheer lipstick
+rose cream lipstick
+coral gloss lipstick
+rust velvet lipstick
+plum stain lipstick
+pink velvet lipstick
+fuchsia stain lipstick
+fuchsia sheer lipstick
+golden matte lipstick
+mauve velvet lipstick
+pink gloss lipstick
+plum satin lipstick
+coral matte lipstick
+teal cream lipstick
+mauve satin lipstick
+cherry matte lipstick
+eyes softly closed, lips slightly parted
+direct, lips slightly parted
+softly parted lips
+makeup applied with defined eyelashes
+full lips with a subtle gloss
+lip color
+dark brown eyes with long lashes
+{her} jawline defined, eyebrows arched
+almond-shaped eyes with natural lashes
+lips glossy
+a matte lipstick
+a thin line of dark eyeliner
+a neutral-toned foundation
+a muted red lipstick
+a glossy, nude-pink lipstick
+slightly upturned eyebrows
+makeup including defined eyebrows
+closed lips
+white nail polish on fingers
+lips parted subtly
+lips slightly pursed
+black nail polish on fingers
+dark purple nail polish
+lipstick tube
+minimal makeup including glossy lips
+lips puckered
+subtle makeup including defined eyes
+nude lips
+smoky eyeshadow
+dramatic black winged eyeliner
+lips softly parted
+“VISUAL MAKE-UP
+one hand resting near {her} lips
+green stain lipstick
+magenta sheer lipstick
+grape satin lipstick
+hot pink stain lipstick
+black gloss lipstick
+rose sheer lipstick
+orange gloss lipstick
+beige matte lipstick
+lavender velvet lipstick
+teal metallic lipstick
+violet metallic lipstick
+golden satin lipstick
+soft pink stain lipstick
+berry stain lipstick
+burgundy satin lipstick
+fuchsia satin lipstick
+cherry stain lipstick
+gloss satin lipstick
+beige sheer lipstick
+hot pink sheer lipstick
+violet stain lipstick
+violet matte lipstick
+peach cream lipstick
+magenta cream lipstick
+teal matte lipstick
+pink sheer lipstick
+brown velvet lipstick
+rose matte lipstick
+black sheer lipstick
+cream stain lipstick
+hot pink velvet lipstick
+rust cream lipstick
+burgundy stain lipstick
+golden stain lipstick
+golden gloss lipstick
+lavender matte lipstick
+orange metallic lipstick
+soft pink gloss lipstick
+black cream lipstick
+grape matte lipstick
+orange sheer lipstick
+plum gloss lipstick
+red gloss lipstick
+pink metallic lipstick
+brown sheer lipstick
+burgundy sheer lipstick
+brown stain lipstick
+burgundy velvet lipstick
+coral satin lipstick
+cherry cream lipstick
+rose satin lipstick
+gloss stain lipstick
+beige cream lipstick
+parted lips slightly open
+natural lips
+a natural makeup look
+gentle natural makeup
+evenly litAnd makeup
+rounded, {her} eyebrows
+large almond-shaped eyes with defined eyeliner
+eyes with subtle eyeliner
+coral lipstick
+subtle makeup with glossy lips
+eyes slightly upturned, eyebrows naturally arched
+small, {her} lips
+almond-shaped with subtle eyeliner
+eyebrows raised
+eyebrows lightly arched
+long, defined lashes
+{her} makeup status
+minimal foundation
+dark brown eyes with defined eyebrows
+natural eyeliner
+a neutral foundation
+large brown eyes with long lashes
+long dark lashes
+neatly arched eyebrows
+makeup applied with defined eyebrows
+cheeks with soft, natural makeup
+long, dark false eyelashes
+a smooth, even foundation
+a glossy red lip
+a subtle pink blush
+blush applied for a polished look
+a matte rose-pink lipstick
+a soft pink lip gloss
+defined lips
+lips environment
+chest contour
+a serene smile upon {her} lips
+pale blush pink silk
+a muted lip color
+lips parted in soft smile
+subtle nail polish
+upper lip line
+lips parted in a subtle smile
+eyes gently closed, lips slightly parted
+soft lips slightly parted
+lips parted in serene repose
+long, dark eyelashes
+subtle makeup highlighting {her} eyes
+blue nail polish
+lips gently closed
+glossy coral lipstick
+dark nail polish on fingertips
+silver nail polish on fingers
+pink nail polish on fingers
+rosy blush
+lips pursed
+red lipstick on {her} lips
+minimal nail polish on fingertips
+a subtle lip curve
+lips parted in soft expression
+minimal makeup highlighting eyes
+soft makeup looking directly at camera
+stone foundation
+trendy full makeup with natural eyeliner
+natural lashes
+non-excessive eyeliner
+intense, lips slightly parted
+glossy pink lips slightly parted
+subtly parted lips
+eyes half-closed, lips slightly parted
+striking purple eyes
+soft peach blush makeup
+coral metallic lipstick
+cream sheer lipstick
+mauve metallic lipstick
+gloss metallic lipstick
+brown satin lipstick
+mauve gloss lipstick
+gloss velvet lipstick
+gloss matte lipstick
+coral stain lipstick
+green satin lipstick
+grape metallic lipstick
+coral cream lipstick
+green velvet lipstick
+brown gloss lipstick
+teal gloss lipstick
+magenta satin lipstick
+terracotta satin lipstick
+cream metallic lipstick
+red matte lipstick
+cherry velvet lipstick
+orange matte lipstick
+plum metallic lipstick
+beige metallic lipstick
+beige gloss lipstick
+mauve cream lipstick
+bold pink lipstick
+natural makeup with subtle blush
+subtle makeup highlighting {her} defined cheekbones
+subtle makeup with defined lashes
+defined dark eyeliner
+a gentle blush
+natural makeup enhancing {her} expressive eyes
+dreamy eyes
+glossy, cheeks flushed with natural blush
+{her} lips painted a vibrant red
+bright makeup
+slightly squared, eyebrows naturally arched
+sharply defined eyebrows
+subtly illuminated, eyebrows neatly shaped
+eyebrows evenly arched
+subtle makeup enhancing {her} eyebrows
+dark arched eyebrows
+eyes slightly upturned with dark lashes
+darkly defined eyebrows
+full lips with glossy pink lipstick
+pink eyeshadow
+subtle makeup on the eyelids
+minimal makeup with defined eyeliner
+full cheeks with natural blush
+cheeks subtly contoured with makeup
+eyes gazing upward with defined eyebrows
+makeup applied to enhance the eyes
+makeup applied to {her} eyes
+minimal under-eye makeup
+eyes framed by dark lashes
+full lips with a neutral expression
+eyes slightly upturned with defined eyebrows
+minimal eye makeup
+subtle makeup with well-defined eyebrows
+well-defined, {her} eyes
+eyes wide with defined lashes
+voluminous eyelashes
+eyes softly focused, lips slightly parted
+almond-shaped eyes with subtle lashes
+centered, lips slightly parted
+almond-shaped eyes with subtle under-eye shadows
+lips centered
+lips parted as if mid-speech
+{her} makeup applied with defined eyeliner
+focused, eyebrows naturally arched
+eyes dark with subtle eyeliner
+natural pink lip color
+defined, arched eyebrows
+eyes gently closed with long lashes
+bold red lipstick and a dark
+small, lips pink
+slightly parted, eyebrows naturally arched
+eyes gazing forward with defined eyebrows
+full lips with red lipstick
+cheeks slightly flushed, eyebrows naturally arched
+blush applied for a natural flush
+subtle makeup enhancing {her} eyes
+lips with a natural pink hue
+straight dark eyebrows
+dark eyebrows
+eyes dark with defined lashes
+cheeks softly rounded
+dark eyeliner and glossy pink lipstick
+neutral lipstick
+darkly arched eyebrows
+foundation applied with a neutral tone
+foundation applied with a natural tone
+lipstick discernible
+almond-shaped eyes with defined eyebrows
+subtle makeup on {her} eyes
+eyes with defined eyeliner
+dark brown eyebrows
+subtle blush enhancing {her} complexion
+dark eyes with long lashes
+subtle makeup on {her} lips
+dark, eyebrows naturally arched
+eyebrows softly arched
+blush applied for even skin tone
+subtle foundation with a natural tone
+a neutral eyeliner
+long natural-looking eyelashes
+false eyelashes and glossy pink lipstick
+blush applied in a natural finish
+natural makeup with minimal under-eye bags
+glossy, natural-toned lipstick
+foundation applied for an even complexion
+blush enhancing {her}
+even foundation
+minimal makeup highlighting {her} large
+almond-shaped dark eyes with defined eyebrows
+dark brown eyes with prominent eyelashes
+voluminous false eyelashes
+almond-shaped brown eyes with long lashes
+subtle makeup with rosy blush
+soft coral-pink lips
+full coral-pink lips slightly parted
+delicate warm-brown eyeliner
+subtle peach-pink blush
+subtle brown eyeliner
+freckles on face
+clearly defined lips
+lip makeup
+full red lips
+{her} lips slightly parted in anticipation
+a subtle blush on {her} lips
+distinctively shaped eyes with defined eyelashes
+captivating deer-like eyes
+eyes gently closed, lips parted
+upper lip clearly defined
+vibrant red lipstick and subtle makeup
+cluttered makeup table foreground
+dark nail polish on fingernails
+lips puckered in playful kiss gesture
+stone foundation under overcast sky
+stone foundation under an overcast sky
+white nail polish on all fingernails
+black nail polish on fingernails
+minimal makeup accentuating eyes
+lips pursed upward
+smooth gloss finish on satin trim
+red lipstick applied on lips only
+red lipstick accentuating lips
+subtle facial makeup highlighting cheekbones
+eyes softly closed, lips parted subtly
+bold winged eyeliner accentuating eyes
+heavy makeup
+wristline contour
+nail polish painted in purple hue
+pink nail polish accenting fingers
+subtle makeup accentuating green eyes
+defined brows
+lips parted in a subtle pout
+purple nail polish on all fingernails
+makeup brush holder
+defined lip gloss sheen
+subtle eyeliner accentuating eyes
+upper lip contour discernible
+blue nail polish on fingernails
+pink embroidered lip cutout detail
+parted lips while {her} right arm
+makeup items with colorful lids
+fitted to contour {her} body
+slightly parted lips in mid-expression
+neutral lips
+subtle freckles across cheeks
+teal nail polish
+prominent eyelashes
+prominent makeup defined eyebrows
+lips parted in subtle allure
+silver nail polish on long fingers
+glittery nail polish
+defined makeup bold eyeliner
+prominent makeup pink blush
+orange lipstick
+lips around straw
+prominent makeup
+eyes softly closed
+bright orange lipstick
+dark nail polish on all fingers
+natural blush tones
+glossy lips in coral shade
+realistic eyeliner definition
+dark nail polish on {her} fingers
+metallic nail polish on fingertips
+black nail polish on long fingers
+glossy nail polish on fingers
+pronounced makeup
+black nail polish on fingertips
+pink blush
+silver nail polish accents on toes
+lips slightly puckered
+arched brows
+glossy lips makeup applied to face
+prominent blue eyes with dark eyeliner
+bright pink manicure nails
+red nail polish accentuating fingertips
+lips slightly parted in serene contentment
+lips parted in subtle expression
+lips pursed as if savoring flavor
+lips parted into a gentle smile
+subtle lipstick color on lips
+nail polish details red nails
+lips pursed slightly forward
+soft pink lips and subtle makeup
+lashes rendered realistically
+soft lip color
+bright red lipstick and subtle makeup
+bold eyeliner
+glossy peach lips
+puckers {her} lips playfully
+lipstick graphic
+glossy lips puckered playfully
+striking dark eyes
+lips pursed as if kissing them
+red lips making a playful pout
+bold winged eyeliner puckers {her} lips
+red nail polish accenting fingers
+lip gloss with soft pink hue
+pink nail polish on all fingers
+red nail polish on that fingertip
+yellow nail polish
+white nail polish with pointed tips
+nail polish finish
+minimal makeup highlighting defined eyes
+dramatic makeup winged eyeliner
+subtle lips parted
+parted lips in a neutral expression
+soft pink lips slightly parted
+upper lip edge
+an open makeup palette beside them
+subtle facial makeup
+dramatic eyeliner
+black nail polish with glittery tips
+peach-toned blush
+glossy rose-pink lips
+prominent winged eyeliner
+lipstick brush
+upper torso contour
+red nail polish matching the cherries
+white glitter nail polish
+dark nail polish accentuating fingertips
+dark nail polish with glitter accents
+abdomen contour
+lips slightly parted in relaxed expression
+lips parted in serene expression
+glossy lips with natural sheen
+subtle smoky eyeliner
+matte peach lipstick
+minimal nail polish in dark tone
+nail polish accenting fingertips
+subtle neckline contour
+lips curved
+subtle lip gloss
+lips contour
+soft makeup accentuating defined cheekbones
+subtle smoky eyeshadow
+earlobe contour
+subtle gloss on lips
+nail polish painted in gradient pink-to-yellow
+points to lips with index finger
+lips parted in a playful smirk
+red nail polish on all fingers
+green nail polish on fingertips
+natural makeup accentuating eyes
+lower lip edges
+brow contour
+lips puckered in playful expression
+polished nail polish in nude shade
+lips slightly parted in gentle smile
+bright makeup smiling directly at camera
+minimal makeup accentuating natural skin tone
+slightly glossy lips
+trendy full makeup with natural-looking eyeliner
+trendy full makeup with natural beauty
+{her} lips parted around the shaft
+natural pink lips
+heavy black eyeliner
+lips clearly engaged in the act
+lips parted in anticipation
+prominent eyeliner
+intense, {her} lips
+defined brows accentuating {her} sensual expression
+red lipstick reclines on a dark
+intensity, lips slightly parted
+sensual embrace, lips parted
+lips glistening with moisture
+lips near each other
+detailed nail polish
+makeup items
+lips parted with a soft smile
+lips parted slightly revealing teeth
+subtle parted lips
+eyes gazing upward with parted lips
+shimmery silver eyeshadow
+vibrant red lipstick and {her} gaze
+lips slightly parted with red lipstick
+captivating brown eyes
+parted lips revealing glossy red lipstick
+striking gray eyes
+lips parted as they kiss
+green matte lipstick
+pink stain lipstick
+mauve matte lipstick
+beige satin lipstick
+hot pink gloss lipstick
+berry cream lipstick
+cream matte lipstick
+green metallic lipstick
+cherry gloss lipstick
+red stain lipstick
+fuchsia gloss lipstick
+black matte lipstick
+red lips slightly parted
+lips as focal points
+lips painted a vibrant magenta
+natural makeup highlighting {her} rosy cheeks
+soft makeup enhancing {her} natural glow
+bold defined eyeliner
+glossy makeup
+delicate makeup highlighting {her} rosy cheeks
+delicate makeup highlighting {her} blue eyes
+soft glowing makeup
+subtle makeup with defined eyes
+minimal makeup enhancing {her} defined eyes
+natural makeup highlighting {her} radiant smile
+subtle makeup with defined red lips
+warm-toned makeup
+soft natural makeup with subtle blush
+gentle makeup with defined eyes
+gentle makeup highlighting {her} clear complexion
+natural makeup emphasizing {her} dark eyes
+subtle makeup highlighting {her} red eyes
+{her} makeup polished with defined eyes
+subtle makeup enhancing {her} bright eyes
+makeup enhancing {her} natural glow
+natural makeup enhancing {her} rosy cheeks
+minimal makeup with a fresh
+subtle makeup with warm tones
+clean makeup
+natural makeup look with subtle blush
+subtle makeup with rosy cheeks
+bright natural makeup
+bold pink lips
+slightly upward, lips parted
+bold blue eyeshadow
+lips parted in a soft gaze
+slightly parted, lips slightly open
+eyes closed with lips slightly parted
+eyes half-lidded, lips parted
+natural makeup enhancing {her} defined cheekbones
+minimal makeup enhancing {her} clear complexion
+soft makeup highlighting {her} defined cheekbones
+soft makeup with defined lashes
+peach-toned lips
+subtle lips
+warm blush
+{her} makeup highlighting {her} bright eyes
+natural freckles
+minimal makeup emphasizing {her} clear complexion
+subtle makeup highlighting {her} expressive eyes
+lips pursed in a playful pout
+natural makeup highlighting {her} dark eyes
+soft makeup emphasizing glossy pink lips
+natural makeup with defined lips
+dark, voluminous lashes
+makeup brushes
+slightly parted lips expression
+neatly defined lashes
+soft, warm makeup
+slightly parted lips hinting at seduction
+captivating brown eyes with defined lashes
+defined eye makeup
+lips slightly parted with natural gloss
+lips in a gentle smile
+eyes with defined eyebrows
+dark eyes with subtle under-eye shadows
+wide open eyes with natural lashes
+large almond-shaped eyes with defined lashes
+full lips with neutral makeup
+full lips with no makeup
+natural makeup without shadows or harsh
+prominent arched eyebrows
+dark, eyes large with subtle eyeliner
+darkly defined, eyes with subtle eyeliner
+dark, almond-shaped eyes with subtle eyeliner
+straight, eyebrows naturally arched
+smooth, {her} eyebrows
+full lips painted with red lipstick
+subtle makeup-free lips
+even, makeup applied with defined eyes
+cheeks subtly defined by soft makeup
+natural makeup with defined eyebrows
+natural lip line
+lips clearly seen
+almond-shaped eyes with no makeup
+eyelashes dark
+lips parted with a glossy sheen
+jawline soft, eyebrows faintly arched
+rounded, lips glossy
+a matte lip color
+natural-toned eyeliner
+natural-looking eyelashes without false lashes
+though {her} eyes
+prominent dark eyeliner
+eyes large with dark lashes
+subtly rounded, lips glossy
+lips parted in a neutral expression
+thigh contour
+though lips
+straight, well-defined eyebrows
+glossy peach-toned lipstick
+{her} eyes closed with long lashes
+minimal makeup with natural skin tone
+neatly shaped eyebrows
+straight, {her} lips
+softly rounded, lips slightly parted
+lightly powdered, eyes with minimal mascara
+makeup applied to enhance cheekbones
+subtle eyelashes
+full eyebrows
+makeup applied minimally
+makeup applied lightly
+eyes slightly downcast, eyebrows naturally arched
+muted lipstick
+elongated false eyelashes
+a soft foundation with blush applied
+natural lipstick
+pursed lips
+dark, well-defined eyebrows
+eyes gazing downward
+dark eyeliner and a neutral-toned lipstick
+a noticeable foundation
+eyes wide with dark eyeliner
+false lashes apparent
+defined eyeliner with minimal mascara
+subtle eyeliner defining {her} eyes
+eyes gazing upward, lips slightly parted
+eyes half-lidded, lips slightly parted
+bold lipstick
+defined eyebrows with minimal eyeliner
+foundation applied for even tone
+reddish lipstick
+lips painted a vivid pink
+direct, eyebrows naturally arched
+lips parted to reveal teeth
+lips parted in a wide grin
+lips slightly moist
+eyes slightly squinted, eyebrows naturally arched
+dark eyes with defined eyelashes
+slightly upturned, eyebrows naturally arched
+slightly flushed, lips glossy
+cheeks with soft contour
+full lips with natural pinkish hue
+cheeks softly rounded, lips parted
+cheeks softly rounded, lips slightly parted
+straight, lips with natural pink tone
+natural cheekbones without makeup
+minimal makeup showing natural eyelashes
+only {her} lips
+dark false lashes
+long lashes with false eyelashes
+thick false lashes
+long lashes with dark liner
+makeup tables
+parted lips as if mid-sentence
+lip gloss
+subtly contoured cheekbones with natural blush
+subtle makeup with no under-eye bags
+natural makeup look with defined eyebrows
+slightly parted, eyes with subtle eyeliner
+full cheeks with a subtle blush
+well-defined, eyes with subtle eyeliner
+mascara accentuating the shape
+eyebrow makeup
+{her} lips near a dark
+a natural-toned foundation with subtle blush
+subtle eyeliner and a natural-toned lipstick
+a natural-toned lip color
+eyes slightly open with dark lashes
+without makeup
+cheeks full, makeup minimal
+closed eyes with long lashes
+cheekbones gently rounded, {her} makeup minimal
+cheeks softly rounded, makeup minimal
+full lips with glossy red lipstick
+{her} facial makeup
+{her} jaw, eyebrows
+cheeks subtly rounded, lips slightly parted
+soft, even makeup
+cheeks subtly rounded, eyebrows naturally arched
+large dark eyes with defined eyebrows
+subtle makeup highlighting {her} lips
+dark brown eyes with defined lashes
+subtle makeup accentuating {her} eyes
+straight, lips slightly parted
+lips slightly parted with glossy finish
+lips parted in a subtle grin
+natural-looking eyes with subtle eyeliner
+slightly rounded, eyebrows naturally arched
+cheeks soft, makeup minimal
+small, {her} eyebrows naturally arched
+defined jawline, eyebrows slightly arched
+smooth, makeup applied with subtle contouring
+minimal gloss
+eyebrows slightly arched upward
+minimal makeup. - 身着粉色蕾丝
+full lips with a gentle smile
+eyes looking upward with defined eyebrows
+gloss of {her} lips
+eyes dark with defined eyeliner
+lips near the chest area
+eyes half-lidded with dark eyeliner
+lips parted showing upper teeth
+cheeks softly rounded with subtle blush
+eyebrows slightly furrowed
+slightly parted lips revealing teeth
+lips parted in a joyful expression
+white nail polish on {her} fingernails
+well-defined cheekbones with natural blush
+slightly squinted, eyebrows naturally arched
+arched, eyes with dark eyeliner
+full lips with subtle pink lipstick
+slightly downturned eyebrows
+minimal makeup status
+neutral with lips slightly parted
+{her} eyes wide with defined eyebrows
+eyes looking upward, eyebrows arched
+lips parted in a cheerful expression
+lips curved upward
+soft cheekbones
+large dark eyes
+{her} eyes slightly closed with lashes
+full lips with subtle gloss
+eyebrows slightly lowered
+eyes closed with eyelashes slightly curled
+cheeks softly illuminated by warm lighting
+lips parted with red lipstick
+full cheeks with no makeup
+cheeks softly rounded, eyebrows naturally arched
+large, round eyes
+{her} eyebrows arched naturally
+eyelashes defined
+subtle makeup enhancing {her} dark eyes
+eyes slightly narrowed, eyebrows naturally arched
+defined cheekbones
+nails painted with glittery nail polish
+a foundation
+prominent false eyelashes
+eyebrows furrowed
+wide, eyebrows naturally arched
+fair, {her} eyebrows neatly arched
+subtle makeup on the cheeks
+arched, {her} eyes
+smoky eyeliner
+minimal makeup with defined eyebrows
+lips parted as if mid-action
+blush applied for a natural sheen
+foundation applied for a smooth finish
+mascara accentuating {her} almond-shaped eyes
+{her} eyes half-closed, eyebrows slightly raised
+full lips with glossy lipstick
+minimal makeup highlighting {her} defined cheekbones
+cheeks softly rounded, eyebrows gently arched
+natural lips without makeup
+gold nail polish
+lips parted in a relaxed expression
+lips parted around a dark
+full lips with a natural smile
+a nude lip color
+subtle eyeliner with a neutral tone
+lipstick in a muted red shade
+natural-length eyelashes without false lashes
+long, dark lashes without eyeliner
+glossy reddish lipstick
+{her} lips parted as if mid-act
+blush applied in natural tones
+foundation and {her} lips
+blush visibly applied
+subtle blush enhancing {her} skin tone
+{her} jawline, eyebrows
+makeup applied with a natural finish
+lips around the bottle's opening
+minimal eyeliner defining {her} eyes
+blush applied for a smooth complexion
+eyes wide, eyebrows slightly raised
+a matte foundation
+eyes wide open, eyebrows slightly raised
+between {her} lips
+dark mascara-enhanced lashes
+subtly enhanced eyelashes
+nude-toned lipstick
+{her} lips parted as if mid-lick
+minimal makeup with no under-eye bags
+long natural-looking lashes
+medium-length lashes with no false lashes
+symmetrical, lips with a matte finish
+dark eyeliner and glossy red lipstick
+dark eyeliner and bright red lipstick
+brown eyes
+brown eyes with long lashes
+full lips with natural pink lipstick
+large almond-shaped eyes with subtle lashes
+lips with a glossy sheen
+clear, eyebrows naturally arched
+natural makeup status on {her} face
+natural makeup with defined eyeliner
+soft natural makeup emphasizing defined eyes
+dark almond-shaped eyes with soft lashes
+natural makeup emphasizing defined eyes
+natural makeup with defined brows
+elegant makeup accentuating {her} defined brows
+minimal makeup with rosy blush
+minimal lipstick
+soft natural makeup with glossy lips
+warm-toned makeup accentuating {her} almond-shaped eyes
+natural makeup with rosy cheeks
+natural makeup highlighting {her} bright eyes
+minimal makeup enhancing {her} delicate eyes
+subtly rosy lips
+minimal makeup with defined brown eyes
+sparkling eye makeup
+sharp defined eyeliner
+soft natural makeup with defined eyeliner
+minimal makeup accentuating {her} bright eyes
+moist lips
+natural makeup highlighting dewy
+cheekbones while creating soft shadows
+subtle natural blush
+{her} lips painted a soft pink
+natural makeup with defined lashes
+natural makeup enhancing {her} defined eyes
+natural makeup highlighting {her} glossy lips
+natural makeup highlighting {her} brown eyes
+subtle cheek blush
+delicate makeup highlighting {her} eyes
+a glossy lip finish
+subtly parted lips revealing {her} teeth
+diffused peach-pink blush across the cheeks
+softly defined eyes with thin eyeliner
+warm-pink eyeshadow
+subtle peach blush
+hydrated nude-pink lips showing natural specular
+delicate brown eyeliner
+delicate peach-pink blush
+lips curled
+thick lower lip
+lips painted in red lipstick
+nail polish on {her} fingers
+whose lips
+blue eyes framed by natural makeup
+lipstick on {her} lips
+full lips with lipstick
+delicate makeup
+possesses lips
+trendy makeup
+wet lips
+engaged, lips slightly parted
+red lips stained with lipstick
+makeup applied with emphasis on eyeliner
+lips slightly open
+parted lips exposed
+natural freckles across cheeks
+exposed lips
+lips partially open
+dramatic eye makeup
+natural brown eyes with defined lips
+lipid gloss on {her} areolas
+lips slightly parted in natural repose
+brown eyes adorned with tiny freckles
+subtle contour of clothing
+lips clearly defined
+lips slightly parted revealing teeth
+lips tightly closed
+freckles on right cheek
+clear lips
+faint freckles near {her} right nipple
+amber eyes
+freckles scattered across {her} waistline
+warm brown eyes
+lips pressed tightly together in concentration
+vivid red lips
+detailed lips
+engaging brown eyes
+sensual lip contour
+soft natural-colored lips
+clearly defined eyelashes
+freckles on {her} bare shoulders
+close-ups e.g., lips
+lip lips details
+nude nail polish
+lip lines
+clear chest contour
+makeup on {her} face
+lip makeup when {her} eyes
+natural makeup applied
+detailed nail polish on fingers
+glossy lipstick completing the glamorous look
+glossy nail polish reflections
+lips slightly parted in neutral expression
+meticulously applied makeup
+lips coated in vivid red lipstick
+makeup. lipstick
+glossy nail polish
+lips curved into a tender smile
+realistic nail polish
+subtle freckles across {her} midriff
+naturally flushed lips
+lips lifted
+anatomical contour
+highlighter on cheekbones
+meticulously drawn eyeliner
+{her} lower lip lightly clenched
+subtle freckles near {her} navel
+expressive eyes with natural-looking makeup
+natural makeup enhancing {her} eyes
+slightly parted lips revealing red lipstick
+particularly defined eyeliner
+full lips parted
+lips parted in a subtle expression
+dark eyes accented by subtle makeup
+natural-looking makeup emphasizing {her} brown eyes
+faint makeup around {her} eyes
+parted lips showing red lipstick
+silver nail polish on {her} fingernails
+lips parted as if mid-breath
+lips parted in a faint smile
+subtle freckles across {her} chest
+peachy-pink lipstick
+bright nail polish on {her} fingers
+makeup enhancing {her} eyes
+expressive dark eyes under defined eyebrows
+soft red lips
+full lips painted coral red
+glossy coral-red lipstick
+subtly parted lips showing red lipstick
+red lipstick applied to {her} lips
+natural-looking makeup highlighting {her} eyes
+vivid red lipstick on {her} lips
+full lips in a neutral expression
+natural makeup enhancing {her} peaceful demeanor
+dark defined eyes with eyeliner
+natural nail polish
+lips parted in a soft expression
+subtle pink lips
+sheer coral-pink lipstick
+subtle lips curved into a faint
+subtle makeup accentuating {her} lips
+dark nail polish on all fingernails
+puckers {her} lips
+smoky eyeshadow enhancing {her} almond-shaped eyes
+natural-looking makeup highlighting {her} defined eyes
+subtly curved lips
+full lips painted a soft pink
+defined eyes accentuated by dark eyeliner
+soft brown eyes with subtle eyeliner
+natural-looking makeup accentuating {her} eyes
+soft pinkish-red lips
+dark eyes framed by defined lashes
+naturally arched eyebrows
+expressive brown eyes
+{her} lips parted slightly in anticipation
+inviting eyes that suggest a quiet
+alluring eyes
+heavy-lidded lips parted
+parted lips glistening subtly
+natural-looking makeup emphasizing {her} eyes
+gently parted lips
+bright blue eyes
+soft pink eyeshadow
+{her} lips painted in soft pink
+subtly defined eyes with warm-toned makeup
+soft natural makeup with rosy blush
+coral-pink lipstick
+subtle makeup with understated lipstick
+natural glowing blush
+soft parted lips

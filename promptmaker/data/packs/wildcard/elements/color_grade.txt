@@ -1,0 +1,203 @@
+# 와일드카드 확장 요소 (color_grade) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+natural skin tones
+muted tones
+realistic skin tones
+white tones
+neutral tones
+beige tones
+skin tones
+indistinct tones
+slight film grain
+true to life warm skin tones
+blue tones
+saturated colors
+green tones
+vibrant colors
+organic film grain
+brown tones
+blue hues
+red tones
+black tones
+warm string
+purple hues
+cream tones
+naturalistic skin tones
+soft tones
+shadow contrast
+green hues
+high contrast
+warm ambient tones
+red hues of the genital tissue
+highly saturated colors
+pink tones
+gold tones
+natural color grading
+intimate moment with natural skin tones
+natural tones
+muted color tone
+faded wash
+yellow tones
+slightly muted color tone
+black and white
+bright tones
+yellow hues
+purple tones
+black-and-white checkered floor tiles
+muted yellow tones
+white hues
+dark tones
+indistinct indoor tones
+warm color grading
+earthy tones
+vibrant color contrast
+saturated tones
+diffused tones
+contrast
+color contrast
+subtle skin tones
+high-saturation colors
+even tones
+white and gray tones
+sky tones
+red hues
+translucent hues
+leather grain
+naturalistic color grading
+earth tones
+grain
+earthy color palette
+material contrast
+golden tones
+orange tones
+deep red tones
+warm yellow tones
+lavender tones
+pale tones
+warm color palette
+pink hues
+authentic film grain
+polished marble surface grain
+door grain
+coral tones
+blue and green hues
+rock grain structure
+monochrome aesthetic throughout
+soft pink ambient tones
+ochre tones
+chairs in neutral tones
+saturated dark hue
+armrests in muted tones
+brown and grey tones
+pink hues near horizon
+terracotta tones
+smooth tones
+paper grain
+grey hues
+contrast stitching
+burgundy hues
+deep green hues
+charcoal tones
+tan tones
+navy tones
+peach tones
+burgundy tones
+orange hues hanging overhead
+foliage create strong contrast
+metallic hues
+chairs in muted tones
+magenta tones
+white contrast trim
+light blue tones
+low-contrast pastel tones
+desaturated
+muted tones of brown
+indistinct tones of beige
+rusted grain silo
+saturated greens
+neutral beige tones
+orange hues
+cinematic color grading
+muted pastel color palette
+hues
+saturated
+deep shadow tones
+water tones
+high-contrast tones
+slightly high contrast
+glass windows creating contrast
+warm golden tones
+vivid ocean hues
+slight grain
+multicolored tones
+contrast to the scene
+airy tones
+saturated with pastel hues
+red and beige tones
+orange and reddish tones
+low-contrast tones
+ambient tones
+saturated tone
+slightly desaturated tone
+indistinct warm tones
+white and gold tones
+blue and black tones
+blue and gray tones
+gray and white tones
+muted earth tones
+blue and white tones
+strong contrast between illuminated
+indistinct earth tones
+black and brown tones
+light orange hues
+green and white hues
+green color palette
+muted color tones
+black and yellow tones
+beige and brown hues
+bright white tones
+red and white hues
+pink and orange hues
+diffused ambient tones
+reddish tones
+light brown tones
+indistinct tones of brown
+out-of-focus tones
+gray and beige tones
+subdued tones
+white and pink hues
+diffused tones throughout
+muted blue-gray tones
+cool tones
+sunlit tones
+color grading
+hyper-saturated colors
+palette
+realistic color grading
+grain under directional lighting
+ISO800 film grain
+vibrant high-saturation color grading
+sun-kissed tones
+high-saturation color grading
+realistic color palette
+real contrast
+brown hues
+chestnut tones
+flesh tones
+soft ambient contrast
+naturalistic tones
+natural color tones
+distressed orange-yellow tones
+natural tones below
+subdued color tones
+creamy tones
+rich tonal contrast
+concrete grain
+teal and cream tones
+reddish-brown tones
+lit with cooler tones
+subtle color grading
+muted tones of gray
+naturalistic color tones
+darkened by monochrome shading
+cinematic contrast

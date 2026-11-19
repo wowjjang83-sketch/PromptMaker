@@ -1,0 +1,1170 @@
+# 와일드카드 확장 요소 (hair) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+long hair
+black hair
+wavy hair
+curly hair
+coarse hair
+fine hair
+pubic hair
+shoulder-length dark hair
+short black hair
+long dark wavy hair
+hair strands
+golden blonde hair
+strawberry blonde hair
+honey blonde hair
+platinum blonde hair
+gray hair
+red hair
+chestnut hair
+silver hair
+brunette hair
+white hair
+dark hair pulled back
+long dark hair cascading over shoulders
+long auburn hair
+dark, wavy hair
+long, wavy auburn hair
+dark hair tied back
+shoulder-length reddish-brown hair
+long reddish-brown hair
+short black bob hair
+blunt bangs
+natural hair strands
+long dark hair flowing over shoulders
+dark, straight hair
+long black hair flowing over shoulders
+loose strands framing face
+long black straight hair
+shoulder-length wavy brown hair
+free of hair
+long black hair cascading over shoulders
+long straight hair
+straight black hair
+formal braided updo
+twintails
+long blonde hair
+detailed hair strands
+fishbone braid
+long, wavy dark brown hair
+rope braid
+donut bun
+natural pubic hair
+braid
+long black wavy hair
+long, straight reddish-brown hair
+bangs looking directly at the camera
+medium-length brown hair
+straight dark hair
+short brown bob hair
+dark, slightly tousled hair
+fishtail braid
+bangs turned slightly to {her} right
+loose curls
+swept bangs
+medium hair
+long black hair flowing down back
+long wavy dark hair
+warm brown hair
+wet hair
+chignon
+twisted bun
+wet dark hair
+short reddish-brown hair
+angled bob
+formal updo
+fringed bangs
+long wavy hair
+high bun
+long dark hair cascading over shoulder
+long dark hair with bangs
+long dark wet hair
+one hand gently touching {her} hair
+wet, dark brown hair
+sleek bun
+lace braid
+sleek straight hair
+low messy bun
+medium-length dark brown hair
+twin braids
+hair bun
+dark, wet hair
+short dark brown bob hair
+bangs taking a mirror selfie
+short, straight brown hair
+dark pubic hair
+boho braid
+stacked bob
+waterfall braid
+sock bun
+low ponytail
+high ponytail
+high chignon
+long curled updo
+long brown hair cascading over shoulders
+bangs smiles gently at the camera
+dark hair tied in a ponytail
+long straight brown hair with bangs
+long dark hair tied back
+side bangs
+side-swept bangs
+bouncy curls
+tousled brown hair
+dark, glossy hair
+bun
+wedding updo
+dutch braid
+straight bob
+layered bob
+low chignon
+one hand raised to {her} hair
+straight bob with layers
+straight updo
+updo
+wavy bob
+wavy updo
+low updo
+messy bun
+shoulder-length curls
+herringbone braid
+{her} hair partially framing {her} face
+bangs smiling gently at the camera
+long dark hair flowing down back
+long dark hair flowing over shoulder
+shoulder-length brown hair with bangs
+long, straight auburn hair
+dark, tousled hair
+short dark bob hair
+fancy updo
+four-strand braid
+bob with bangs
+high messy bun
+blunt cut bangs
+straight, reddish-brown hair
+short, tousled reddish-brown hair
+long black hair falling over shoulders
+{her} hair pulled back
+long brown hair flowing down back
+long, wavy reddish-brown hair
+loose bangs
+short, wavy brown hair
+dark hair tied up
+long curly hair
+braided updo
+a side part
+long, dark brown wavy hair
+short hair
+wavy, reddish-brown hair
+realistic hair
+dark hair falling over {her} shoulders
+dark hair styled in an updo
+long brown hair flowing over shoulders
+long brown hair with bangs
+one hand raised to adjust hair
+dark hair tied in a bun
+long dark hair pulled back
+short black bob haircut
+dark brown shoulder-length hair
+a straight fringe
+long black hair flowing over shoulder
+long black hair with straight bangs
+hair wet
+long dark hair falling over shoulders
+long straight blonde hair
+shoulder-length black hair
+dark hair wet
+pulled back into a low ponytail
+long, wavy blonde hair
+short brown bob haircut
+long brown wavy hair
+long straight platinum blonde hair
+soft waves
+reddish-brown, shoulder-length hair
+straight, shoulder-length brown hair
+short, sleek black hair
+black pigtails
+warm brown wavy hair
+hair without harsh shadows
+shoulder-length brown hair styled with bangs
+styled with bangs
+hair ornament
+double bun
+long waist-length brown hair
+long dark hair cascading down back
+bangs smiling directly at the camera
+long, wet dark hair
+dark long hair cascading over shoulders
+long brown hair tied back
+a fringe
+short dark hair with bangs
+long dark hair parted center
+dark hair styled in a bun
+soft bangs taking a mirror selfie
+brown hair tied in a ponytail
+natural body hair
+long dark hair in a ponytail
+hair detail
+dark, slightly damp hair
+hair slightly tousled
+long, wet dark brown hair
+long, dark brown hair styled straight
+dark, shoulder-length wavy hair
+shoulder-length straight dark hair
+shoulder-length cut with bangs
+{her} hair partially obscures {her} face
+some strands framing {her} face
+fine, dark pubic hair
+bob cut
+Korean, long brown hair
+long, wavy chestnut-brown hair
+shoulder-length straight brown hair
+long dark hair draped over shoulders
+dark hair styled in loose waves
+long black hair tied back
+long dark red hair
+long straight reddish-brown hair with bangs
+bangs posing in a mirror selfie
+long maroon hair
+shoulder-length dark brown hair with bangs
+fine hair strands
+dark hair in a low ponytail
+long black hair cascading over shoulder
+hair partially wet
+bangs parted to the side
+long brown hair in a ponytail
+dark brown hair tied back
+dark hair slicked back
+wet black hair
+dark hair styled straight
+shoulder-length dark wavy hair
+{her} hair tied in a ponytail
+wet brown hair
+long platinum blonde hair
+long, wavy pastel blonde hair
+styled in soft waves
+fine hair detail
+bangs partially covering {her} face
+hair loose
+short purple hair
+long silver-gray hair
+subtle bangs taking a mirror selfie
+long glossy straight black hair
+dark hair partially tied back
+dark curly hair
+dark hair partially obscuring {her} face
+dark, layered bob hair
+wet, shoulder-length brown hair
+one with dark hair
+{her} hair partially obscuring {her} face
+dark hair in a side braid
+dark hair in a ponytail
+wet hair strands
+dark brown wavy hair
+dark, naturally textured hair
+dark hair styled in a half-updo
+long, wavy silver-gray hair
+individual hair strands
+pink hair
+wavy layered bob
+{her} hair tousled
+{her} dark hair slightly tousled
+dark shoulder-length hair with bangs
+{her} dark hair framing {her} face
+{her} dark hair styled with bangs
+long, tousled brown hair
+a side ponytail
+a neat fringe
+long, sun-kissed brown hair
+{her} hair flows over {her} shoulders
+styled straight with a side part
+voluminous hair
+reddish-brown, shoulder-length wavy hair
+medium-length brown hair with bangs
+{her} brown hair
+shoulder-length bob with bangs
+smooth, {her} hair dark
+neat bob
+straight dark brown hair with bangs
+straight, shoulder-length hair
+their hair
+styled with bangs framing {her} face
+long, layered brown hair
+covered in dark hair
+{her} hair cascades over {her} shoulders
+straight black hair with bangs
+short twintails
+hair details
+long, slightly wavy hair
+waist-length hair
+short, damp brown hair
+wind in {her} hair
+smooth hair
+long straight black hair parted center
+long dark reddish-brown hair
+shoulder-length straight dark brown hair
+long straight dark hair parted center
+short dark bob haircut
+long dark hair partially tied back
+long straight dark hair partially wet
+long wavy burgundy hair
+long dark wavy hair slightly tousled
+long dark hair slightly tousled
+short black wavy hair
+long straight brown hair parted center
+long dark brown hair parted center
+sleek dark hair pulled back
+sleek black hair pulled back
+dark hair parted to the side
+long black hair parted center
+long dark wavy hair parted center
+black hair in a high ponytail
+long dark brown hair slightly tousled
+long dark hair in profile pose
+long red hair
+long straight maroon hair
+long straight dark auburn hair
+dark hair partially pulled back
+shoulder-length dark brown wavy hair
+shoulder-length straight black hair
+short blonde hair
+long brown hair parted center
+short dark brown bob haircut
+long orange hair
+{her} dark, short hair
+medium-length wavy brown hair
+long dark hair looking down
+long black hair styled straight
+black hair tie around left wrist
+dark long hair flowing over shoulders
+long black hair in a ponytail
+long black hair in high ponytail
+long dark hair tied back loosely
+long brown hair partially pulled back
+long dark hair flowing naturally
+fringe detailing
+long dark hair flowing freely
+dark wavy hair with bangs
+long black hair in profile pose
+bangs smiling gently toward the camera
+dark hair tied back in pigtails
+reddish-brown hair tied back
+long black hair in two braids
+long dark hair in two braids
+bangs smiling gently with closed eyes
+hair styled with multiple pink
+wet dark hair slicked back
+dark wavy hair cascading over shoulders
+shoulder-length dark hair slightly tousled
+long dark braided hair
+bangs resting on {her} forehead
+long dark hair partially framing face
+dark hair parted center
+long black hair cascading down back
+long dark hair partially wet
+black shoulder-length hair
+hair tied back
+hair long
+dark hair partially wet
+hair tied up
+brown hair in a high ponytail
+dark shoulder-length hair parted center
+dark hair styled in pigtails
+long black hair with purple roots
+long blonde hair tied back
+blonde hair in a high ponytail
+{her} hair in a ponytail
+bangs poses directly at the camera
+short dark hair styled sleekly back
+{her} hair cascading over {her} shoulder
+short brown bob haircut with bangs
+shoulder-length brown hair parted center
+long blonde hair cascading over shoulders
+long blonde hair flowing over shoulders
+short blonde bob haircut
+dark long hair flowing down back
+dark hair in a high bun
+long brown hair falling over shoulders
+loose waves framing {her} face
+hair shafts
+dark brown hair partially wet
+long black hair looking down
+long black hair flowing down shoulders
+dark wet hair framing {her} face
+dark hair cascading over {her} shoulders
+bangs swept to the side
+long silver hair
+dark hair loosely tied back
+vibrant red hair
+bangs leaning against a concrete pillar
+soft bangs leaning slightly forward
+soft side-swept bangs
+hair falling over {her} shoulder
+{her} brown hair framing {her} face
+brown wavy hair
+dark hair styled in twin buns
+hair from the side
+individual strands of hair
+{her} hair dark
+wavy dark hair
+curly reddish-brown hair
+hair falling over {her} shoulders
+{her} hair styled in a high
+{her} dark hair slightly damp
+{her} hair slightly damp
+{her} dark hair tousled
+hair damp
+hair softly framing {her} face
+dark, straight hair with bangs
+short reddish-brown bob haircut
+neat bangs
+short brown hair tied back
+a gentle fringe
+{her} dark hair damp
+delicate bangs
+tousled dark hair
+shoulder-length layered hair
+floral fringe
+bangs framing {her} forehead
+{her} hair styled in loose
+reddish-orange hair
+hair clipped with gold barrettes
+dark, shoulder-length hair styled with bangs
+long brown hair framing the face
+long, dark hair styled in loose
+hair while maintaining a cool
+wavy hair near {her} temple
+medium-length reddish-brown hair
+long brown hair in pigtails
+shoulder-length hair with bangs
+shoulder-length with bangs
+{her} hair framing {her} face
+a black hair tie
+long brown hair styled with bangs
+dark hair styled in a short
+dark hair spread around {her} head
+brown hair styled in loose waves
+strands of hair
+wet-looking hair falling over {her} shoulders
+dark brown hair slightly damp
+a soft fringe
+facial hair
+blue hair
+purple hair
+blunt bangs framing {her} face
+messy hair
+long hair brown
+long hair reaching {her} waist
+parted bangs
+black hair color
+Korean, long hair to the waist
+brown curly hair
+long waist-length hair
+wispy bangs falling across {her} forehead
+dark hair spread across the matting
+dark hair neatly parted
+wet hair falling over {her} shoulders
+long black hair parted down center
+dark hair cascading down shoulders
+long black hair slightly tousled
+long dark hair partially pulled back
+dark hair in low ponytail
+dark hair flowing over right shoulder
+reddish-brown hair styled in two buns
+brown hair in a half-updo
+strands of hair with sharp focus
+black hair tied in high ponytail
+long brown hair slightly tousled
+hair flowing down {her} back
+hair loose over shoulder
+hair tied up in high bun
+long brown hair cascading over shoulder
+hair styled in low bun
+dark hair pulled into low bun
+hair styled long
+hair tied back in low ponytail
+short pinkish-brown hair
+long dark hair tilted back
+bangs smiling gently with eyes closed
+long black hair cascading down spine
+bangs smiling at the camera
+long burgundy hair cascading over shoulders
+bangs posing sideways to the camera
+bangs poses mid-stride
+long reddish-brown hair cascading over shoulder
+reddish-brown hair tied in a bun
+long burgundy hair
+bangs posing with a playful expression
+bangs looking off-camera to {her} right
+bangs leaning slightly forward
+bangs poses sideways
+hair tied back with blue ribbons
+bangs poses facing the camera
+bangs looking slightly upward
+bangs poses at a wooden table
+subtle hair follicles across arms
+long straight hair with a fringe
+wet dark hair tied high ponytail
+bangs leaning against a white curtain
+bangs leaning against a white wall
+reddish-brown hair with bangs
+bangs reclining on white pillows
+black hair styled with bangs
+hair slicked back
+black hair with bangs
+hair adorned with small metallic accessories
+long dark hair in braids
+long dark hair loose over shoulders
+bangs turned slightly toward the camera
+long side braid secured near neck
+bangs kneels on the office carpet
+bangs poses facing camera
+dark hair flowing over shoulders
+bangs smiling softly with closed eyes
+bangs poses sideways to the camera
+dark hair flowing down back
+long brown hair styled half up
+sleek high bun hairstyle
+dark long hair cascading over shoulder
+long black hair cascades down back
+long dark hair poses dynamically mid-stride
+short dark hair looking slightly upward
+short bob haircut
+dark wavy hair partially obscuring face
+hair pulled back into loose bun
+dark hair styled in high bun
+long dark hair smiling
+dark hair tied high in bun
+braid strands
+long black hair in profile view
+long dark hair posing sideways
+subtle bangs
+dark hair parted down the middle
+long dark hair styled half up
+short dark hair parted center
+hair held back slightly with fingers
+dark wavy hair flowing freely
+long brown hair styled straight down
+loose hair framing {her} face
+long dark hair parted to side
+tinsel fringe above the mirror
+shoulder-length dark hair looking upward
+black hair in low ponytail
+shoulder-length dark hair parted center
+hair tied in low ponytail
+hair pulled into a ponytail
+short dark hair slightly tousled
+hair styled into single high ponytail
+dark hair in profile pose
+dark hair styled in a half-ponytail
+hair loosely draped around shoulders
+braided hair falling over one shoulder
+dark hair tied back loosely
+blonde long hair with bangs
+dark hair partially tucked behind ears
+hair tied up in loose ponytail
+dark hair styled in bangs
+bangs smiling with closed eyes
+hair tied up with strawberry-themed clips
+long brown hair tied half-up
+dark hair gently tousled by wind
+braids held by black elastic bands
+long reddish-brown hair partially pulled back
+hair tied up in a bun
+wet black hair falling over forehead
+dark hair partially framing face
+bangs smiling playfully
+short dark hair styled with bangs
+short dark hair looking down
+wet hair tied back loosely
+black straight hair falling past shoulders
+dark shoulder-length hair tied back loosely
+dark hair styled in a half-bun
+hair styled straight down past shoulders
+dark hair parted down middle
+one purple hair curler
+purple hair curler on right temple
+long black hair loosely framing face
+adorned with bangs
+long hair pulled back
+only hair
+hair in low ponytail
+hair tied in high bun
+blonde wavy hair
+blonde hair windswept
+blonde hair tied in a ponytail
+blonde hair cascading over shoulders
+long blonde hair partially obscuring face
+blonde hair pulled back into ponytail
+blonde hair in a side braid
+blonde hair pulled back
+long straight blonde hair parted center
+wet blonde hair
+{her} hair in a high ponytail
+{her} hair in a low ponytail
+blonde hair tied up
+silver-blonde bob hair
+long brown hair pulled back
+ponytail secured in a high bun
+braids
+dark brown hair falling over shoulders
+long dark hair cascading down spine
+long brown hair cascades over shoulders
+long hair partially draped over shoulder
+dark wet hair draped over shoulders
+long dark hair falling down back
+long wet hair cascading over shoulders
+slightly wet hair falling over shoulders
+wet dark hair draped over shoulders
+dark hair styled in high ponytail
+dark hair styled half-up
+short black hair posing confidently
+short dark hair styled in bangs
+dark wet hair falling over forehead
+short black bob
+short black bob haircut with bangs
+short dark bob haircut with bangs
+individual fur strands with sharp focus
+dark bob haircut with bangs
+bangs posing directly at the camera
+long reddish-brown hair flowing over shoulder
+long dark hair wet from water
+fringe detailing along the bodice
+dark hair in twin ponytails
+pom-pom atop blonde wavy hair
+blonde hair styled straight
+long hair cascading over shoulder
+long braided hair
+blonde hair styled in a half-updo
+hair tied up in bun
+high bun hairstyle
+short brown hair parted in middle
+hair near face
+long blonde hair slightly parted
+blonde hair flowing down {her} back
+platinum blonde hair cascading over shoulders
+fine hair detail across face
+platinum blonde hair parted center
+long blonde hair parted in center
+long platinum blonde hair slightly tousled
+platinum blonde hair tilted slightly upward
+fringe detailing along sides
+fringe detailing at the hips
+blonde bob haircut
+long blonde hair styled straight
+dark hair parted in the middle
+shoulder-length black hair smiling at camera
+braids sharply defined in foreground
+long black hair slightly parted
+long black hair parted in center
+dark wavy hair smiling gently
+bangs leaning against a tree trunk
+long brown hair loose over shoulders
+hair in high ponytail
+dark hair styled in low bun
+dark hair adorned with pearl barrette
+hair styled neatly with soft bangs
+dark long hair
+long dark hair closed-eyed
+black hair styled straight down shoulders
+dark hair in high ponytail
+bangs poses slightly turned toward camera
+long dark hair flowing behind {her}
+black hair styled in high bun
+long dark hair down past shoulders
+long dark hair flowing down shoulders
+loose bangs framing {her} face
+shoulder-length dark hair parted slightly off-center
+hair strands falling naturally over shoulders
+long dark hair with teal tips
+long dark hair down shoulders
+dark hair pulled back loosely
+dark hair tied in an updo
+hair pulled back into a ponytail
+long dark hair obscuring face
+black hair tied back
+black hair parted centerfalling over shoulders
+bangs turned slightly to {her} left
+AL HAIR SALON
+silver wavy hair
+bangs winking playfully at the camera
+dark hair tied high ponytail
+bangs looking off to the side
+wet strands of dark brown hair
+long dark hair in low ponytail
+hair pulled into a low bun
+long brown hair partially framing face
+long brown hair partially pinned up
+dark brown hair parted center
+long brown hair framing {her} face
+long brown hair smiling at camera
+cascading crystal fringe from the bustline
+long brown hair parted to side
+bangs winks playfully at the camera
+{her} hair in a high bun
+dark hair with bangs framing face
+bangs kneels in shallow greenish water
+long dark hair adorned
+long dark hair cascades over shoulders
+long dark hair partially obscuring face
+dark hair tied in low bun
+long dark hair with side-swept bangs
+long dark hair styled down
+dark wavy hair cascading down spine
+platinum-blonde hair pulled back
+blonde wavy hair cascading over shoulder
+dark long hair styled straight
+long black hair smiling gently
+long black hair smiling at camera
+dark hair styled back
+long dark braid over right shoulder
+long black hair leaning slightly forward
+long dark hair flows over shoulders
+hair tied back with small barrette
+hair styled in a sleek ponytail
+dark hair in a long braid
+long black hair styled half-up half-down
+black hair falling straight over shoulders
+dark hair partially obscuring forehead
+dark brown hair partially pulled back
+dark hair tied back slightly damp
+dark wavy hair pulled back
+beaded fringe
+hairstyle
+sleek dark hair styled straight
+hair strands at the temples
+bangs posing in profile
+bangs leaning against a stone wall
+bangs leaning against a stone
+bangs tilted slightly upward
+bangs tilted slightly forward
+blunt bangs posing in profile
+blunt bangs in profile
+straight bangs leaning slightly forward
+short red hair
+fine hair strands along shoulders
+bangs posing confidently toward the camera
+smooth dark hair pulled back
+tuck hair behind ear
+subtle side-swept strands framing face
+straight dark hair parted center
+shimmering tinsel fringe curtain
+prominent bangs leaning slightly toward camera
+bangs posing playfully
+loose side fringe
+bangs gazing directly at camera
+bangs gently framing {her} face
+blunt bangs leaning slightly forward
+straight dark hair pulled back
+hair strands sharply defined
+short dark hair styled straight
+subtle side-swept bangs gazing upward
+bangs walking slightly sideways across frame
+bangs resting gently on forehead
+bangs smiling directly at camera
+sleek dark hair styled back
+glossy black hair pulled back neatly
+waves into soft bokeh
+shoulder-length dark hair tied back
+soft voluminous waves framing face
+soft bangs leaning slightly toward camera
+braid ends
+dark straight hair pulled back
+bangs gently tousled
+dark hair partially tousled
+sleek dark hair parted center
+hair straightener wrapped in towel
+wet hair strands clinging to shoulders
+prominent bangs
+flyaway hair reflects the raw
+hair tied back in a bun
+dark hair partially obscuring {her} shoulders
+dark, layered hair
+hair obscuring {her} face
+glossy, dark hair framing {her} face
+hair falling loosely around {her} face
+dark hair styled in a high
+voluminous updo
+a blunt bob
+wet hair partially obscuring {her} face
+hair density
+anatomical detail, hair dark
+tousled purple hair
+dark hair fanned across the pillow
+silver-gray hair
+reddish-brown hair tied up
+detailed body hair
+brown hair in a side braid
+dark hair in a loose bun
+dark brown hair loosely tied back
+reddish-brown hair in twin tails
+dark hair clinging to {her} shoulders
+green braided hair
+long black braided hair
+strands of hair catching the sun
+brown hair in a messy bun
+tousled auburn hair
+brown hair in a messy half-updo
+brown hair in a high bun
+long dark hair styled loosely
+lifelike hair strands
+dark brown hair loosely gathered
+defined curls over {her} bare shoulders
+hair follicles
+dark hair in a messy ponytail
+brown hair in a ponytail
+hair strands clearly defined
+natural hair on {her} thighs
+dark hair in twin braids
+long dark hair in pigtails
+brown hair styled in a half-updo
+dark hair in a messy bun
+short blonde bob hair
+realistic hair follicles
+short black hair in a topknot
+{her} hair tied back loosely
+{her} long hair flowing behind {her}
+dark hair in a messy updo
+straight blonde hair
+individual hair strands catching the breeze
+wet strands of hair
+hair with photographic realism
+straight, ash-brown hair
+glossy black hair
+wet dark hair pulled back
+soft pink hair
+natural hair strands framing {her} face
+natural hair
+dark hair in a messy half-updo
+long chestnut hair
+{her} hair styled short
+tousle {her} hair
+hair loosely spread across the leaves
+hair loosely fanned behind {her}
+hair pulled into a high
+hair loosely spread around {her} shoulders
+wet dark hair loosely tied back
+{her} dark hair loosely braided
+{her} dark hair loosely tousled
+{her} hair tousled by the breeze
+hair fanned out around {her} head
+hair gently tousled by a breeze
+hair flowing in motion
+full bangs
+dark wavy hair slightly damp
+hair gently tousled by breeze
+dark, shoulder-length hair slightly damp
+hair falling over one shoulder
+hair cascading over shoulders > pose
+{her} hair partially tied back
+short auburn hair
+hair blowing gently in the breeze
+hair gently blowing
+tousled with bangs framing {her} face
+{her} black hair with straight bangs
+hair cascading down {her} back
+{her} dark hair with straight bangs
+long dark hair flowing dynamically
+striking blue-purple hair
+short silver-white hair
+silver hair styled in twin buns
+dark straight hair in pigtails
+long dark hair in twin pigtails
+dark hair in pigtails
+{her} black bob hair wet
+straight black bob hair
+hair cascading over one shoulder
+hair falling naturally over {her} shoulder
+a blunt fringe
+tousled blonde hair
+fine hair on {her} inner arm
+warm auburn hair
+dark, shoulder-length hair tied back
+long dark hair in twin ponytails
+a small bun at the back
+{her} dark hair neatly pulled back
+{her} dark bob haircut
+hair gently blowing in the breeze
+reddish-brown hair falling over {her} shoulders
+long brown hair with gentle waves
+long, chestnut-brown hair
+short dark hair styled in pigtails
+blue hair tie
+dark hair softly tousled
+slightly tousled hairstyle
+a blunt bob cut
+hair flowing over {her} shoulders
+brown fringe details
+long dark hair styled in pigtails
+hair adorned with small decorative pins
+black bob hair
+short bob hair
+{her} dark hair partially tied up
+a strawberry-patterned hair accessory
+dark hair styled in two braids
+short pink hair
+brown hair pulled back
+hair strands against a plain
+wet, dark hair framing {her} face
+straight, lavender-highlighted hair
+straight, lavender-colored hair
+{her} dark hair partially braided
+dark hair cascades over {her} shoulders
+reddish-purple hair
+long, dark hair styled in braids
+hair flowing
+jawline sharp, hair parted center
+medium-dark brown hair
+damp hair
+{her} dark hair tousled by wind
+reddish-brown hair styled in bangs
+short, layered hair
+medium-length dark hair framing {her} face
+brown hair styled in a ponytail
+hair against a dark
+hair evenly
+hair spread across the pillow
+blonde, shoulder-length hair
+{her} dark hair short
+hair short
+dark hair partially blown by wind
+strands framing {her} cheek
+{her} hair partially obscures {her} forehead
+hair falling across {her} cheek
+wavy hair cascades around {her} shoulders
+{her} hair styled in a bun
+straight with bangs
+fine, straight hair with bangs
+hair spread out
+{her} hair flows over {her} shoulder
+dark brown hair pulled back
+shoulder-length dark hair styled with bangs
+bangs falling across {her} forehead
+brown hair styled in two high
+messy pigtails
+dark hair along the neck
+brown hair falling over {her} shoulders
+hair in gentle shadow
+braided edge and {her}
+{her} dark hair falling forward
+reddish-brown hair in a side ponytail
+shoulder-length strands framing {her} face
+straight-cut bob
+straight brown bangs
+soft, wavy hair
+reddish-brown hair flows over {her} shoulders
+fine, dark hair
+wet, coarse hair
+hair against the wet
+{her} hair submerged
+dark, thick hair
+brown with bangs framing {her} face
+layered, chestnut-brown hair
+shoulder-length, medium-length hair
+hair while creating gentle shadows
+{her} hair falling across {her} forehead
+silver hair styled in a braid
+straight, peach-colored hair
+reddish-brown bob
+dark hair spread across the blanket
+a straight-cut fringe
+medium-length dark hair
+hair while creating soft shadows
+{her} hair clings to {her} shoulders
+hair with a gentle glow
+wavy shoulder-length hair
+reddish-brown wavy hair
+{her} hair partially obscuring {her} forehead
+dark brown hair styled with bangs
+hair spread loosely around {her} head
+wavy hair falling over {her} shoulder
+straight, auburn hair
+{her} dark hair spread out
+slightly parted bangs obscuring {her} eyes
+brown with bangs
+short, layered hair with bangs
+dark hair with reddish
+long black hair styled in pigtails
+{her} own hair
+dark brown hair styled straight
+short, straight hair
+dark, shoulder-length hair with straight bangs
+brown hair styled in a side-parted
+hair spread across {her} shoulders
+dark hair partially covering {her} face
+hair spread out around {her} face
+shoulder-length straight hair
+brown hair styled in two pigtails
+hair partially obscuring {her} right eye
+dark hair styled in loose
+dark brown hair styled in loose
+shoulder-length dark hair styled straight
+{her} hair falling across {her} shoulders
+{her} hair flows down {her} back
+fine hair around the area
+dark hair in a neat updo
+dark hair flows over {her} shoulders
+brown hair styled in pigtails
+gray hair tie
+neat bun
+dark brown bob with bangs
+dark brown hair styled in bangs
+a straight-cut bob hairstyle
+slightly parted bangs
+shoulder-length bob
+{her} hair down
+hair without casting harsh shadows
+shoulder-length hair styled with soft waves
+a side-swept fringe
+dark black hair styled
+wet strands framing {her} face
+shoulder-length wavy hair
+dark brown hair with straight-cut bangs
+dark glossy hair with straight bangs
+dark, glossy hair framing {her} face
+strands of hair framing {her} face
+long, dark hair partially braided
+ash-brown hair
+hair strands against textured shadows
+black hair parted down the middle
+hair over shoulder
+a double bun hairstyle
+straight bangs framing {her} face
+armpit hair
+possesses brown hair
+display long hair
+long black hair with blunt bangs
+single hair bun
+brown hair alongside black hair
+curly brown hair
+grey hair
+long hair cascading over shoulders
+black long hair tied loosely
+black hair streaks
+brown hair styled short
+black long hair tied back
+long black hair tied loosely
+short brown hair styled neatly
+single hair bun on the back
+short black hair with tanlines
+brown hair with short
+styled hair
+long brown hair falling past shoulders
+long hair reaching mid-back
+long hair tied loosely
+hair styled in a high bun
+tousled black hair
+brown hair tied in twin braids
+long brown hair styled loose
+brown hair in twin braids
+long hair with twin braids
+long brown hair in twin braids
+brown hair styled into twin braids
+messy hair framing {her} face
+black hair styled short
+short brown hair styled upward
+long brown hair styled loosely
+chest hair
+medium-length brown hair styled neatly
+black hair accessory
+black hair with blunt bangs
+{her} hair styled in two thick
+medium-length black hair
+double braids
+short brown hair with a braid
+brown hair in hair bun
+brown hair with a hair bun
+Korean, black hair
+short, shoulder-length hair
+brown hair with short twintails
+hair strands under diffused ambient lighting
+long hair mixing shades of brown
+short brown hair framing {her} face
+chestnut-brown hair
+hair bun details
+low twintails
+long hair mixed between brown
+straight bangs resting at {her} eyebrows
+long black hair to {her} shoulders
+clear hair details
+see-through, hair bun
+hair over breasts
+long hair to {her} waist
+long hair to the waist
+hair on the outer thighs
+waist-length, brown hair
+{her} hair wet with water droplets
+long black hair reaching {her} shoulders
+{her} hair partially covers {her} breasts
+some hair
+black hair long hair
+detailed hair
+longer hair
+long hair flowing down {her} shoulders
+short black hair mixed hair color
+Korean, long hair
+hair shine
+black two hair colors
+jet-black long hair
+hair falling messily over {her} shoulders
+waist-length black hair
+medium-length hair
+slightly wavy hair
+hair falling to below the collarbone
+brown hair with blue eyes
+{her} hair covering {her} left eye
+hair close-up
+wavy black hair
+navel stomach, hair over one eye
+realistic hair movement
+hair falling to {her} waist
+short brown hair with blue eyes
+hair over one eye
+waist-length flowing hair
+long waist-length hair cascading naturally downward
+hair against the cool metallic sheen
+a textured fringe along its edge
+fine strands of hair
+messy brown hair
+tousled reddish-brown hair
+hair while maintaining a naturalistic
+damp-looking hair falling around {her} shoulders
+strands softly framing {her} face
+soft bangs framing {her} face
+hair wetness
+medium-to-dark brown hair
+straight bangs that frame {her} face
+hair while leaving parts in shadow
+hair while casting gentle shadows
+dark straight hair styled with bangs
+medium brown hair
+medium-length brown hair styled with bangs
+wispy bangs partially cover {her} forehead
+dark, straight bangs
+wet, wavy hair
+shoulder-length brown hair with natural waves
+hair while casting minimal shadows
+dark black hair
+dark brown hair falling forward
+only dark hair can be seen
+straight silver-white hair
+short brown bangs
+wet-looking hair cascades over {her} shoulders
+dark brown hair styled in long
+black hair styled in a high
+{her} jet-black hair
+sleek black hair tied back loosely
+black hair cascading over {her} shoulders
+high single bun
+high single hair bun
+soft bangs falling across {her} forehead
+dark hair styled in two pigtails
+long brown hair styled straight
+long dark hair styled straight
+wet reddish-brown hair
+dark hair swept back
+hair as if in quiet thought
+vibrant pink hair
+perfectly styled hair in hollywood waves
+chic dark bob hair
+black hair in a low ponytail

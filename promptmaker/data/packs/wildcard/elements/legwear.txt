@@ -1,0 +1,463 @@
+# 와일드카드 확장 요소 (legwear) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+sheer black tights
+white socks
+black knee-high socks
+white knee-high socks
+thigh-high stockings
+black fishnet stockings
+sheer tights
+black lace thigh-high stockings
+sheer thigh-high stockings
+black stockings
+white crew socks
+red fishnet stockings
+black sheer tights
+white thigh-high stockings
+opaque black tights
+knee-high black socks
+sheer nude tights
+opaque black thigh-high stockings
+fishnet pantyhose
+opaque black stockings
+black thigh-high socks
+black pantyhose
+sheer black fishnet stockings
+white ankle socks
+black lace garter stockings
+purple fishnet stockings
+white ribbed knee-high socks
+black tights
+sheer black polka-dot tights
+lace thigh-high stockings
+black sheer thigh-high stockings
+white thigh-high socks
+white lace thigh-high stockings
+black fishnet stockings with lace trim
+dark knee-high socks
+sheer dark tights
+knee-high socks
+sheer white thigh-high stockings
+thigh-high black stockings
+black ankle socks
+white fishnet stockings
+grey knee-high socks
+sheer beige thigh-high stockings
+sheer black pantyhose
+black opaque tights
+white tights
+white lace-trimmed garter stockings
+white lace-trimmed fishnet stockings
+black fishnet stockings with garter straps
+sheer white tights
+dark stockings
+thigh-high white stockings
+sheer nude stockings
+striped socks
+complemented by sheer black thigh-high stockings
+nude stockings
+black polka-dot stockings
+tall white socks
+white ribbed socks
+pink socks
+dark brown lace thigh-high stockings
+lace-trimmed thigh-high stockings
+gray socks
+fishnet stockings with attached garters
+fishnet thigh-high stockings with lace tops
+black lace stockings
+black fishnet stockings with lace cuffs
+beige thigh-high stockings
+bright pink tights
+fishnet stockings with lace trim
+fishnet stockings with garter belt
+black fishnet stockings with purple accents
+black stockings with silver buckles
+glossy black stockings
+black fishnet tights with golden threads
+sheer black stockings with lace tops
+fishnet thigh-high stockings
+sheer thigh-high stockings with back seams
+thigh-high fishnet stockings with lace-up backs
+sheer stockings with garter belt
+thigh-high stockings with pentagram pattern
+fishnet stockings with red bows
+fishnet thigh-high stockings with garter clips
+sheer thigh-high stockings with lace trim
+thigh-high fishnet stockings with lace tops
+sheer mesh stockings
+plain white ankle socks
+knee-high stockings
+bright red fishnet stockings
+high-waisted thigh-high stockings
+ankle socks
+cream-colored socks
+opaque tights
+thigh-high socks
+sheer white stockings
+ribbed gray knee-high socks
+brown ribbed knee-high socks
+knee-high white socks
+dark tights
+thigh-high stockings with lace cuffs
+sheer black polka-dot stockings
+thigh-high sheer stockings
+red lace thigh-high stockings
+tights surface
+sheer light grey tights
+white athletic socks
+bright red knee-high socks
+beige lace thigh-high stockings
+thigh-high black socks
+sheer pantyhose
+black thigh-high stockings with lace trim
+pink lace thigh-high stockings
+white knitted socks
+bright pink socks
+vibrant pink thigh-high socks
+bright pink thigh-high socks
+dark blue knee-high socks
+dark navy knee-high socks
+leopard-print thigh-high stockings
+sheer beige stockings
+nude-colored stockings
+brown plaid thigh-high stockings
+bright green fishnet stockings
+bright pink sheer tights
+navy blue knee-high socks
+nude except for white thigh-high stockings
+knee-high socks with horizontal green stripes
+purple toe-strap dance socks covering toes
+sheer thigh-high stockings adorned
+black thigh-high stockings over dark underwear
+knee-high black socks or stockings
+opaque black thigh-high socks
+tall black knee-high socks
+white crew socks with ribbed cuffs
+sheer white ankle socks
+white ribbed socks covering her ankles
+fishnet tights with diamond-patterned mesh
+lace thigh-high stockings with sheer overlay
+thin white thigh-high stockings
+black ribbed ankle socks
+full-length fishnet stockings
+knee-high nike socks
+only white knee-high socks
+tall black socks
+white lace-up knee-high socks
+ribbed knee-high socks in matching white
+sheer white lace stockings
+opaque black knee-high socks
+sheer black knee-high socks
+nude sheer tights
+knee-high ribbed cream-colored socks
+only white socks over bare feet
+lavender thigh-high socks
+thigh-high stockings secured with decorative clips
+black lace-trimmed thigh-high stockings
+black stockings with lace trim
+black silk stockings
+sheer green stockings
+sheer green thigh-high stockings
+thigh-high stockings with fishnet pattern
+lace-trimmed thigh-high stockings with fishnet paneling
+sheer fishnet stockings
+black sheer polka-dot stockings
+black polka-dot sheer stockings
+white socks with ankle straps
+thigh-high stockings with matching lace trim
+thigh-high stockings adorned with pearl-and-tassel garters
+thigh-high stockings held by pearl-and-tassel garters
+bright red sheer thigh-high stockings
+red sheer thigh-high stockings
+red thigh-high stockings
+black fishnet tights
+sheer black gucci monogram mesh tights
+light blue socks
+pale blue ankle socks
+fishnet stockings with black high heels
+sheer nude stockings over thighs
+sheer brown thigh-high stockings
+black-and-white striped ankle socks
+knee-high ribbed knit socks
+white crew socks covering her ankles
+white socks tucked into black sneakers
+sheer lace-patterned tights over bare skin
+beige ribbed knee-high socks
+sheer textured tights over body
+ambient light highlights sheen of stockings
+white tabi socks
+thigh-high stockings with sheer fishnet pattern
+high-cut black socks
+ribbed knit tights
+white crew socks with nike swooshes
+ribbed knit socks
+thigh-high stockings with white garter belts
+long white socks
+sheer thigh-high stockings under dark underwear
+ribbed knee-high socks in muted gray
+black thigh-high stockings with elastic cuffs
+gray knee-high socks
+thin sheer tights
+translucent tights
+translucent pink tights
+black fishnet stockings revealing red-painted toes
+fishnet stockings over bare
+black fishnet stockings over pink thighs
+fishnet stockings kneels on tiled floor
+chunky knit gray socks reaching mid-calf
+heathered gray socks
+brown mesh fishnet stockings
+sheer opaque tights
+grey ribbed knee-high socks
+ribbed light grey knee-high socks
+light gray knee-high socks
+light-colored ankle socks
+tan sheer stockings with lace garters
+thin beige tights
+tan thigh-high stockings
+white ankle socks with scalloped edges
+light-colored stockings
+opaque thigh-high stockings
+white socks tucked into chunky sneakers
+opaque sheer tights
+sheer dark gray tights
+black opaque stockings
+sheer nude pantyhose
+opaque black tights and adorned
+transparent tights matching the pattern
+sheer strawberry-patterned tights
+transparent stockings
+thigh-high stockings with garter straps
+nude tights
+thigh-high stockings with lace garters
+nude sheer stockings covering feet
+opaque nude tights
+lace thigh-high stockings with decorative straps
+sheer black thigh-high stockings detailed
+sheer gray tights
+white knee-high socks with elastic cuffs
+tights transparency
+pantyhose surface reflecting ambient city lights
+sheer red stockings
+festive stockings draped beside stool
+thigh-high sheer black stockings
+thigh-high stockings connected by suspenders
+sheer black lace-trimmed thigh-high stockings
+sheer nude thigh-high stockings
+over fishnet stockings
+tights' mesh grid clearly defined
+thin black tights
+ribbed off-white knee-high socks
+thigh-high sheer black tights
+thigh-high clear stockings
+thin black thigh-high stockings
+black thigh-high sheer stockings
+opaque black sheer tights
+sheer gradient pink thigh-high stockings
+opaque sheer black thigh-high stockings
+opaque taupe tights
+sheer translucent grey tights
+sheer translucent tights
+tights' surface tension details
+translucent sheen of stockings
+translucent tights surface
+pale yellow thigh-high stockings
+bright red crew socks
+white nike socks
+white crew socks with black stripes
+black crew socks
+ribbed black socks
+tall white socks extending to mid-thigh
+white ribbed ankle socks
+sheer white pantyhose
+pale pink sheer tights
+tall white ribbed knee-high socks
+high-knee white ribbed knit socks
+dark sheer tights
+folded socks resting nearby
+light lavender crewneck socks
+white socks with black horizontal stripes
+sheer black lace fishnet tights beneath
+knee-high red ribbed socks
+light pink socks
+sheer black lace fishnet tights
+slim-fit black sheer tights
+light purple ankle socks
+bright pink knee-high socks
+bright yellow ankle socks
+only black lace thigh-high stockings
+black knee-high socks with black loafers
+sheer white fishnet stockings
+white fishnet stockings with lace trim
+light blue fishnet stockings
+bright cyan fishnet stockings
+thigh-high stockings with black high-heeled boots
+sheer black lace-edged thigh-high stockings
+socks while the background
+white socks with ruffled cuffs
+thigh-high lavender stockings
+sheer lavender thigh-high stockings
+sheer thigh-high stockings with gold heels
+only fishnet stockings
+fishnet stockings with lace tops
+lace gartered thigh-high stockings
+patterned thigh-high stockings
+sheer polka-dot tights
+sheer black lace thigh-high stockings
+sheer black polka-dot thigh-high stockings
+bright pink thigh-high stockings
+black thigh-high stockings and her arms
+sheer hot pink tights
+sheer dark patterned tights
+thigh-high beige knit stockings
+lace thigh-high stockings with tied bows
+only black high-heeled socks
+high white thigh-high stockings
+sheer black-and-white polka-dot thigh-high stockings
+pink fishnet stockings
+patterned fishnet stockings
+thigh-high black socks with black shoes
+dark lace thigh-high stockings
+black mesh fishnet stockings
+her red mesh stockings
+red mesh thigh-high stockings with bows
+mesh stockings
+thigh-high stockings with garters
+red fishnet stockings with lace trim
+black fishnet stockings with lace garters
+red thigh-high stockings with black heels
+pink fishnet stockings with lace garters
+vibrant pink fishnet stockings
+her yellow polka-dotted socks
+neat white socks with low-cut shoes
+black mesh stockings with lace detailing
+red-and-white striped socks
+black fishnet stockings with black heels
+blue mesh thigh-high stockings
+delicate beige lace thigh-high stockings
+sheer polka-dot socks
+black mesh stockings
+white socks with blue athletic shoes
+navy blue thigh-high stockings
+pink-striped socks
+pink mesh thigh-high stockings
+bright pink ribbed socks
+black-and-white striped knee-high socks
+hot pink thigh-high socks
+black thigh-high stockings with lace cuffs
+white lace-trimmed leg warmers
+beige socks
+white ribbed socks and her long
+bright red thigh-high socks
+white knee-high socks with lace trim
+white fishnet stockings with lace garters
+black polka-dotted stockings with garter straps
+black lace-trimmed polka-dot thigh-high stockings
+sheer pink tights
+white mesh stockings
+crisscross thigh-high stockings
+sheer tan stockings
+dark socks
+brown knee-high socks
+striped knee-high socks
+sheer red lace stockings
+shiny knee-high socks
+red knee-high socks
+sheer stockings with black heels
+black stockings and her dark hair
+white knee-high socks with red stripes
+white ribbed socks on her feet
+pink mesh stockings
+sheer lace thigh-high stockings
+sheer pink lace thigh-high stockings
+sheer beige stockings with lace trim
+sheer pink lace-trimmed stockings
+sheer lace-trimmed stockings
+black knee-high socks with white stripes
+white knee-high socks and her dark
+brown stockings
+black ribbed knee-high socks
+gray plaid thigh-high stockings
+black striped thigh-high stockings
+black plaid thigh-high stockings
+black checkered thigh-high stockings
+gold patterned thigh-high stockings
+beige plaid thigh-high stockings
+black knee-high socks with white lettering
+black lace-patterned thigh-high stockings
+red fishnet stockings with lace garters
+red fishnet stockings with lace cuffs
+red mesh thigh-high stockings
+white thigh-high stockings with lace cuffs
+white thigh-high stockings with lace trim
+sheer purple tights
+sheer purple thigh-high stockings
+purple lace-trimmed stockings
+sheer purple lace thigh-high stockings
+dark socks with shoes
+sheer beige fishnet stockings
+purple mesh stockings
+light-colored thigh-high stockings
+black lace-patterned stockings
+white socks on her feet
+bright neon green fishnet stockings
+green diamond-patterned fishnet stockings
+green knee-high socks
+green mesh stockings
+red fishnet thigh-high stockings
+long green ribbed leg warmers
+red fishnet thigh-high stockings adorned
+red fishnet stockings with red bows
+green mesh fishnet stockings
+a pair of white knee-high socks
+dark knee-high socks and her hands
+black fishnet stockings with straps
+thigh-high stockings with lace trim
+red-and-black striped thigh-high stockings
+fishnet stockings with black garters
+beige stockings
+navy knee-high socks
+black lace-trimmed fishnet stockings
+black fishnet stockings with crisscross straps
+textured thigh-high stockings
+nude except for black thigh-high stockings
+black polka-dot thigh-high stockings
+black sheer stockings with garter straps
+tan-colored sheer stockings and her arms
+tan-striped thigh-high stockings
+black lace-knitted thigh-high stockings
+bright pink fishnet stockings
+black stockings with white lace cuffs
+gray thigh-high stockings
+purple fishnet stockings with ruffled edges
+gray textured knee-high socks
+alongside sheer black tights
+a set of fishnet pantyhose
+over-the-knee stockings
+fishnet over-the-knee stockings
+alongside white socks
+pantyhose details
+alongside fishnets
+blue socks
+pantyhose and short sleeves
+thigh-high black leather stockings with boots
+pantyhose strands
+black thigh-highs with sheer stockings
+black thigh-highs
+toned thighs through sheer black thigh-highs
+stockings at her waist
+buttocks through low-rise stockings
+see-through stockings
+pantyhose pull
+brown pantyhose
+thigh-high black fishnet stockings
+only black fishnet stockings
+sheer black patterned thigh-high stockings
+skin-toned pantyhose or tights
+light beige ankle socks
+knit socks
+only opaque black thigh-high stockings
+these stockings
+light-pink lace thigh-high stockings
+white thigh-high socks or stockings

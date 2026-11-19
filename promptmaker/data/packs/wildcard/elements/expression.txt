@@ -1,0 +1,407 @@
+# 와일드카드 확장 요소 (expression) — AI Gallery Manager 와일드카드 프롬프트에서 뽑은 문구 (0.12.0)
+# 기본 요소와 중복 없음 · 요소 검사 통과. PromptMaker(packs=["wildcard"]) 로 켭니다.
+a smile
+her gaze
+her eyes closed
+a gaze directed toward the camera
+a confident expression
+a gaze directed at camera
+a gaze directly at camera
+a gaze directed toward camera
+a gaze directed slightly upward
+her gaze direct
+a gentle expression
+an inviting gaze
+a gaze directed at the camera
+a gaze directed straight at camera
+a gaze directed downward
+a seductive expression
+a gaze directed at phone screen
+a focused expression
+a direct gaze toward camera
+an engaging expression
+a gaze directed slightly toward camera
+a direct gaze toward the camera
+a confident gaze
+a grin
+a warm smile
+a natural expression
+a gaze directed straight ahead
+a composed expression
+a radiant smile
+a contemplative gaze
+a soft gaze
+a gaze directed upward
+a cheerful expression
+an approachable expression
+a gaze directly at viewer
+a confident smile
+an engaging smile
+a gaze directed toward the sky
+a soft expression
+a serene smile
+an alluring smile
+her expression focused
+a gaze directed toward the floor
+a gaze directed slightly off-camera
+a subtle expression
+her gaze lowered
+a direct expression
+a flushed expression
+a gaze directed slightly downward
+a curious expression
+a bright smile
+a gaze directly forward
+a gaze directed at viewer
+a gaze directed directly at camera
+a joyful expression
+a parted-lip expression
+a gaze directly toward camera
+a gaze downward
+a pensive expression
+a natural smile
+an engaging gaze
+a slightly pensive expression
+a gaze directed toward the viewer
+a thoughtful expression
+an open-mouthed expression
+her gaze steady
+a poised expression
+a slightly contemplative expression
+a smiling expression
+a gentle smile directed at camera
+a sensual smile
+an intimate smile
+a slightly sultry expression
+a slightly shy expression
+a gaze cannot be determined
+a gaze directed to her right
+a direct gaze at camera
+a gaze directed toward her lap
+her gaze directed off-camera
+a calm expression
+a neutral gaze
+a radiant expression
+an open-mouthed smile
+a downward gaze
+a slightly sensual expression
+a slightly dreamy expression
+her gaze directed at the viewer
+her gaze fixed forward
+a gaze directed toward her chest
+a pleasant smile
+a gaze slightly upward
+a gaze upward toward the sky
+a gaze directed toward horizon
+a gaze directed forward toward camera
+an upward gaze
+an intense expression
+an expressive gaze
+a candid expression
+a gentle smile on her face
+a gaze slightly downward
+a direct gaze at the camera
+a gaze directed toward viewer
+a gaze softly directed downward
+a gaze directed toward her hands
+a gaze directed toward the ground
+a direct gaze toward the viewer
+a playful gaze
+an engaged expression
+a detailed facial expression
+an aroused expression
+a receptive expression
+a sweet expression
+a toothy grin
+an attentive expression
+her gaze fixed on the camera
+a realistic expression
+a gaze directed toward phone screen
+a gaze fixed directly at viewer
+a gaze directly at the camera
+a gaze directed straight at viewer
+a gaze directed toward the ocean
+a soft smile directed at camera
+a slightly mischievous expression
+her expression intense
+a flirtatious expression
+a dreamy expression
+her gaze lifted
+a toothy smile
+an affectionate expression
+a slightly surprised expression
+a slightly parted-lip smile
+a flirty look
+her expression cheerful
+a youthful expression
+a warm expression
+a content expression
+a slightly demure expression
+a slightly serious expression
+an inviting look
+an approachable expression with subtle warmth
+her expression radiating warmth
+her expression radiating cheerful innocence
+a relaxed facial expression
+her gaze engaging
+her gaze fixed on the viewer
+a dominant smile
+a determined expression
+a relaxed smile
+a focused facial expression
+her gaze filled with mystery
+her expression a mix of nostalgia
+a playful smile on her face
+a feminine look
+a sophisticated look
+a modern look
+an ethereal look
+a fashion-forward look
+a create a whimsical look
+a seductive look
+a chic office look
+an edgy look
+a fashionable look
+a romantic look
+a charm to her look
+a whimsy to her look
+a contemporary look
+a unique look
+an allure to the overall look
+a chic look
+a movement to the overall look
+a breezy look
+a bohemian-inspired look
+an effortlessly chic look
+a confident look
+a playfulness to your look
+a smiles warmly at the camera
+a playful smile
+a soft gaze directed forward
+a gaze softly downward
+a gaze directed at screen
+a gaze upward
+a gaze directly into lens
+a gaze upward toward sky
+a subtle smirk
+a gaze directly facing camera
+a gaze directly into camera
+a dreamy gaze
+a playful smirk
+a suggestive gaze
+an expression conveying quiet confidence
+her expression conveying intense pleasure
+her gaze intense
+an intense gaze
+a tender expression
+her expression intimate
+a curious gaze
+a suggestive expression
+an exposed expression
+her gaze softly directed upward
+an elegant expression
+her expression serene yet intimate
+an approachable gaze
+her expression conveying warmth
+her gaze softly focused
+a sweet smile
+a high-contrast look
+her gaze directed slightly off-center
+a parted-lip smile
+a gaze direction
+an assertive expression
+a teasing smile
+an alluring stare
+a facial expression focused
+an introspective expression
+a gentle smile directed upward
+a straight gaze
+a gaze directed over shoulder
+a gaze fixed at camera
+a gaze directly to camera
+a gaze fixed on viewer
+a gentle smile poses playfully
+a gaze directed toward upper-right
+a gaze directly forward smiling
+an unimpressed expression
+a gaze directed toward floor
+a gaze directed slightly forward
+a neutral gaze directed forward
+a gaze directed at device
+a gaze locked forward
+a gaze directed downwards
+a gaze directed outward
+a gaze directly at lens
+a gaze directed directly forward
+a subtle smile while hands
+her gaze directly engaging
+a direct gaze toward viewer
+a gaze fixed on target
+a gaze softly directed forward
+a gaze directly engaging viewer
+a celebratory expression
+a gentle half-smile
+an amused smile
+a gaze direct at camera
+an expression radiating seduction
+an expression conveying seduction
+her expression sensual
+a mutual gaze
+her expression conveying confidence
+a suggestive smile
+a pleasure-induced expression
+her expression conveying arousal
+a gaze suggest a quiet
+a satisfied expression
+a direct look
+an expression neutral to seductive
+a gaze conveying direct engagement
+a half-smile
+a gaze conveying confidence
+a pensive gaze
+relaxed expression with half-closed eyes
+her expression neutral yet suggestive
+an unapologetic expression
+an expression sharply in focus
+a passionate expression
+a vulnerable expression
+a coy expression
+her gaze equally direct
+her eyes closed in pleasure
+a knowing gaze
+her expression conveying contentment
+a pouty expression
+a sleepy expression
+an affectionate look
+an expression in a sensual
+a submissive expression
+an affectionate gaze
+a serious expression
+a direct gaze conveying dominance
+an observant expression
+her expression conveying sensual surrender
+her expression flirtatious
+a reverent expression
+her expression tender
+an unrestrained laugh
+her expression radiating pure
+her expression playful or surprised
+her expression conveying tenderness
+an engaged gaze
+a tranquil expression
+a deliberate gaze
+a provocative gaze
+a gaze conveying direct
+an intimate gaze directed downward
+a natural grin
+a gentle expression of pleasure
+a gaze softly upward
+an attentive gaze
+a gentle smile revealing teeth
+a curious smile
+an expression in focus
+a neutral expression while nude
+her gaze softly lowered
+her gaze soft and direct
+her expression serene yet suggestive
+her gaze meeting the camera
+her expression radiating happiness
+her expression sweet
+her expression radiating innocence
+her expression radiates happiness
+an intimate look
+an expression sharply defined
+a shy expression
+an approachable smile
+her expression conveying allure
+her expression radiates warmth
+her expression conveying quiet allure
+her expression conveying
+her expression neutral yet engaging
+her expression radiating comfort
+a joyful smile
+a sunlit expression
+a sultry smile
+an expression without distracting elements
+an expression in detail
+an unmade-up look
+an unstyled look
+a pleasant expression
+a wide smile showing teeth
+a natural expression with clear
+an expression conveying intensity
+an expression of focused intensity
+her expression concentrated
+an unadorned look
+her gaze engaging the viewer
+an expression against a sunlit
+a steady gaze
+an open expression
+a serene gaze
+a radiant grin
+a cheeky expression
+an introspective gaze
+an innocent expression
+a candid smile
+an inquisitive expression
+a self-assured expression
+a genuine smile
+a grin showing teeth
+a subtle expression of seduction
+a subtle expression of calmness
+a deliberate expression of modesty
+her expression combines determination
+her expression assertive
+a smug smile
+her expression determined
+a face expression determined
+a detailed expression
+a facial expression focus
+a detailed expression focus
+an open grin
+a focused smile
+her expression composed yet alluring
+a direct gaze expression
+an expression POV
+a candid gaze
+an inviting stare
+a gaze directed through sheer
+an eye-contact gaze
+a trance-like expression
+a self-assured smile
+a clear expression
+a tender smile radiating warmth
+a gentle smile （注：根据要求已去除所有可能涉及性暗示的描述，仅保留符合写实摄影风格的细节，并确保人物姿态及表情符合日本写真偶像规范）
+a gentle smile eyes open
+a realistic expression gentle smile
+a gentle smile eyes half-closed
+a thoughtful gaze
+a contemplative smile
+a tender smile
+her gaze directed gently downwards
+an unposed look
+a contemplative look
+her gaze remains fixed forward
+a relaxed gaze
+her gaze directed just off-center
+a playful pout
+an upward-looking gaze
+a focused look
+her lowered gaze
+a wide smile
+a surprised or playful gaze
+her expression open
+a textured look
+a neutral smile
+a direct smile
+an expression from view
+a direct gaze forward
+a dominant expression
+an anticipatory gaze
+a playful grin
+a dominant gaze
+her expression calm yet alluring
+a puckered-lip expression
+a gentle gaze downward
+a confident gaze downward
+a sun-kissed expression

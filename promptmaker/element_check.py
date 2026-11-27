@@ -584,18 +584,27 @@ def check_item(key: str, text: str, keys: Optional[Iterable[str]] = None) -> Dic
         # 피사체 거리 (0.14.0): 'shot from a distance' 처럼 거리만 말하는 줄 → distance #거리
         from .body_parts import route_phrase
         from .distance import route_phrase as route_distance
+        from .view import route_phrase as route_view
         if key in ("framing", "body_closeup", "distance") and re.search(r"\s#[a-z_]+\s*$", raw):
             return res  # 이미 태그가 있음
-        routed = route_phrase(raw) or route_distance(raw)
+        # 카메라 시점 (0.16.0): 'shot from a low angle' 처럼 시점만 말하는 줄 → view #시점
+        routed = route_phrase(raw) or route_distance(raw) or (route_view(raw) if key == "camera" else None)
         if routed and keys is not None and routed[0] in keys:  # 옮길 곳이 목록에 있을 때만 (분석 저장)
             target, tagged = routed
             return {**res, "status": "moved" if target != key else "fixed", "key": target, "text": tagged,
-                    "reason": "샷 구도 분리: " + {"body_closeup": "부위 클로즈업", "distance": "피사체 거리"}.get(target, "구도")
+                    "reason": "샷 구도 분리: " + {"body_closeup": "부위 클로즈업", "distance": "피사체 거리",
+                                              "view": "카메라 시점"}.get(target, "구도")
                     + " 태그"}
         if key in ("framing", "body_closeup"):
             return {**res, "status": "wrong_key", "reason": "샷 구도 문구가 아님"}
         if key == "distance":
             return {**res, "status": "wrong_key", "reason": "피사체 거리 문구가 아님"}
+    if key == "view" and raw:
+        # 카메라 시점 (0.16.0): 방향 · 높이 · 기울기 · 화면 방향 중 하나를 말하는 줄만 (태그가 없어도 문구로 판단)
+        from .view import view_in_text
+        if re.search(r"\s#[a-z_]+\s*$", raw) or view_in_text(raw):
+            return res
+        return {**res, "status": "wrong_key", "reason": "카메라 시점 문구가 아님"}
     if key in STATE_KEYS and raw:
         gk = garment_only_key(raw)
         if gk and (keys is None or gk in keys):

@@ -667,6 +667,31 @@ suggest_aspect("Full-body shot showing her from head to toe. She is lying on her
 - 장면: 와이드 · 파노라마 · 풍경 → 가로, 두 사람 이상 → 가로.
 - 결과 `ratio` 는 `9:16` · `1:1` · `16:9` · `2:1` · `9:18` 중 하나. 판단할 것이 없으면 `9:16`.
 
+### 7-10. 카메라 시점 · 앵글 (0.16.0)
+
+**카메라 시점** (`promptmaker/view.py`, `elements/view.txt`): 카메라가 피사체를 **어느 쪽에서, 어느 높이에서** 보는지.
+샷 구도(7-5) · 피사체 거리(7-9)와 따로 정해집니다. 실사 인물 카메라 컨트롤 LoRA 사례(42개 시점 학습 캡션)의 방식을 따릅니다.
+
+| 축 | id · 요청 말 |
+|---|---|
+| 방향 (`view`) | `front` 정면 · `front_3q` 정면 사선(사선, 반측면, 3/4, three-quarter view) · `side` 측면(옆모습, side profile) · `rear_3q` 뒤 사선(뒤돌아보는, looking back over her shoulder) · `rear` 뒷모습(뒤태, from behind, rear view) |
+| 높이 (`view_height`) | `eye_level` 눈높이 · `high` 하이앵글(내려다보는 시점, 부감) · `overhead` 탑뷰(바로 위에서, top-down) · `low` 로우앵글(올려다보는 시점, 앙각) · `worm` 웜즈아이(바닥에서 올려다보는) |
+| 기울기 · 화면 방향 | 더치 앵글 (dutch angle) · 화면 왼쪽/오른쪽을 향함 (facing screen left/right) — 요청에서만 |
+
+- `GenerateOptions(view="auto", view_height="auto")` (기본: 요청에서 찾음), 값을 직접 주거나 `none`(넣지 않음).
+- 문구는 구도 · 거리 문장 바로 뒤에 한 문장으로 들어갑니다 (`picks["view"]`, 템플릿에서는 `{view}`).
+- **몸통이 어떻게 보이는지 함께 적습니다**: 'front three-quarter view, … with the front and one side of her torso visible'.
+  정면 사선은 이름만 쓰면 측면처럼 나오는 경우가 많았습니다. `view.txt` 에 줄을 추가할 때도 같은 방식으로 적으세요.
+- **뒷모습**: 표정 자리는 '얼굴을 돌린' 말로 바꾸고 (요청에 표정을 말했으면 그대로), 카메라와 눈을 맞추는 · 윙크하는 줄은 빼고,
+  눈 화장은 드물게만 고릅니다. 템플릿의 '카메라를 바라보는' 문장은 'seen from behind' 로 바꿉니다.
+- **뒷모습 · 뒤 사선**: '카메라 쪽으로 걸어오는' 은 '카메라에서 멀어지는' 으로 바꾸고, '카메라를 정면으로 보는' 줄은 뺍니다.
+- 시점 문구를 넣으면 각도를 말하는 카메라 줄('low-angle shot', 'Dutch angle composition')은 고르지 않습니다 (렌즈 · 구도만).
+- 바로 아래에서 수직으로 올려다보는 시점은 인물 형태가 무너지므로 웜즈아이는 '바닥 가까이에서 올려다보는' 으로 씁니다.
+- 요청에 시점이 없으면 무작위 모드에서 가끔(25%) 정면 사선 · 측면을 넣고, 그중 30% 는 약한 하이 · 로우앵글을 더합니다
+  (뒷모습 · 탑뷰 · 웜즈아이 · 더치 같은 극단 시점은 무작위로 넣지 않음).
+- '뒤에서 안는 (hugging her from behind)' 같은 상호작용, 'light from above' 같은 조명, 'Dutch woman' 은 시점이 아닙니다.
+- 요소 검사(7-4): 이미지 분석이 카메라에 넣은 'shot from a low angle' 처럼 시점만 말하는 줄은 `view` 에 `#low` 같은 태그를 붙여 옮깁니다.
+
 ### 7-4. 요소 검사 · 잘못 분류된 요소 정리 (0.8.0)
 
 요소 txt 한 줄은 **단어 또는 짧은 구** 여야 합니다 (템플릿이 요소를 엮어 문장을 만듦). 이미지 분석·생성 프롬프트 자동 추가가 긴 문장을 쉼표로만 잘라 넣으면 이런 줄이 생겼습니다.

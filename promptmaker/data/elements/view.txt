@@ -1,0 +1,28 @@
+# 카메라 시점·앵글 (0.16.0). 카메라가 어느 쪽·어느 높이에서 보는지 — 샷 구도(framing) · 피사체 거리(distance)와 따로 정해집니다.
+# 방향 태그: #front(정면) #front_3q(정면 사선 3/4) #side(측면) #rear_3q(뒤 사선) #rear(뒷모습)
+# 높이 태그: #eye_level(눈높이) #high(하이앵글) #overhead(탑뷰) #low(로우앵글) #worm(웜즈아이)   기울기: #dutch   화면 방향: #left #right
+# 시점 이름만 쓰지 말고 몸통이 어떻게 보이는지 함께 적으면 잘 지켜집니다. 문장: "{view}."
+straight-on front view, with the front of {her} body facing the camera #front
+front view, {her} shoulders and torso square to the camera #front
+front three-quarter view, {her} body turned about 45 degrees, with the front and one side of {her} torso visible #front_3q
+three-quarter angle, {her} torso angled away from the camera with both eyes still visible #front_3q
+side profile view, the camera looking directly at the side of {her} body #side
+side view in full profile, only one side of {her} face and torso visible #side
+rear three-quarter view, with {her} back and one side of {her} body visible #rear_3q
+rear three-quarter view, {her} back and one side of {her} torso visible as {she} glances back over {her} shoulder #rear_3q
+straight-on rear view, {her} back to the camera as {she} faces away #rear
+rear view from behind, the back of {her} torso visible #rear
+shot at eye level #eye_level
+camera at {her} eye level #eye_level
+shot from a high angle, looking down at {her} #high
+slightly high camera angle looking down #high
+overhead shot looking down at {her} from directly above #overhead
+top-down view from above #overhead
+shot from a low angle, looking up at {her} #low
+low camera angle looking up #low
+very low angle from near the ground, looking up at {her} #worm
+worm's-eye view from ground level #worm
+dutch angle with the frame slightly tilted #dutch
+tilted camera, canted frame #dutch
+{her} body turned toward the left side of the frame #left
+{her} body turned toward the right side of the frame #right

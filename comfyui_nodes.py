@@ -16,6 +16,7 @@ from promptmaker import GenerateOptions, PromptMaker  # noqa: E402
 from promptmaker.core import MODES  # noqa: E402
 from promptmaker.framing import FRAMINGS  # noqa: E402
 from promptmaker.body_parts import PARTS  # noqa: E402
+from promptmaker.view import DIRECTIONS, HEIGHTS  # noqa: E402
 
 _USER_DATA = os.path.join(_HERE, "user_data")
 _MAKER = PromptMaker(user_data_dir=_USER_DATA if os.path.isdir(_USER_DATA) else None)
@@ -60,12 +61,16 @@ class PromptMakerGenerate:
                 "framing": (["auto"] + list(FRAMINGS) + ["none"], {"default": "auto"}),
                 # 신체 부위 클로즈업: none = 요청에서 찾음 ('다리 클로즈업' → legs)
                 "body_part": (["none"] + list(PARTS), {"default": "none"}),
+                # [0.16.0] 카메라 시점: auto = 요청에서 찾음 ('뒷모습' → rear, '로우앵글' → low), none = 넣지 않음
+                "view": (["auto"] + list(DIRECTIONS) + ["none"], {"default": "auto"}),
+                "view_height": (["auto"] + list(HEIGHTS) + ["none"], {"default": "auto"}),
             },
         }
 
     def generate(self, user_input, prompt_type, mode, template, seed,
                  translate, use_related_words, model_profile="default", selections_json="{}", random_elements="",
-                 prefix="", suffix="", framing="auto", body_part="none"):
+                 prefix="", suffix="", framing="auto", body_part="none",
+                 view="auto", view_height="auto"):
         try:
             selections = json.loads(selections_json or "{}")
         except json.JSONDecodeError as exc:
@@ -77,6 +82,7 @@ class PromptMakerGenerate:
             "random_elements": random_elements,
             "model_profile": None if model_profile == "default" else model_profile,
             "framing": framing or "auto",
+            "view": view or "auto", "view_height": view_height or "auto",
             "body_part": "" if body_part in (None, "", "none") else body_part,
         })
         result = _MAKER.generate(user_input, opts)

@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-DEFAULT_TAG_ORDER = ["photo_style", "video_style", "framing", "distance", "subject", "hair", "makeup", "skin", "attire",
+DEFAULT_TAG_ORDER = ["photo_style", "video_style", "framing", "distance", "view", "subject", "hair", "makeup", "skin", "attire",
                      "attire_state", "pose", "action", "motion", "expression", "interaction", "location",
                      "time_weather", "lighting", "lighting_effect", "camera", "camera_movement",
                      "color_grade", "mood"]

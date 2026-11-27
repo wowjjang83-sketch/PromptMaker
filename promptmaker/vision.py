@@ -798,6 +798,8 @@ KEY_HINTS: Dict[str, str] = {
     "outerwear": "worn over the outfit: jacket, coat, blazer, cardigan",
     "sportswear": "yoga set, sports bra, leggings for exercise",
     "traditional": "hanbok, kimono, yukata",
+    "view": "camera viewpoint only: front view, three-quarter view, side profile, rear view; eye level, high angle, "
+            "low angle, overhead",
     "footwear": "shoes, heels, boots, sandals, or barefoot",
     "legwear": "stockings, tights, socks, or bare legs",
     "accessory": "jewelry, choker, belt, hat, glasses, bag, hair accessory",

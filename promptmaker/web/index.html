@@ -111,9 +111,13 @@
     <select id="framing"><option value="auto">자동 (요청에서 찾음)</option></select>
     <label for="distance">피사체 거리</label>
     <select id="distance"><option value="auto">자동 (요청에서 찾음)</option></select>
+    <label for="view">카메라 방향 (시점)</label>
+    <select id="view"><option value="auto">자동 (요청에서 찾음)</option></select>
+    <label for="view_height">카메라 높이 (앵글)</label>
+    <select id="view_height"><option value="auto">자동 (요청에서 찾음)</option></select>
     <label for="body_part">신체 부위 클로즈업</label>
     <select id="body_part"><option value="">없음 (요청에서 찾음)</option></select>
-    <p class="hint">요청에 '얼빡샷 / 클로즈업 / 미디엄샷 / 카우보이샷 / 전신샷' 이나 '다리 클로즈업 / 입술 접사' 같은 부위 클로즈업이 있으면 자동으로 씁니다. 여기서 고르면 그 구도가 우선합니다. 피사체 거리는 '가까이서 / 중거리 / 멀리서 / 원경' 을 찾아 쓰고, 구도와 맞지 않으면 구도에 맞춥니다.</p>
+    <p class="hint">요청에 '얼빡샷 / 클로즈업 / 미디엄샷 / 카우보이샷 / 전신샷' 이나 '다리 클로즈업 / 입술 접사' 같은 부위 클로즈업이 있으면 자동으로 씁니다. 여기서 고르면 그 구도가 우선합니다. 피사체 거리는 '가까이서 / 중거리 / 멀리서 / 원경' 을 찾아 쓰고, 구도와 맞지 않으면 구도에 맞춥니다. 카메라 시점은 '정면 / 정면 사선 / 옆모습 / 뒤 사선 / 뒷모습', '하이앵글 / 로우앵글 / 탑뷰 / 웜즈아이 / 더치 앵글' 을 찾아 씁니다 (뒷모습이면 얼굴 표정 대신 '얼굴을 돌린' 으로).</p>
     <label for="model_profile">대상 모델 (프롬프트 형식)</label>
     <select id="model_profile"></select>
     <p class="hint" id="model_hint"></p>
@@ -312,6 +316,10 @@ function fillFramings() {
     .map(f => `<option value="${esc(f.id)}">${esc(f.label)}</option>`).join("");
   $("distance").innerHTML = (INFO.distances || [{ id: "auto", label: "자동 (요청에서 찾음)" }])
     .map(d => `<option value="${esc(d.id)}">${esc(d.label)}</option>`).join("");
+  $("view").innerHTML = (INFO.views || [{ id: "auto", label: "자동 (요청에서 찾음)" }])
+    .map(v => `<option value="${esc(v.id)}">${esc(v.label)}</option>`).join("");
+  $("view_height").innerHTML = (INFO.view_heights || [{ id: "auto", label: "자동 (요청에서 찾음)" }])
+    .map(v => `<option value="${esc(v.id)}">${esc(v.label)}</option>`).join("");
   $("body_part").innerHTML = (INFO.body_parts || [{ id: "", label: "없음" }])
     .map(p => `<option value="${esc(p.id)}">${esc(p.id ? p.label : "없음 (요청에서 찾음)")}</option>`).join("");
 }
@@ -327,6 +335,8 @@ async function generate() {
     model_profile: $("model_profile").value || null,
     framing: $("framing").value || "auto",
     distance: $("distance").value || "auto",
+    view: $("view").value || "auto",
+    view_height: $("view_height").value || "auto",
     body_part: $("body_part").value || "",
     count: parseInt($("count").value, 10) || 1,
     seed: isNaN(seed) || seed < 0 ? null : seed,

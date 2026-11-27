@@ -263,7 +263,8 @@ class CoherenceTests(unittest.TestCase):
         for r in self._run("photo in the bedroom", n=100):
             p = r.prompt.lower()
             for w in ("sand", "shoreline", "wading", "beach towel", "splashing water"):
-                self.assertNotIn(w, p, r.prompt)
+                # 단어 단위로 확인 ('strappy sandals' 의 'sand' 는 모래가 아님)
+                self.assertNotRegex(p, r"\b" + w + r"\b", r.prompt)
 
     def test_inline_tags_are_parsed(self):
         from promptmaker.data_loader import _parse_txt_line

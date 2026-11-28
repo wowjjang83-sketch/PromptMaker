@@ -1,0 +1,15 @@
+# [0.18.0] 의상 소재 (in 구, 의상 뒤에 붙음)
+in glossy satin
+in smooth silk
+in soft cotton
+in breezy linen
+in sheer chiffon
+in delicate lace
+in washed denim
+in black leather
+in chunky knit
+in plush velvet
+in fine wool
+in shiny latex
+in sheer mesh
+in tweed fabric

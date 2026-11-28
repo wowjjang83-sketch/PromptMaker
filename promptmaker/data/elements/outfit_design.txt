@@ -1,0 +1,17 @@
+# [0.18.0] 의상 디자인 (with 구, 의상 뒤에 붙음: "{attire} {outfit_material} {outfit_design}")
+with a floral print
+with polka dots
+with thin stripes
+with a plaid pattern
+with lace trim
+with ruffled details
+with a pleated design
+with delicate embroidery
+with sparkling sequins
+with cut-out details
+with a ribbon bow
+with a high slit
+with puff sleeves
+with a sweetheart neckline
+with a backless design
+in a minimalist design

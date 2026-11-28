@@ -692,6 +692,39 @@ suggest_aspect("Full-body shot showing her from head to toe. She is lying on her
 - '뒤에서 안는 (hugging her from behind)' 같은 상호작용, 'light from above' 같은 조명, 'Dutch woman' 은 시점이 아닙니다.
 - 요소 검사(7-4): 이미지 분석이 카메라에 넣은 'shot from a low angle' 처럼 시점만 말하는 줄은 `view` 에 `#low` 같은 태그를 붙여 옮깁니다.
 
+### 7-11. 프롬프트 커스터마이징 (0.18.0)
+
+캐릭터 커스터마이징 화면처럼 **피사체 1·2 → 장소/배경 → 조명 세팅 → 앵글** 순서로 요소를 골라 프롬프트를 만듭니다.
+(AI Gallery Manager 의 AI채팅 '커스텀프롬' 화면이 이 기능을 씁니다.)
+
+```python
+from promptmaker import PromptMaker
+from promptmaker.customize import schema, build, build_batch
+
+pm = PromptMaker()
+info = schema(pm)      # 단계(steps) · 카테고리(categories, 성별별 카드 items) · 시점 이름
+res = build(pm, {
+    "subjects": [
+        {"enabled": True, "gender": "female",
+         "sel": {"hair": {"mode": "pick", "values": ["long wavy chestnut hair"]},
+                 "outfit": {"mode": "pick", "values": ["a satin camisole", "a pleated tennis skirt"]},
+                 "action": {"mode": "off"}}},
+        {"enabled": True, "gender": "male"},          # 두 번째 피사체 (생략하면 한 명)
+    ],
+    "scene": {"location": {"mode": "auto"}, "view": {"direction": "front_3q", "height": "high"}},
+}, model_profile="krea2")
+print(res["prompt"])
+```
+
+- 카테고리마다 `mode`: `auto`(요소 txt 에서 자동 선택, 이미 고른 장소·의상과 어울리는 항목 우선) · `pick`(고른 값) · `off`(넣지 않음)
+- 피사체: 성별 · 국적 · 나이 · 외모 수준 / 헤어스타일 · 머리 길이 · 메이크업 / 의상(여러 개) · 디자인 · 소재 · 착용 상태 / 포즈 / 동작 · 표정
+- 장소: location · time_weather, 조명: lighting · lighting_effect · color_grade · photo_style, 앵글: view(다이얼 값) · framing · camera
+- 새 요소 txt: `hair_length.txt`(머리 길이) · `outfit_design.txt`(디자인, with 구) · `outfit_material.txt`(소재, in 구) · `male_hair.txt`(남성 헤어)
+- 국적 · 여성 나이 규칙(7-3)을 그대로 지킵니다. 남성 나이는 23~35 중에서 고릅니다.
+- 디자인 · 소재 · 착용 상태 · 조명 효과 · 색감 같은 꾸밈 요소는 자동일 때 가끔만 넣습니다 (`auto_rate`).
+- 뒷모습 시점이면 표정은 자동으로 넣지 않고, '카메라 쪽으로' 는 '카메라에서 멀어지는' 으로 바꿉니다.
+- 웹 서버(`run_server.bat`): `GET /api/customize/schema`, `POST /api/customize/build` (`{"spec": {...}, "count": 1}`)
+
 ### 7-4. 요소 검사 · 잘못 분류된 요소 정리 (0.8.0)
 
 요소 txt 한 줄은 **단어 또는 짧은 구** 여야 합니다 (템플릿이 요소를 엮어 문장을 만듦). 이미지 분석·생성 프롬프트 자동 추가가 긴 문장을 쉼표로만 잘라 넣으면 이런 줄이 생겼습니다.

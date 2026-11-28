@@ -48,6 +48,9 @@ def make_handler(maker: PromptMaker):
                 return self._vision("GET")
             if self.path == "/favicon.ico":
                 return self._send(204, b"", "image/x-icon")
+            if self.path.startswith("/api/customize/schema"):
+                from .customize import schema
+                return self._json(200, schema(maker))
             if self.path.startswith("/api/info"):
                 return self._json(200, maker.info())
             if self.path.startswith("/api/reload"):
@@ -61,6 +64,17 @@ def make_handler(maker: PromptMaker):
         def do_POST(self):
             if self.path.startswith("/api/vision/"):
                 return self._vision("POST")
+            if self.path.startswith("/api/customize/build"):
+                from .customize import build_batch
+                length = int(self.headers.get("Content-Length", 0))
+                try:
+                    payload = json.loads(self.rfile.read(length) or b"{}")
+                    count = max(1, min(int(payload.get("count", 1)), 20))
+                    results = build_batch(maker, payload.get("spec") or {}, count, payload.get("seed"),
+                                          payload.get("model_profile"))
+                    return self._json(200, {"results": results})
+                except Exception as exc:
+                    return self._json(400, {"error": f"{type(exc).__name__}: {exc}"})
             if not self.path.startswith("/api/generate"):
                 return self._json(404, {"error": "not found"})
             length = int(self.headers.get("Content-Length", 0))

@@ -1,0 +1,7 @@
+# [0.18.0] 머리 길이 (형용사, 커스터마이징 화면에서 헤어스타일 앞에 붙음: "{hair_length} {hair}")
+very short
+chin-length
+2::shoulder-length
+2::medium-length
+3::long
+waist-length

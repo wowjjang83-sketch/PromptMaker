@@ -1,0 +1,9 @@
+# [0.18.0] 남성 헤어스타일 (명사구, 문장: "{He} has {male_hair}")
+short neat black hair
+a textured crop
+a two-block cut with soft bangs
+slicked-back dark hair
+messy medium-length hair
+a clean undercut
+short wavy brown hair
+a comma hairstyle
